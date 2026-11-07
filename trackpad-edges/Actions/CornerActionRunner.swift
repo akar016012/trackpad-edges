@@ -3,19 +3,26 @@ import AppKit
 /// Carries out the action assigned to a corner.
 final class CornerActionRunner {
     func run(_ action: CornerAction) {
+        guard action.isConfigured else { return }
         switch action {
         case .none:
             break
         case .mute:
             MediaKeys.press(MediaKeys.mute)
+        case .playPause:
+            MediaKeys.press(MediaKeys.playPause)
+        case .nextTrack:
+            MediaKeys.press(MediaKeys.nextTrack)
+        case .previousTrack:
+            MediaKeys.press(MediaKeys.previousTrack)
         case .openApp(let path):
             toggleApp(at: URL(fileURLWithPath: path))
         case .openLink(let link, let browserPath):
             open(link: link, browserPath: browserPath)
         case .openFile(let path):
             NSWorkspace.shared.open(URL(fileURLWithPath: path))
-        case .keyCombination(let keyCode, let modifiers):
-            press(keyCode: keyCode, modifiers: modifiers)
+        case .keyCombination(let keyCode, let modifiers, _):
+            if let keyCode { press(keyCode: keyCode, modifiers: modifiers) }
         case .shortcut(let name):
             runShortcut(named: name)
         }

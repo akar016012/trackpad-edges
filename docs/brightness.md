@@ -24,4 +24,4 @@ Each step fires a haptic, and reaching a limit can fire a distinct one. See [hap
 ## Related docs
 
 - [gestures.md](gestures.md) describes how a slide starts and ends.
-- [settings.md](settings.md) describes swap sides and sensitivity.
+- [settings.md](settings.md) describes edge assignment and sensitivity.

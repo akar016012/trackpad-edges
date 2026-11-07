@@ -6,7 +6,7 @@ This project is a desktop macOS menu bar app that turns the edges and top corner
 
 ## Status
 
-The project is now a macOS menu bar app with a private GitHub repository. Touch input, haptics, and the pointer freeze are confirmed working on the built-in trackpad. Touch-to-start slides are the default, because testing showed that a light touch at the edge produces no click. The right-edge volume slide is confirmed working. Brightness, corners, and assignable edges are built, but they have not been confirmed on hardware yet. The app window, the haptic settings, onboarding, and media seeking are still to be built. The findings below come from a review of the website, Apple's documentation, the installed macOS binaries, and open source projects.
+The project is now a macOS menu bar app with a private GitHub repository. Touch input, haptics, and the pointer freeze are confirmed working on the built-in trackpad. Touch-to-start slides are the default, because testing showed that a light touch at the edge produces no click. The right-edge volume slide is confirmed working. Brightness, corners, and assignable edges are built, but they have not been confirmed on hardware yet. The app window, the haptic settings, and the first-run steps are built. Media seeking is still to be built. The findings below come from a review of the website, Apple's documentation, the installed macOS binaries, and open source projects.
 
 ## Decisions
 
@@ -36,7 +36,7 @@ External display brightness is out of scope for the first version, as it is in a
 
 - The target becomes macOS-only by editing `trackpad-edges.xcodeproj/project.xcproj`.
 - App Sandbox is turned off, because `MultitouchSupport` does not work inside it.
-- `LSUIElement` is set so that the app has no Dock icon.
+- `LSUIElement` is set so that the app has a Dock icon only while its window is open.
 - The placeholder bundle identifier is replaced with a stable one, and signing stays on your development team so that the Accessibility permission survives rebuilds.
 - `MyApp.swift` and `ContentView.swift` are replaced by an AppKit entry point.
 - A `.gitignore` covers `xcuserdata/`, and a README is added. Unit tests run through a small Swift package at the repository root, because `swift test` needs no project file support.
@@ -50,7 +50,7 @@ All source lives under `trackpad-edges/`.
 - `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it.
 - `Actions/` holds the volume, brightness, media seek, and corner actions.
 - `Haptics/` holds the haptic engine behind one small interface.
-- `Settings/` holds the settings store and the AppKit settings window.
+- `Settings/` holds the settings store and the panes of the app window.
 - `UI/` holds the app window and the trackpad diagram, and it will hold the seek overlay.
 
 ## Build order

@@ -1,14 +1,14 @@
 # Menu bar and onboarding
 
-Status: the menu bar item is built. The first-run guide is not built yet.
+Status: the menu bar item and the first-run steps are built. Their layout has been inspected, but the first-run flow has not been confirmed from a clean install.
 
 ## Menu bar
 
-The app runs as a menu bar item. The menu shows how many trackpads were found, offers the Accessibility prompt, pauses gestures, and quits the app.
+The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu shows how many trackpads were found, offers the Accessibility prompt, assigns each edge, pauses gestures, opens the window, and quits the app.
 
 ## First-run guide
 
-The guide appears on first launch. It asks for the Accessibility permission, asks what the top-right corner should do, and lets you try each gesture on your own trackpad.
+The window opens on the General pane whenever the Accessibility permission is missing. That pane explains the permission and how to try a gesture. The app tries to skip the window when it starts at login, but that has not been confirmed with a real login.
 
 ## Permissions
 

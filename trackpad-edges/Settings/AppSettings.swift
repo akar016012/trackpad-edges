@@ -4,11 +4,29 @@ import AppKit
 enum CornerAction: Codable, Equatable {
     case none
     case mute
+    case playPause
+    case nextTrack
+    case previousTrack
     case openApp(path: String)
     case openLink(url: String, browserPath: String?)
     case openFile(path: String)
-    case keyCombination(keyCode: UInt16, modifiers: UInt64)
+    /// A nil key code means that nothing has been recorded yet. The label is for display.
+    case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
     case shortcut(name: String)
+
+    /// Whether the action has everything it needs. A corner that is not configured stays a normal
+    /// part of the trackpad, so that it never swallows clicks while doing nothing.
+    var isConfigured: Bool {
+        switch self {
+        case .none: return false
+        case .mute, .playPause, .nextTrack, .previousTrack: return true
+        case .openApp(let path), .openFile(let path): return !path.isEmpty
+        case .openLink(let url, _):
+            return ["http", "https"].contains(URL(string: url)?.scheme?.lowercased())
+        case .keyCombination(let keyCode, _, _): return keyCode != nil
+        case .shortcut(let name): return !name.isEmpty && !name.hasPrefix("-")
+        }
+    }
 }
 
 struct CornerSetting: Codable, Equatable {
@@ -69,7 +87,6 @@ struct AppSettings: Codable, Equatable {
     /// A multiplier from 0.5 to 2.0, where higher values need less finger travel for each step.
     var sensitivity: Float = 1.0
     var haptics = HapticSettings()
-    var hasFinishedSetup = false
 
     func gestureConfig(brightnessAvailable: Bool, seekAvailable: Bool) -> GestureConfig {
         var config = GestureConfig()
@@ -82,8 +99,8 @@ struct AppSettings: Codable, Equatable {
         config.bottomAction = bottomEdge
         config.brightnessAvailable = brightnessAvailable
         config.seekAvailable = seekAvailable
-        config.topLeftClicks = topLeft.action == .none ? nil : topLeft.clicks
-        config.topRightClicks = topRight.action == .none ? nil : topRight.clicks
+        config.topLeftClicks = topLeft.action.isConfigured ? topLeft.clicks : nil
+        config.topRightClicks = topRight.action.isConfigured ? topRight.clicks : nil
         return config
     }
 }

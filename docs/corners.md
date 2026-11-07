@@ -1,17 +1,18 @@
 # Corners
 
-Status: the click counting and every action are built, but they have not been confirmed on hardware yet. The window for choosing actions is not built yet, so only the default top-left mute can be used for now.
+Status: the click counting, every action, and the Corners pane are built, but they have not been confirmed on hardware yet.
 
-The top-left and top-right corners respond to 1 to 4 clicks. A corner with no action stays a normal part of the trackpad.
+The top-left and top-right corners respond to 1 to 4 clicks. A corner with no action stays a normal part of the trackpad, and so does a corner whose action is not finished, such as Press Keys with nothing recorded.
 
 ## Actions
 
 Each corner can do one of these things:
 
 - It can mute or unmute the sound.
+- It can play or pause media, or skip to the next or previous track, in whichever app is playing.
 - It can open an app, and clicking again hides that app.
 - It can open an `http` or `https` link in a browser you choose.
-- It can open a file, a folder, or an app link.
+- It can open a file or a folder.
 - It can press a key combination, such as a screenshot shortcut.
 - It can run a shortcut from the Shortcuts app in the background.
 

@@ -8,6 +8,9 @@ enum MediaKeys {
     static let brightnessUp = 2
     static let brightnessDown = 3
     static let mute = 7
+    static let playPause = 16
+    static let nextTrack = 17
+    static let previousTrack = 18
 
     /// Sets the modifier flags explicitly, because a held Option key would otherwise open
     /// System Settings. A fine press adds Shift and Option, which gives quarter steps.

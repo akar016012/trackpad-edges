@@ -1,12 +1,12 @@
 # Haptics
 
-Status: haptics are built for steps, limits, and corners, and a tick on each volume step is confirmed working on the built-in trackpad. The settings window for these controls is not built yet.
+Status: haptics are built for steps, limits, and corners, and a tick on each volume step is confirmed working on the built-in trackpad. The Haptics pane is built, but its controls have not been confirmed on hardware yet.
 
 Haptics let you feel a level change without looking. a similar app offers only a light click on each step, so the controls described here go beyond it.
 
 ## Settings
 
-| Setting  | Planned behavior                                                                   |
+| Setting  | Behavior                                                                           |
 | -------- | ---------------------------------------------------------------------------------- |
 | Haptics  | This switch turns all haptics on or off.                                           |
 | Strength | This slider sets how strong each haptic feels.                                     |
@@ -39,7 +39,7 @@ The app uses the private `MTActuator` API, because Apple's public `NSHapticFeedb
 | Rechargeable external Apple trackpad | This is unverified, and some reports suggest haptics may be unreliable over Bluetooth. |
 | Original external Apple trackpad     | It has no haptic engine, so haptics are unavailable.                                   |
 
-When only the public API is available, the strength control is disabled and the settings window explains why.
+The Haptics pane says whether this trackpad supports strength and pattern control. When only the public API is available, those settings may have no effect.
 
 ## Related docs
 

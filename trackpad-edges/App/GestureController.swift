@@ -27,6 +27,8 @@ final class GestureController {
     private var healthTimer: Timer?
 
     private(set) var trackpadCount = 0
+    /// Receives every touch frame, so that the window can show fingers live.
+    var onTouches: (([TouchPoint]) -> Void)?
     /// Whether the user has paused all gestures from the menu.
     var paused = false {
         didSet { if paused { abortAll() } }
@@ -81,6 +83,25 @@ final class GestureController {
             brightnessAvailable: brightness.isAvailable, seekAvailable: false)
     }
 
+    /// Fires one haptic with the current settings.
+    func testHaptic() {
+        let devices = MultitouchBridge.shared.devices
+        guard let device = devices.first(where: { haptics.hasActuator(device: $0) }) ?? devices.first
+        else { return }
+        haptics.pulse(device: device)
+    }
+
+    /// Describes what the connected trackpads can do, for the Haptics pane.
+    var hapticStatus: String {
+        let devices = MultitouchBridge.shared.devices
+        if devices.isEmpty { return "No trackpad was found." }
+        if devices.contains(where: { haptics.hasActuator(device: $0) }) {
+            return "Strength and pattern control are available on this trackpad."
+        }
+        return
+            "This trackpad has no haptic engine that the app can control, so the strength and pattern settings may have no effect."
+    }
+
     private func newEngine() -> GestureEngine {
         var engine = GestureEngine()
         engine.config = currentConfig()
@@ -90,6 +111,7 @@ final class GestureController {
     // MARK: Input
 
     private func handle(device: UnsafeRawPointer, touches: [TouchPoint]) {
+        onTouches?(touches)
         // A frame that was queued before a rebuild can name a device that no longer exists.
         // Without the click tap there is no permission to press keys, so a slide would do nothing.
         guard !paused, !locked, ClickTap.shared.isInstalled,

@@ -9,6 +9,10 @@ The app is for everyday use. It relies on the private `MultitouchSupport` framew
 - The app needs an Apple silicon Mac with a Force Touch trackpad for haptics. It currently targets macOS 27.2.
 - Gestures need the Accessibility permission, which you can grant from the menu bar icon.
 
+## Configure
+
+The app window and the menu bar icon both let you choose what each edge does. The window also sets the corners, the haptic strength and pattern, and launch at login.
+
 ## Build and run
 
 Open `trackpad-edges.xcodeproj` in Xcode and run the `trackpad-edges` scheme, or build from the command line:

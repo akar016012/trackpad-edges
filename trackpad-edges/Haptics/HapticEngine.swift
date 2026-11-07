@@ -28,6 +28,10 @@ final class HapticEngine {
         self.device = device
     }
 
+    func hasActuator(device: UnsafeRawPointer) -> Bool {
+        getActuator?(device) != nil
+    }
+
     private func openActuatorIfNeeded() {
         guard actuator == nil, let device, let candidate = getActuator?(device),
             open?(candidate, 0) == 0
