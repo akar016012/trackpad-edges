@@ -100,7 +100,7 @@ All source lives under `trackpad-edges/`.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
 - `UI/` holds the app window, the trackpad diagram, and the seek overlay.
-- `Resources/` holds the bundled adapter, and `Vendor/` holds its source.
+- `Resources/` holds the bundled adapter, its license, and the About box text, and `Vendor/` holds the adapter source.
 
 ## What was done
 

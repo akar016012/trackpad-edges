@@ -37,6 +37,10 @@ See [media-seek.md](media-seek.md).
 
 The haptic controls are described in [haptics.md](haptics.md).
 
+## App details
+
+The app is named Trackpad Edges, and it is in the Utilities category. Its name, version, copyright, and category are build settings in the project, and its About box text is in `Resources/Credits.rtf`.
+
 ## General
 
 The pane holds the first-run steps, the Accessibility status, and launch at login.

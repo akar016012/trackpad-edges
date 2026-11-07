@@ -22,8 +22,14 @@ xcodebuild -project trackpad-edges.xcodeproj -scheme trackpad-edges -configurati
 ```
 
 ```bash
-open build/Build/Products/Debug/trackpad-edges.app
+open "build/Build/Products/Debug/Trackpad Edges.app"
 ```
+
+## Make a copy to keep
+
+In Xcode, choose **Product > Archive**, and then **Distribute App** in the Organizer. **Direct Distribution** signs and notarizes the app with your Developer ID, and it needs the Hardened Runtime, which is on. **Custom > Copy App** is the quickest way to get a local copy, and it skips notarization.
+
+The app's name, version, category, copyright, and icon are set in the project's build settings, and the text in its About box is in `Resources/Credits.rtf`.
 
 ## Test
 
