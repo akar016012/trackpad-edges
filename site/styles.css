@@ -1,0 +1,599 @@
+@font-face {
+  font-family: "Archivo";
+  src: url("fonts/archivo.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --aluminum: #d4d6d8;
+  --pad: #e9eaeb;
+  --pad-edge: #f7f7f8;
+  --ink: #1d1f22;
+  --ink-soft: #4d5157;
+  --orange: #ff6a13;
+  --graphite: #17181a;
+  --gutter: clamp(16px, 4vw, 48px);
+  --strip: clamp(44px, 6vw, 72px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--aluminum);
+  color: var(--ink);
+  font-family:
+    "Archivo",
+    -apple-system,
+    sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+h3 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: 24px;
+  top: -60px;
+  z-index: 5;
+  padding: 8px 14px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.skip:focus {
+  top: 24px;
+}
+
+/* The hero is one trackpad, and its edges are the controls. */
+
+.stage {
+  padding: clamp(10px, 1.6vw, 20px);
+}
+
+.pad {
+  position: relative;
+  display: grid;
+  min-height: calc(100svh - clamp(20px, 3.2vw, 40px));
+  grid-template-columns: var(--strip) minmax(0, 1fr) var(--strip);
+  grid-template-rows: var(--strip) 1fr var(--strip);
+  overflow: hidden;
+  border-radius: clamp(20px, 3vw, 36px);
+  background: var(--pad);
+  box-shadow:
+    inset 0 0 0 1px var(--pad-edge),
+    inset 0 2px 3px rgb(255 255 255 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.28);
+}
+
+.pad.is-ticking {
+  animation: tick 70ms ease-out;
+}
+
+@keyframes tick {
+  50% {
+    transform: scale(0.9985);
+  }
+}
+
+.dimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.middle {
+  grid-area: 1 / 2 / 4 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(16px, 2.4vh, 26px);
+  padding: calc(var(--strip) + 12px) clamp(12px, 4vw, 56px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+.brand img {
+  border-radius: 9px;
+}
+
+h1 {
+  max-width: 11em;
+  font-size: clamp(2rem, 8.6vw, 8rem);
+  font-weight: 800;
+  line-height: 0.96;
+}
+
+.lede {
+  max-width: 34em;
+  color: var(--ink-soft);
+  font-size: clamp(1.05rem, 1.7vw, 1.375rem);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 24px;
+}
+
+.readout {
+  min-height: 1.5em;
+  color: var(--ink);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+.download {
+  display: inline-block;
+  padding: 15px 26px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.download:hover {
+  background: #000;
+}
+
+/* Strips. The fill grows with the value, and the marks show the steps. */
+
+.strip {
+  position: relative;
+  z-index: 1;
+  touch-action: none;
+  cursor: grab;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--orange) 16%, var(--pad));
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.strip:active {
+  cursor: grabbing;
+}
+
+.strip:focus-visible {
+  outline-offset: -5px;
+}
+
+.strip-left {
+  grid-area: 2 / 1;
+}
+
+.strip-right {
+  grid-area: 2 / 3;
+}
+
+.strip-bottom {
+  grid-area: 3 / 2;
+}
+
+.strip::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(to top, rgb(29 31 34 / 0.2) 1px, transparent 1px)
+    0 100% / 100% calc(100% / 16);
+  pointer-events: none;
+}
+
+.strip-bottom::after {
+  background: linear-gradient(
+      to right,
+      rgb(29 31 34 / 0.2) 1px,
+      transparent 1px
+    )
+    0 0 / 5% 100%;
+}
+
+.fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--value, 50%);
+  border-top: 2px solid var(--ink);
+  background: var(--orange);
+}
+
+.strip-bottom .fill {
+  top: 0;
+  right: auto;
+  width: var(--value, 40%);
+  height: auto;
+  border-top: 0;
+  border-right: 2px solid var(--ink);
+}
+
+.strip-name {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.strip-right .strip-name {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.strip-bottom .strip-name {
+  transform: translate(-50%, -50%);
+}
+
+.corner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--orange) 34%, var(--pad));
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.corner:hover {
+  background: color-mix(in srgb, var(--orange) 55%, var(--pad));
+}
+
+.corner:active,
+.corner[aria-pressed="true"] {
+  background: var(--orange);
+}
+
+.corner:focus-visible {
+  outline-offset: -5px;
+}
+
+.corner-tl {
+  grid-area: 1 / 1;
+}
+
+.corner-tr {
+  grid-area: 1 / 3;
+}
+
+.corner-bl {
+  grid-area: 3 / 1;
+}
+
+.corner-br {
+  grid-area: 3 / 3;
+}
+
+/* The rest of the page reads like a spec sheet. */
+
+main > section {
+  padding: clamp(64px, 11vw, 136px) var(--gutter);
+}
+
+.what {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(32px, 6vw, 80px);
+  max-width: 1280px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.measure p {
+  max-width: 30em;
+  margin-top: 20px;
+  color: var(--ink-soft);
+}
+
+.actions-list {
+  grid-column: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.actions-list li {
+  padding: 11px 0;
+  border-top: 1px solid rgb(29 31 34 / 0.18);
+  color: var(--ink-soft);
+}
+
+.actions-list b {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.shot {
+  margin: 0;
+}
+
+.shot img {
+  border-radius: 14px;
+  box-shadow: 0 18px 44px rgb(23 24 26 / 0.3);
+}
+
+.what .shot {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: sticky;
+  top: 32px;
+}
+
+main > .feel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+  min-height: min(80vh, 720px);
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+  background: #0e0e0f;
+  color: #fff;
+}
+
+.feel-image {
+  grid-area: 1 / 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mask-image: linear-gradient(to right, transparent, #000 16%);
+}
+
+.feel-text {
+  grid-area: 1 / 1;
+  padding: clamp(32px, 6vw, 80px) 0 clamp(32px, 6vw, 80px) var(--gutter);
+}
+
+.feel-text p {
+  max-width: 24em;
+  margin-top: 16px;
+  color: #d9dadc;
+}
+
+.more {
+  display: grid;
+  gap: clamp(40px, 6vw, 64px);
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: clamp(120px, 20vw, 200px) minmax(0, 1fr);
+  gap: clamp(20px, 5vw, 56px);
+  align-items: center;
+}
+
+.row p {
+  max-width: 34em;
+  margin-top: 10px;
+  color: var(--ink-soft);
+}
+
+/* Each small trackpad marks the zone that its text describes. */
+
+.map {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--pad);
+  box-shadow:
+    inset 0 0 0 1px var(--pad-edge),
+    0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.map[data-zone="corners"] {
+  --block: linear-gradient(var(--orange), var(--orange));
+  background:
+    var(--block) 0 0 / 20% 22% no-repeat,
+    var(--block) 100% 0 / 20% 22% no-repeat,
+    var(--block) 0 100% / 20% 22% no-repeat,
+    var(--block) 100% 100% / 20% 22% no-repeat,
+    var(--pad);
+}
+
+.map[data-zone="two"] {
+  --finger: radial-gradient(circle closest-side, var(--ink) 92%, transparent);
+  background:
+    var(--finger) 96.5% 30% / 8% 12% no-repeat,
+    var(--finger) 96.5% 70% / 8% 12% no-repeat,
+    linear-gradient(var(--orange), var(--orange)) 100% 0 / 13% 100% no-repeat,
+    var(--pad);
+}
+
+.map[data-zone="apps"] {
+  background:
+    linear-gradient(var(--ink), var(--ink)) 28% 36% / 20% 30% no-repeat,
+    linear-gradient(var(--ink-soft), var(--ink-soft)) 62% 36% / 20% 30%
+      no-repeat,
+    linear-gradient(var(--orange), var(--orange)) 0 100% / 100% 16% no-repeat,
+    var(--pad);
+}
+
+.shot-small {
+  max-width: 720px;
+  margin-left: calc(clamp(120px, 20vw, 200px) + clamp(20px, 5vw, 56px));
+}
+
+.answers {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+.answers dl {
+  margin: 32px 0 0;
+}
+
+.answers dt {
+  padding-top: 22px;
+  border-top: 1px solid rgb(29 31 34 / 0.18);
+  font-weight: 650;
+}
+
+.answers dd {
+  margin: 6px 0 22px;
+  max-width: 38em;
+  color: var(--ink-soft);
+}
+
+main > .get {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  background: var(--orange);
+  text-align: center;
+}
+
+.get img {
+  border-radius: 22px;
+  box-shadow: 0 8px 22px rgb(23 24 26 / 0.3);
+}
+
+.coming,
+.version {
+  font-weight: 650;
+}
+
+.needs {
+  max-width: 34em;
+  font-size: 1rem;
+}
+
+footer {
+  padding: 32px var(--gutter);
+  background: var(--graphite);
+  color: #c8cacd;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 860px) {
+  .what {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions-list,
+  .what .shot {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+  }
+
+  .shot-small {
+    margin-left: 0;
+  }
+
+  main > .feel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feel-image {
+    grid-area: 1 / 1;
+    mask-image: none;
+  }
+
+  .feel-text {
+    grid-area: 2 / 1;
+    padding: 28px var(--gutter) 48px;
+  }
+}
+
+@media (max-width: 560px) {
+  .strip-name {
+    font-size: 0.6875rem;
+  }
+
+  .corner span {
+    font-size: 0.625rem;
+  }
+
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .map {
+    max-width: 200px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .pad.is-ticking {
+    animation: none;
+  }
+}

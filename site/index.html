@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trackpad Edges for Mac</title>
+    <meta
+      name="description"
+      content="Trackpad Edges turns the sides and corners of your Mac's trackpad into controls for volume, brightness, media, and more, with a tick you can feel."
+    />
+    <meta property="og:title" content="Trackpad Edges for Mac" />
+    <meta
+      property="og:description"
+      content="The sides and corners of your trackpad become controls, and the middle stays a normal trackpad."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="assets/share.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="assets/favicon.png" />
+    <link
+      rel="preload"
+      href="fonts/archivo.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#what">Skip the demo</a>
+
+    <header class="stage" id="stage">
+      <div class="pad" id="pad">
+        <div class="dimmer" id="dimmer" aria-hidden="true"></div>
+
+        <div class="middle">
+          <div class="brand">
+            <img src="assets/icon.png" alt="" width="40" height="40" />
+            <span>Trackpad Edges</span>
+          </div>
+          <h1>Your trackpad has edges. Use them.</h1>
+          <p class="lede">
+            Slide along the side of your Mac's trackpad to change the volume,
+            the brightness, or your place in a video. Press a corner to run
+            whatever you choose. The middle stays a normal trackpad.
+          </p>
+          <div class="actions">
+            <a class="download" href="#download">Get Trackpad Edges</a>
+            <p class="readout" id="readout">
+              Drag an orange edge, or use the arrow keys, to try it.
+            </p>
+          </div>
+        </div>
+
+        <button
+          class="corner corner-tl"
+          id="mute"
+          type="button"
+          aria-pressed="false"
+        >
+          <span>Mute</span>
+        </button>
+        <button class="corner corner-tr" id="play" type="button">
+          <span>Pause</span>
+        </button>
+        <button class="corner corner-bl" id="previous" type="button">
+          <span>Previous</span>
+        </button>
+        <button class="corner corner-br" id="next" type="button">
+          <span>Next</span>
+        </button>
+
+        <div
+          class="strip strip-left"
+          id="brightness"
+          role="slider"
+          tabindex="0"
+          aria-orientation="vertical"
+          aria-label="Brightness of this demo"
+          aria-valuemin="0"
+          aria-valuemax="16"
+          aria-valuenow="16"
+        >
+          <span class="fill"></span>
+          <span class="strip-name">Brightness</span>
+        </div>
+        <div
+          class="strip strip-right"
+          id="volume"
+          role="slider"
+          tabindex="0"
+          aria-orientation="vertical"
+          aria-label="Volume"
+          aria-valuemin="0"
+          aria-valuemax="16"
+          aria-valuenow="9"
+        >
+          <span class="fill"></span>
+          <span class="strip-name">Volume</span>
+        </div>
+        <div
+          class="strip strip-bottom"
+          id="seek"
+          role="slider"
+          tabindex="0"
+          aria-orientation="horizontal"
+          aria-label="Media seek position"
+          aria-valuemin="0"
+          aria-valuemax="20"
+          aria-valuenow="8"
+        >
+          <span class="fill"></span>
+          <span class="strip-name">Media seek</span>
+        </div>
+        <p class="visually-hidden" id="announcer" aria-live="polite"></p>
+      </div>
+    </header>
+
+    <main>
+      <section class="what" id="what">
+        <div class="measure">
+          <h2>Every edge does what you choose</h2>
+          <p>
+            Give each edge any of these controls. They move in fixed steps, so a
+            slide goes as far as you expect, and a tap on an edge changes
+            nothing.
+          </p>
+        </div>
+        <ul class="actions-list">
+          <li><b>Volume</b> moves in the same steps as your keyboard.</li>
+          <li><b>Brightness</b> changes your Mac's built-in screen.</li>
+          <li><b>Media seek</b> shows a preview before you let go.</li>
+          <li><b>Scroll</b> moves the window under the pointer.</li>
+          <li>
+            <b>Zoom</b> works in apps that use the standard zoom shortcuts.
+          </li>
+          <li>
+            <b>Switch apps</b> moves through your open apps one at a time.
+          </li>
+          <li><b>Switch Spaces</b> moves one Space left or right.</li>
+          <li><b>Keyboard backlight</b> changes the light under your keys.</li>
+          <li>
+            <b>Monitor brightness</b> works on external displays that allow it.
+          </li>
+        </ul>
+        <figure class="shot">
+          <img
+            src="assets/edges.png"
+            width="1320"
+            height="1132"
+            loading="lazy"
+            alt="The Edges tab, with a diagram of the trackpad beside a menu for each edge."
+          />
+        </figure>
+      </section>
+
+      <section class="feel">
+        <img
+          class="feel-image"
+          src="assets/feel.jpg"
+          width="1536"
+          height="1024"
+          alt=""
+          loading="lazy"
+        />
+        <div class="feel-text">
+          <h2>You feel each step</h2>
+          <p>
+            Your trackpad taps back as you slide, so you can change the volume
+            without looking. Choose how strong the tick is, or turn it off.
+          </p>
+        </div>
+      </section>
+
+      <section class="more">
+        <h2 class="visually-hidden">More controls</h2>
+        <article class="row">
+          <div class="map" data-zone="corners" aria-hidden="true"></div>
+          <div>
+            <h3>Four corners</h3>
+            <p>
+              Press a corner lightly to mute, play, or skip a track, to open an
+              app, link, or file, to press a key combination, or to run a
+              shortcut. One corner can hold a different action for each number
+              of presses.
+            </p>
+          </div>
+        </article>
+        <article class="row">
+          <div class="map" data-zone="two" aria-hidden="true"></div>
+          <div>
+            <h3>Two fingers</h3>
+            <p>
+              Give an edge a second job. One finger can change the volume, and
+              two fingers can zoom.
+            </p>
+          </div>
+        </article>
+        <article class="row">
+          <div class="map" data-zone="apps" aria-hidden="true"></div>
+          <div>
+            <h3>A setup for each app</h3>
+            <p>
+              The bottom edge can seek in your video player and scroll in your
+              browser. Each app changes only what you tell it to, and the rest
+              follows your usual setup.
+            </p>
+          </div>
+        </article>
+        <figure class="shot shot-small">
+          <img
+            src="assets/profiles.png"
+            width="1320"
+            height="768"
+            loading="lazy"
+            alt="The Profiles tab, listing apps with their own settings."
+          />
+        </figure>
+      </section>
+
+      <section class="answers">
+        <h2>Good to know</h2>
+        <dl>
+          <dt>Will it get in the way of normal clicks?</dt>
+          <dd>
+            The middle of the trackpad works as it always has. A finger that
+            lands on an edge is treated as the start of a slide, so the pointer
+            waits, and a click there arrives when you let go. A corner with an
+            action uses that press for its action, and the top-left corner mutes
+            until you change it.
+          </dd>
+          <dt>Why does it ask for Accessibility?</dt>
+          <dd>
+            The app needs this permission to press keys for you, including any
+            shortcut you assign, to bring apps forward, and to watch trackpad
+            clicks so that a slide or corner press does not also click. It reads
+            your keyboard only while you record a shortcut. Without the
+            permission, gestures stay off.
+          </dd>
+          <dt>Does it collect anything?</dt>
+          <dd>
+            No. Your touches stay on your Mac, and the app has no accounts, no
+            tracking, and no analytics.
+          </dd>
+          <dt>Does media seek work everywhere?</dt>
+          <dd>
+            It works with whatever your Mac shows as now playing. An app that
+            does not share its position cannot be moved.
+          </dd>
+          <dt>Why does keyboard backlight sometimes stop?</dt>
+          <dd>
+            macOS turns the keyboard light off when the room is bright. The app
+            tells you when this happens, and the light comes back in a darker
+            room.
+          </dd>
+        </dl>
+      </section>
+
+      <section class="get" id="download">
+        <img src="assets/icon.png" alt="" width="96" height="96" />
+        <h2>Get Trackpad Edges</h2>
+        <p class="coming" id="coming-soon">The download is coming soon.</p>
+        <a class="download" id="download-link" hidden>Download for Mac</a>
+        <p class="version" id="version" hidden></p>
+        <p class="needs">
+          Needs a Mac with Apple silicon and a Force Touch trackpad, running
+          macOS 27.2 or later. Haptic control is tested on built-in trackpads.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Trackpad Edges is an independent app, and it is not affiliated with
+        Apple Inc.
+      </p>
+      <p>Mac, macOS, and Force Touch are trademarks of Apple Inc.</p>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
