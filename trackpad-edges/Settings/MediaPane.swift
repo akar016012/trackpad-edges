@@ -2,22 +2,29 @@ import AppKit
 
 /// Lets you choose how far each seek step moves the media, and how the seek preview looks.
 final class MediaPane: SettingsPane {
-    private let amountLabel = NSTextField(labelWithString: "")
     private let summary = NSTextField(wrappingLabelWithString: "")
+    private var amount: NSSlider?
 
     override func loadView() {
-        let amount = slider(value: settings.seekStepPercent, range: 0.5...10) { [weak self] value in
-            // Half-percent stops keep the amount easy to read and to repeat.
-            self?.settings.seekStepPercent = (value * 2).rounded() / 2
-            self?.updateLabels()
+        let slider = slider(value: settings.seekStepValue, range: Self.range(settings.seekStepType)) {
+            [weak self] value in
+            guard let self else { return }
+            self.settings.seekStepValue = Self.rounded(value, for: self.settings.seekStepType)
+            self.updateSummary()
         }
-        amount.setAccessibilityLabel("Percentage of the track for each step")
-        amountLabel.font = .monospacedDigitSystemFont(
-            ofSize: NSFont.systemFontSize, weight: .regular)
+        slider.setAccessibilityLabel("Amount for each step")
+        amount = slider
         summary.textColor = .secondaryLabelColor
         summary.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         summary.preferredMaxLayoutWidth = Self.contentWidth
 
+        let types = SeekStepType.allCases
+        let type = popup(
+            types.map(\.title), selected: types.firstIndex(of: settings.seekStepType) ?? 0
+        ) { [weak self] index in
+            self?.settings.seekStepType = types[index]
+            self?.updateSlider()
+        }
         let styles = OverlayStyle.allCases
         let style = popup(
             styles.map(\.title), selected: styles.firstIndex(of: settings.overlayStyle) ?? 0
@@ -36,21 +43,43 @@ final class MediaPane: SettingsPane {
 
         setContent([
             wideForm([
-                [("Each step:", amount), ("Moves:", amountLabel)],
+                [("Step type:", type), ("Each step:", slider)],
                 [("Style:", style), ("Position:", placement)],
             ]),
             summary,
         ])
-        updateLabels()
+        updateSummary()
     }
 
-    private func updateLabels() {
-        let percent = settings.seekStepPercent
-        let text = percent == percent.rounded() ? "\(Int(percent))" : "\(percent)"
-        amountLabel.stringValue = "\(text)% of the track"
-        let seconds = Int((600 * percent / 100).rounded())
-        let time = "\(seconds / 60):" + String(format: "%02d", seconds % 60)
-        summary.stringValue =
-            "Slide along the bottom edge, and each step gives one haptic tick. On a 10-minute video, each step moves \(time)."
+    private static func range(_ type: SeekStepType) -> ClosedRange<Double> {
+        type == .percent ? 0.5...10 : 1...60
+    }
+
+    /// Half-percent stops and whole seconds keep the amount easy to read and to repeat.
+    private static func rounded(_ value: Double, for type: SeekStepType) -> Double {
+        type == .percent ? (value * 2).rounded() / 2 : value.rounded()
+    }
+
+    private func updateSlider() {
+        let range = Self.range(settings.seekStepType)
+        amount?.minValue = range.lowerBound
+        amount?.maxValue = range.upperBound
+        amount?.doubleValue = settings.seekStepValue
+        updateSummary()
+    }
+
+    private func updateSummary() {
+        let value = settings.seekStepValue
+        let text = value == value.rounded() ? "\(Int(value))" : "\(value)"
+        switch settings.seekStepType {
+        case .percent:
+            let seconds = Int((600 * value / 100).rounded())
+            let time = "\(seconds / 60):" + String(format: "%02d", seconds % 60)
+            summary.stringValue =
+                "Each step moves \(text)% of the track and gives one haptic tick. On a 10-minute video, that is \(time)."
+        case .seconds:
+            summary.stringValue =
+                "Each step moves \(text) \(value == 1 ? "second" : "seconds") on any track and gives one haptic tick."
+        }
     }
 }

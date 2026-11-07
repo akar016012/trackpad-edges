@@ -211,7 +211,7 @@ final class GestureEngineTests: XCTestCase {
 
     func testZonePriorityPutsCornersFirstAndBottomBeforeSides() {
         var config = GestureConfig()
-        config.topRightClicks = 2
+        config.cornerCounts[.topRight] = [2]
         XCTAssertEqual(config.zone(x: 0.05, y: 0.95), .topLeft)
         XCTAssertEqual(config.zone(x: 0.95, y: 0.95), .topRight)
         XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottom)
@@ -262,14 +262,14 @@ final class GestureEngineTests: XCTestCase {
     private func pressEngine(clicks: Int = 1) -> GestureEngine {
         var engine = GestureEngine()
         engine.config.pressThreshold = 90
-        engine.config.topLeftClicks = clicks
+        engine.config.cornerCounts[.topLeft] = [clicks]
         return engine
     }
 
     func testLightPressFiresACornerWithNoClick() {
         var engine = pressEngine()
         XCTAssertEqual(engine.process(pressing(30)), [])
-        XCTAssertEqual(engine.process(pressing(95)), [.cornerFired(.topLeft)])
+        XCTAssertEqual(engine.process(pressing(95)), [.cornerFired(.topLeft, clicks: 1)])
     }
 
     func testRestingFingerDoesNotFireACorner() {
@@ -291,7 +291,7 @@ final class GestureEngineTests: XCTestCase {
         var engine = pressEngine(clicks: 2)
         XCTAssertEqual(engine.process(pressing(95), now: 0), [.cornerCounted])
         _ = engine.process(pressing(30), now: 0.1)
-        XCTAssertEqual(engine.process(pressing(95), now: 0.2), [.cornerFired(.topLeft)])
+        XCTAssertEqual(engine.process(pressing(95), now: 0.2), [.cornerFired(.topLeft, clicks: 2)])
     }
 
     func testPhysicalClickAfterAPressDoesNotCountAgain() {
@@ -306,7 +306,7 @@ final class GestureEngineTests: XCTestCase {
         var engine = pressEngine()
         _ = engine.process(pressing(40))
         XCTAssertTrue(engine.mouseDown().swallow)
-        XCTAssertEqual(engine.mouseUp(now: 0).events, [.cornerFired(.topLeft)])
+        XCTAssertEqual(engine.mouseUp(now: 0).events, [.cornerFired(.topLeft, clicks: 1)])
     }
 
     func testCornerDoesNotFireAfterTheFingerHasLeftIt() {
@@ -322,7 +322,7 @@ final class GestureEngineTests: XCTestCase {
         _ = engine.process([], now: 0.1)
         _ = engine.process(pressing(40), now: 1)
         _ = engine.mouseDown(now: 1.1)
-        XCTAssertEqual(engine.mouseUp(now: 1.2).events, [.cornerFired(.topLeft)])
+        XCTAssertEqual(engine.mouseUp(now: 1.2).events, [.cornerFired(.topLeft, clicks: 1)])
     }
 
     func testLostMouseUpClearsAPressCount() {
@@ -333,7 +333,60 @@ final class GestureEngineTests: XCTestCase {
         _ = engine.process([], now: 0.1)
         _ = engine.process(pressing(40), now: 0.2)
         _ = engine.mouseDown(now: 0.25)
-        XCTAssertEqual(engine.mouseUp(now: 0.3).events, [.cornerFired(.topLeft)])
+        XCTAssertEqual(engine.mouseUp(now: 0.3).events, [.cornerFired(.topLeft, clicks: 2)])
+    }
+
+    func testSingleClickWaitsWhenADoubleClickIsConfigured() {
+        var engine = GestureEngine()
+        engine.config.pressThreshold = 90
+        engine.config.cornerCounts[.topLeft] = [1, 2]
+        XCTAssertEqual(engine.process(pressing(95), now: 0), [.cornerCounted])
+        XCTAssertEqual(engine.tick(now: 0.2), [])
+        XCTAssertEqual(engine.tick(now: 0.5), [.cornerSettled(.topLeft, clicks: 1)])
+        XCTAssertEqual(engine.tick(now: 1), [])
+    }
+
+    func testDoubleClickFiresAtOnceAndSkipsTheSingleAction() {
+        var engine = GestureEngine()
+        engine.config.pressThreshold = 90
+        engine.config.cornerCounts[.topLeft] = [1, 2]
+        _ = engine.process(pressing(95), now: 0)
+        _ = engine.process(pressing(30), now: 0.1)
+        XCTAssertEqual(engine.process(pressing(95), now: 0.2), [.cornerFired(.topLeft, clicks: 2)])
+        XCTAssertEqual(engine.tick(now: 1), [])
+    }
+
+    func testAbortForgetsAWaitingCorner() {
+        var engine = GestureEngine()
+        engine.config.pressThreshold = 90
+        engine.config.cornerCounts[.topLeft] = [1, 2]
+        _ = engine.process(pressing(95), now: 0)
+        _ = engine.abort()
+        XCTAssertEqual(engine.tick(now: 1), [])
+    }
+
+    func testCountWithNoActionFiresNothing() {
+        var engine = GestureEngine()
+        engine.config.pressThreshold = 90
+        engine.config.cornerCounts[.topLeft] = [1, 3]
+        _ = engine.process(pressing(95), now: 0)
+        _ = engine.process(pressing(30), now: 0.1)
+        XCTAssertEqual(engine.process(pressing(95), now: 0.2), [.cornerCounted])
+        XCTAssertEqual(engine.tick(now: 1), [])
+    }
+
+    func testClickingAnotherCornerSettlesTheFirst() {
+        var engine = GestureEngine()
+        engine.config.cornerCounts = [.topLeft: [1, 2], .topRight: [1]]
+        _ = engine.process(finger(0.05, 0.95))
+        _ = engine.mouseDown()
+        XCTAssertEqual(engine.mouseUp(now: 0).events, [.cornerCounted])
+        _ = engine.process([])
+        _ = engine.process(finger(0.95, 0.95))
+        _ = engine.mouseDown()
+        XCTAssertEqual(
+            engine.mouseUp(now: 0.1).events,
+            [.cornerSettled(.topLeft, clicks: 1), .cornerFired(.topRight, clicks: 1)])
     }
 
     func testPressOutsideACornerDoesNothing() {
@@ -403,21 +456,20 @@ final class GestureEngineTests: XCTestCase {
         var config = GestureConfig()
         XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottom)
         XCTAssertEqual(config.zone(x: 0.95, y: 0.12), .right)
-        config.bottomLeftClicks = 1
-        config.bottomRightClicks = 2
+        config.cornerCounts[.bottomLeft] = [1]
+        config.cornerCounts[.bottomRight] = [2]
         XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottomLeft)
         XCTAssertEqual(config.zone(x: 0.95, y: 0.12), .bottomRight)
         XCTAssertEqual(config.zone(x: 0.5, y: 0.05), .bottom)
-        XCTAssertEqual(config.clicks(for: .bottomRight), 2)
     }
 
     func testBottomCornerFiresOnClickEvenInTouchMode() {
         var engine = GestureEngine()
         engine.config.requireClick = false
-        engine.config.bottomRightClicks = 1
+        engine.config.cornerCounts[.bottomRight] = [1]
         XCTAssertEqual(engine.process(finger(0.95, 0.05)), [])
         XCTAssertTrue(engine.mouseDown().swallow)
-        XCTAssertEqual(engine.mouseUp(now: 1).events, [.cornerFired(.bottomRight)])
+        XCTAssertEqual(engine.mouseUp(now: 1).events, [.cornerFired(.bottomRight, clicks: 1)])
     }
 
     func testBottomQuarterOnlyLimitsTheSideEdges() {
@@ -623,33 +675,34 @@ final class GestureEngineTests: XCTestCase {
         var engine = pressed(0.05, 0.95)
         XCTAssertEqual(
             engine.mouseUp(now: 1),
-            GestureEngine.ClickResult(swallow: true, events: [.cornerFired(.topLeft)]))
+            GestureEngine.ClickResult(swallow: true, events: [.cornerFired(.topLeft, clicks: 1)]))
     }
 
     func testMultiClickCornerFiresOnlyOnTheLastClick() {
         var config = GestureConfig()
-        config.topRightClicks = 3
+        config.cornerCounts[.topRight] = [3]
         var engine = GestureEngine()
         engine.config = config
         for (index, time) in [0.0, 0.3, 0.6].enumerated() {
             _ = engine.process([])
             _ = engine.process(finger(0.95, 0.95))
             XCTAssertTrue(engine.mouseDown().swallow)
-            let expected: [GestureEngine.Event] = index == 2 ? [.cornerFired(.topRight)] : []
+            let expected: [GestureEngine.Event] =
+                index == 2 ? [.cornerFired(.topRight, clicks: 3)] : [.cornerCounted]
             XCTAssertEqual(engine.mouseUp(now: time).events, expected)
         }
     }
 
     func testSlowCornerClicksRestartTheCount() {
         var config = GestureConfig()
-        config.topRightClicks = 2
+        config.cornerCounts[.topRight] = [2]
         var engine = GestureEngine()
         engine.config = config
         for time in [0.0, 1.0] {
             _ = engine.process([])
             _ = engine.process(finger(0.95, 0.95))
             _ = engine.mouseDown()
-            XCTAssertEqual(engine.mouseUp(now: time).events, [])
+            XCTAssertEqual(engine.mouseUp(now: time).events, [.cornerCounted])
         }
     }
 }

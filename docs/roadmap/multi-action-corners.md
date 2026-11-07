@@ -1,6 +1,6 @@
 # Multiple actions per corner
 
-Status: this feature is planned for phase 2. This feature is simpler to finish after lighter corner presses.
+Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
 
 ## Goal
 
@@ -15,18 +15,17 @@ Each corner should hold a different action for each click count. For example, on
 
 ## Settings
 
-The Corners pane shows one row for each click count in a corner, opened from a compact summary, so that the 2×2 grid stays aligned.
+The clicks popup on the Corners pane picks which click count you are editing, and the action popup then shows that count's action, so the 2×2 grid needs no extra rows. A dot in the clicks popup marks each count that has an action.
 
 ## Implementation plan
 
 1. Change `CornerSetting` to hold an action for each click count, and migrate the current single action on load.
 2. Teach `GestureEngine` to wait for the window to close, using the existing `tick` path.
-3. Rework `CornersPane` for the extra rows, using the shared layout rules.
+3. Make the clicks popup in `CornersPane` choose which count is being edited.
 
 ## Risks
 
 - Waiting for the window adds up to 450 ms of delay to a single click whenever a higher count is configured. That is the same trade-off as a double click.
-- The extra rows must fit the approved layout.
 
 ## Verification
 

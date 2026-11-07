@@ -55,9 +55,9 @@ final class TrackpadDiagramView: NSView {
             (settings.bottomLeft, NSPoint(x: leftX, y: pad.minY)),
             (settings.bottomRight, NSPoint(x: rightX, y: pad.minY)),
         ]
-        for (corner, origin) in corners where corner.action.isConfigured {
-            drawZone(
-                NSRect(origin: origin, size: cornerSize), title: "\(corner.clicks)×", rotated: false)
+        for (corner, origin) in corners where !corner.configuredClicks.isEmpty {
+            let counts = corner.configuredClicks.sorted().map(String.init).joined(separator: ",")
+            drawZone(NSRect(origin: origin, size: cornerSize), title: "\(counts)×", rotated: false)
         }
         NSGraphicsContext.restoreGraphicsState()
 

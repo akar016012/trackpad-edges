@@ -25,8 +25,8 @@ final class SeekController {
     /// Set when the finger lifts before the position has loaded, so the seek can still happen.
     private var commitWhenLoaded = false
 
-    /// The share of the track that one step moves, from the Media pane.
-    var stepFraction: Double = 0.01
+    /// How far one step moves, from the Media pane.
+    var step = SeekStep.percent(1)
     /// A multiplier where higher values need less finger travel for each step.
     var sensitivity: Float = 1
 
@@ -130,15 +130,15 @@ final class SeekController {
     /// How many steps fit before the start and the end of the track.
     private var limits: ClosedRange<Int>? {
         guard let origin else { return nil }
-        let step = stepFraction * origin.duration
-        let back = (origin.elapsed / step).rounded(.up)
-        let forward = ((origin.duration - Self.endMargin - origin.elapsed) / step).rounded(.up)
+        let length = step.length(duration: origin.duration)
+        let back = (origin.elapsed / length).rounded(.up)
+        let forward = ((origin.duration - Self.endMargin - origin.elapsed) / length).rounded(.up)
         return -Int(back)...Int(max(forward, 0))
     }
 
     private var target: Double? {
         guard let origin, let scrubber else { return nil }
-        let moved = origin.elapsed + Double(scrubber.steps) * stepFraction * origin.duration
+        let moved = origin.elapsed + Double(scrubber.steps) * step.length(duration: origin.duration)
         // Media already in its last second stays put, rather than being pulled back to the margin.
         return min(max(moved, 0), max(origin.duration - Self.endMargin, origin.elapsed))
     }

@@ -3,6 +3,16 @@ import XCTest
 @testable import EdgeGestures
 
 final class SeekScrubberTests: XCTestCase {
+    func testPercentStepScalesWithTheTrack() {
+        XCTAssertEqual(SeekStep.percent(1).length(duration: 600), 6)
+        XCTAssertEqual(SeekStep.percent(1).length(duration: 7200), 72)
+    }
+
+    func testSecondsStepIgnoresTheTrackLength() {
+        XCTAssertEqual(SeekStep.seconds(5).length(duration: 600), 5)
+        XCTAssertEqual(SeekStep.seconds(5).length(duration: 7200), 5)
+    }
+
     func testFirstUpdateSetsTheStartWithoutAStep() {
         var scrubber = SeekScrubber()
         XCTAssertFalse(scrubber.update(travel: 0.04))

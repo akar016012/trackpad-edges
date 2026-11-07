@@ -21,13 +21,14 @@ The menu bar item can also assign each edge, and the window stays in step with i
 
 ## Corners
 
-All four corners have an action and a click count, and the pane arranges them like the trackpad. See [corners.md](corners.md).
+All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. See [corners.md](corners.md).
 
 ## Media
 
-| Setting   | Behavior                                                                            |
-| --------- | ----------------------------------------------------------------------------------- |
-| Each step | This slider sets the percentage of the track that one step moves, from 0.5% to 10%. |
+| Setting   | Behavior                                                                        |
+| --------- | ------------------------------------------------------------------------------- |
+| Step type | This popup makes a step a percentage of the track or a fixed number of seconds. |
+| Each step | This slider sets one step, from 0.5% to 10% or from 1 to 60 seconds.            |
 
 The **Style** popup sets how the seek preview looks: Glass, Clear Glass, Frosted, or Solid. Glass and Solid follow light and dark mode. Clear Glass and Frosted always use a dimmed tint with light text, so they stay readable over any content. The **Position** popup places it at the bottom, center, or top of the screen. Changing either one shows a sample for two seconds.
 

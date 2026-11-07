@@ -89,7 +89,7 @@ final class GestureController {
     func applySettings() {
         let settings = SettingsStore.shared.settings
         haptics.settings = settings.haptics
-        seek.stepFraction = settings.seekStepPercent / 100
+        seek.step = settings.seekStep
         seek.sensitivity = settings.sensitivity
         seek.applyOverlay(style: settings.overlayStyle, placement: settings.overlayPlacement)
         let config = currentConfig()
@@ -150,6 +150,17 @@ final class GestureController {
         // This asks the engine, because a palm keeps frames arriving after the finger has lifted.
         if engine.isSliding, !engine.hasTouches, !tickScheduled {
             scheduleTick(device: device, grace: engine.config.liftGrace)
+        }
+    }
+
+    /// Checks back once a corner's click window has closed, because no event marks that moment.
+    private func scheduleCornerTick(device: UnsafeRawPointer) {
+        let delay = engines[device]?.config.multiClickWindow ?? 0
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.02) { [weak self] in
+            guard let self, var engine = self.engines[device] else { return }
+            let events = engine.tick(now: self.now)
+            self.engines[device] = engine
+            self.dispatch(events, device: device)
         }
     }
 
@@ -261,8 +272,11 @@ final class GestureController {
                 deliverHeldClick()
             case .cornerCounted:
                 if SettingsStore.shared.settings.haptics.onCorner { haptics.pulse(device: device) }
-            case .cornerFired(let zone):
-                fireCorner(zone, device: device)
+                scheduleCornerTick(device: device)
+            case .cornerFired(let zone, let clicks):
+                fireCorner(zone, clicks: clicks, device: device, confirm: true)
+            case .cornerSettled(let zone, let clicks):
+                fireCorner(zone, clicks: clicks, device: device, confirm: false)
             }
         }
     }
@@ -289,14 +303,18 @@ final class GestureController {
     }
 
     /// Runs after the tap callback returns, because an action can take long enough to stall input.
-    private func fireCorner(_ zone: Zone, device: UnsafeRawPointer) {
+    private func fireCorner(
+        _ zone: Zone, clicks: Int, device: UnsafeRawPointer, confirm: Bool
+    ) {
         let settings = SettingsStore.shared.settings
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            if settings.haptics.onCorner, MultitouchBridge.shared.devices.contains(device) {
+            if confirm, settings.haptics.onCorner,
+                MultitouchBridge.shared.devices.contains(device)
+            {
                 self.haptics.pulse(device: device)
             }
-            if let corner = settings.corner(for: zone) { self.corners.run(corner.action) }
+            if let corner = settings.corner(for: zone) { self.corners.run(corner[clicks]) }
         }
     }
 

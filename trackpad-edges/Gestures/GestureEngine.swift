@@ -13,7 +13,7 @@ nonisolated struct TouchPoint: Sendable, Equatable {
     var majorAxis: Float = 0
 }
 
-nonisolated enum Zone: String, Sendable, Equatable {
+nonisolated enum Zone: String, Sendable, Equatable, Hashable {
     case left, right, bottom, topLeft, topRight, bottomLeft, bottomRight
 }
 
@@ -50,11 +50,8 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var bottomAction: SlideKind? = .seek
     var brightnessAvailable = true
     var seekAvailable = true
-    /// The clicks needed to fire each corner, where nil means that the corner has no action.
-    var topLeftClicks: Int? = 1
-    var topRightClicks: Int?
-    var bottomLeftClicks: Int?
-    var bottomRightClicks: Int?
+    /// The click counts that fire each corner. A corner with none is a normal part of the pad.
+    var cornerCounts: [Zone: Set<Int>] = [.topLeft: [1]]
     /// The pressure that counts as a corner press, or nil to need a physical click. Measured on
     /// the built-in trackpad, resting fingers and taps peak near 50, and clicks start near 120.
     var pressThreshold: Float?
@@ -71,18 +68,22 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     /// no action does not count, so the edge beneath it still works.
     func zone(x: Float, y: Float) -> Zone? {
         if y >= 1 - cornerHeight {
-            if x <= cornerWidth, topLeftClicks != nil { return .topLeft }
-            if x >= 1 - cornerWidth, topRightClicks != nil { return .topRight }
+            if x <= cornerWidth, hasCorner(.topLeft) { return .topLeft }
+            if x >= 1 - cornerWidth, hasCorner(.topRight) { return .topRight }
         }
         if y <= cornerHeight {
-            if x <= cornerWidth, bottomLeftClicks != nil { return .bottomLeft }
-            if x >= 1 - cornerWidth, bottomRightClicks != nil { return .bottomRight }
+            if x <= cornerWidth, hasCorner(.bottomLeft) { return .bottomLeft }
+            if x >= 1 - cornerWidth, hasCorner(.bottomRight) { return .bottomRight }
         }
         if y <= edgeWidth, slideKind(for: .bottom) != nil { return .bottom }
         guard !bottomQuarterOnly || y <= 0.25 else { return nil }
         if x <= edgeWidth, slideKind(for: .left) != nil { return .left }
         if x >= 1 - edgeWidth, slideKind(for: .right) != nil { return .right }
         return nil
+    }
+
+    private func hasCorner(_ zone: Zone) -> Bool {
+        cornerCounts[zone]?.isEmpty == false
     }
 
     func isPalm(_ touch: TouchPoint) -> Bool {
@@ -100,16 +101,6 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         if kind == .brightness, !brightnessAvailable { return nil }
         if kind == .seek, !seekAvailable { return nil }
         return kind
-    }
-
-    func clicks(for zone: Zone) -> Int {
-        switch zone {
-        case .topLeft: return topLeftClicks ?? 1
-        case .topRight: return topRightClicks ?? 1
-        case .bottomLeft: return bottomLeftClicks ?? 1
-        case .bottomRight: return bottomRightClicks ?? 1
-        case .left, .right, .bottom: return 1
-        }
     }
 
     func isInside(strip zone: Zone, touch: TouchPoint, moved: Bool = false) -> Bool {
@@ -142,9 +133,12 @@ nonisolated struct GestureEngine {
         case pointerReleased
         /// The swallowed mouse-down must be delivered now, and the real mouse-up will follow it.
         case passthroughClick
-        /// A corner press counted, but more clicks are still needed.
+        /// A corner press counted, and the corner is waiting to see if more follow.
         case cornerCounted
-        case cornerFired(Zone)
+        /// A corner fires at once, because no higher click count can follow.
+        case cornerFired(Zone, clicks: Int)
+        /// A corner fires after its wait, and the press that led to it was already confirmed.
+        case cornerSettled(Zone, clicks: Int)
     }
 
     struct ClickResult: Sendable, Equatable {
@@ -279,12 +273,30 @@ nonisolated struct GestureEngine {
         guard touch.pressure >= threshold else { return [] }
         pressHeld = true
         pressCounted = true
-        let events = countCornerClick(landing.zone, now: now)
-        return events.isEmpty ? [.cornerCounted] : events
+        return countCornerClick(landing.zone, now: now)
+    }
+
+    /// Handles what waits on time: a corner's click window and a slide's lift grace.
+    mutating func tick(now: TimeInterval) -> [Event] {
+        settleCorner(now: now) + endLiftedSlide(now: now)
+    }
+
+    /// Fires a waiting corner once its click window has closed.
+    private mutating func settleCorner(now: TimeInterval) -> [Event] {
+        guard let pending = cornerClicks, now - pending.lastClick > config.multiClickWindow else {
+            return []
+        }
+        return settled(pending)
+    }
+
+    private mutating func settled(_ pending: CornerClicks) -> [Event] {
+        cornerClicks = nil
+        guard config.cornerCounts[pending.zone]?.contains(pending.count) == true else { return [] }
+        return [.cornerSettled(pending.zone, clicks: pending.count)]
     }
 
     /// Ends a slide whose finger stayed away for longer than the grace period.
-    mutating func tick(now: TimeInterval) -> [Event] {
+    private mutating func endLiftedSlide(now: TimeInterval) -> [Event] {
         guard let current = slide, let liftedAt = current.liftedAt,
             now - liftedAt >= config.liftGrace
         else { return [] }
@@ -482,18 +494,24 @@ nonisolated struct GestureEngine {
         return events
     }
 
+    /// Counts one press or click. The highest configured count fires at once, and a lower one waits
+    /// for the click window to close, so that a single click can still become a double click.
     private mutating func countCornerClick(_ zone: Zone, now: TimeInterval) -> [Event] {
+        var events: [Event] = []
         var count = 1
-        if let previous = cornerClicks, previous.zone == zone,
-            now - previous.lastClick <= config.multiClickWindow
-        {
-            count = previous.count + 1
+        if let previous = cornerClicks {
+            if previous.zone == zone, now - previous.lastClick <= config.multiClickWindow {
+                count = previous.count + 1
+            } else {
+                events = settled(previous)
+            }
         }
-        guard count >= config.clicks(for: zone) else {
+        guard let highest = config.cornerCounts[zone]?.max() else { return events }
+        guard count >= highest else {
             cornerClicks = CornerClicks(zone: zone, count: count, lastClick: now)
-            return []
+            return events + [.cornerCounted]
         }
         cornerClicks = nil
-        return [.cornerFired(zone)]
+        return events + [.cornerFired(zone, clicks: highest)]
     }
 }

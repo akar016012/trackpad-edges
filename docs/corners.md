@@ -18,7 +18,7 @@ Each corner can do one of these things:
 
 ## Click counting
 
-A light press fires a corner, with no physical click needed, and a haptic confirms each press. The **Press** slider on the Corners pane sets how light. A physical click also counts, and it never counts twice with a press. Each corner has a click count from 1 to 4. Presses must fall within 450 ms of each other. Earlier clicks only count, and the action fires on the last one. Clicks in a corner that has an action never reach other apps, even if the count is not reached.
+A light press fires a corner, with no physical click needed, and a haptic confirms each press. The **Press** slider on the Corners pane sets how light. A physical click also counts, and it never counts twice with a press. Each corner can hold a different action for each click count from 1 to 4. Presses must fall within 450 ms of each other. The highest configured count fires at once. A lower count waits for that window to close, so a single click only waits if the corner also has a higher count. Clicks in a corner that has an action never reach other apps, even if the count is not reached.
 
 ## Defaults
 
@@ -30,7 +30,7 @@ Apps are opened through `NSWorkspace`, and key combinations are synthesized with
 
 ## Haptics
 
-A haptic can fire when a corner action runs. See [haptics.md](haptics.md).
+A haptic confirms each press. An action that fires after the click window closes adds no second haptic, because its press was already confirmed. See [haptics.md](haptics.md).
 
 ## Related docs
 

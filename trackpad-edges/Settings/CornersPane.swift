@@ -1,7 +1,8 @@
 import AppKit
 import UniformTypeIdentifiers
 
-/// Lets you choose an action and a click count for each corner.
+/// Lets you choose an action for each click count of each corner. The clicks popup picks the
+/// count to edit, so a corner with several actions needs no extra rows.
 final class CornersPane: SettingsPane {
     private enum Choice: Int, CaseIterable {
         case none, mute, playPause, nextTrack, previousTrack, app, link, file, keys, shortcut
@@ -40,7 +41,13 @@ final class CornersPane: SettingsPane {
     /// Called when a corner changes, so that the diagram can redraw.
     var onChange: (() -> Void)?
 
-    private var detailStacks: [WritableKeyPath<AppSettings, CornerSetting>: NSStackView] = [:]
+    private typealias Corner = WritableKeyPath<AppSettings, CornerSetting>
+
+    private var detailStacks: [Corner: NSStackView] = [:]
+    private var actionPopups: [Corner: NSPopUpButton] = [:]
+    private var clickPopups: [Corner: NSPopUpButton] = [:]
+    /// The click count being edited for each corner.
+    private var selectedClicks: [Corner: Int] = [:]
     private let strengthLabel = NSTextField(labelWithString: "")
 
     override func loadView() {
@@ -73,19 +80,19 @@ final class CornersPane: SettingsPane {
     }
 
     private func section(
-        _ title: String, corner: WritableKeyPath<AppSettings, CornerSetting>
+        _ title: String, corner: Corner
     ) -> NSView {
-        let current = settings[keyPath: corner]
+        selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
         let action = popup(
-            Choice.allCases.map(\.title), selected: Choice(current.action).rawValue
+            Choice.allCases.map(\.title), selected: Choice(currentAction(corner)).rawValue
         ) { [weak self] index in
             self?.choose(Choice(rawValue: index) ?? .none, corner: corner)
         }
-        let clicks = popup(["1 Click", "2 Clicks", "3 Clicks", "4 Clicks"], selected: current.clicks - 1) {
-            [weak self] index in
-            self?.settings[keyPath: corner].clicks = index + 1
-            self?.onChange?()
+        let clicks = popup(clickTitles(corner), selected: (selectedClicks[corner] ?? 1) - 1) {
+            [weak self] index in self?.selectClicks(index + 1, corner: corner)
         }
+        actionPopups[corner] = action
+        clickPopups[corner] = clicks
         action.setAccessibilityLabel("\(title) corner action")
         clicks.setAccessibilityLabel("\(title) corner clicks")
         // These two fill the column exactly, so all four sections share their edges.
@@ -102,48 +109,80 @@ final class CornersPane: SettingsPane {
         return column([heading(title), controls, details])
     }
 
-    private func choose(_ choice: Choice, corner: WritableKeyPath<AppSettings, CornerSetting>) {
+    private func choose(_ choice: Choice, corner: Corner) {
         // A text field commits when it loses focus, so that must happen before the new action is
         // stored, or the old text would overwrite it.
         view.window?.makeFirstResponder(nil)
         // AppKit also sends the action for the item that is already selected.
-        guard Choice(settings[keyPath: corner].action) != choice else { return }
+        guard Choice(currentAction(corner)) != choice else { return }
         switch choice {
-        case .none: settings[keyPath: corner].action = .none
-        case .mute: settings[keyPath: corner].action = .mute
-        case .playPause: settings[keyPath: corner].action = .playPause
-        case .nextTrack: settings[keyPath: corner].action = .nextTrack
-        case .previousTrack: settings[keyPath: corner].action = .previousTrack
-        case .app: settings[keyPath: corner].action = .openApp(path: "")
-        case .link: settings[keyPath: corner].action = .openLink(url: "", browserPath: nil)
-        case .file: settings[keyPath: corner].action = .openFile(path: "")
-        case .keys:
-            settings[keyPath: corner].action = .keyCombination(
-                keyCode: nil, modifiers: 0, label: "")
-        case .shortcut: settings[keyPath: corner].action = .shortcut(name: "")
+        case .none: assign(.none, corner: corner)
+        case .mute: assign(.mute, corner: corner)
+        case .playPause: assign(.playPause, corner: corner)
+        case .nextTrack: assign(.nextTrack, corner: corner)
+        case .previousTrack: assign(.previousTrack, corner: corner)
+        case .app: assign(.openApp(path: ""), corner: corner)
+        case .link: assign(.openLink(url: "", browserPath: nil), corner: corner)
+        case .file: assign(.openFile(path: ""), corner: corner)
+        case .keys: assign(.keyCombination(keyCode: nil, modifiers: 0, label: ""), corner: corner)
+        case .shortcut: assign(.shortcut(name: ""), corner: corner)
         }
+        rebuildDetails(corner: corner)
+        // The window fits the pane, so it must hear about this after the rows have changed.
+        onChange?()
+    }
+
+    private func currentAction(_ corner: Corner) -> CornerAction {
+        settings[keyPath: corner][selectedClicks[corner] ?? 1]
+    }
+
+    private func assign(_ action: CornerAction, corner: Corner) {
+        settings[keyPath: corner][selectedClicks[corner] ?? 1] = action
+        refreshClickTitles(corner)
+        onChange?()
+    }
+
+    /// A dot marks each click count that has an action.
+    private func clickTitles(_ corner: Corner) -> [String] {
+        let configured = settings[keyPath: corner].configuredClicks
+        return (1...CornerSetting.maxClicks).map { count in
+            let title = count == 1 ? "1 Click" : "\(count) Clicks"
+            return configured.contains(count) ? "\(title) •" : title
+        }
+    }
+
+    private func refreshClickTitles(_ corner: Corner) {
+        guard let popup = clickPopups[corner] else { return }
+        for (item, title) in zip(popup.itemArray, clickTitles(corner)) { item.title = title }
+    }
+
+    /// Shows the action of another click count, without changing anything that is saved.
+    private func selectClicks(_ count: Int, corner: Corner) {
+        view.window?.makeFirstResponder(nil)
+        selectedClicks[corner] = count
+        actionPopups[corner]?.selectItem(at: Choice(currentAction(corner)).rawValue)
         rebuildDetails(corner: corner)
         onChange?()
     }
 
-    private func rebuildDetails(corner: WritableKeyPath<AppSettings, CornerSetting>) {
+    private func rebuildDetails(corner: Corner) {
         guard let stack = detailStacks[corner] else { return }
         stack.setViews([], in: .leading)
         for view in detailViews(corner: corner) { stack.addView(view, in: .leading) }
     }
 
-    private func detailViews(corner: WritableKeyPath<AppSettings, CornerSetting>) -> [NSView] {
-        switch settings[keyPath: corner].action {
+    private func detailViews(corner: Corner) -> [NSView] {
+        switch currentAction(corner) {
         case .none, .mute, .playPause, .nextTrack, .previousTrack:
             return []
         case .openApp(let path):
             return chooser(path: path, title: "Choose App…", types: [.application]) {
                 [weak self] chosen in
-                self?.settings[keyPath: corner].action = .openApp(path: chosen)
+                self?.assign(.openApp(path: chosen), corner: corner)
             }
         case .openFile(let path):
             return chooser(path: path, title: "Choose…", types: nil) { [weak self] chosen in
-                self?.settings[keyPath: corner].action = .openFile(path: chosen)
+                self?.assign(.openFile(path: chosen), corner: corner)
             }
         case .openLink(let url, let browserPath):
             return linkViews(url: url, browserPath: browserPath, corner: corner)
@@ -152,7 +191,7 @@ final class CornersPane: SettingsPane {
         case .shortcut(let name):
             return [
                 textField(value: name, placeholder: "Shortcut name") { [weak self] text in
-                    self?.settings[keyPath: corner].action = .shortcut(name: text)
+                    self?.assign(.shortcut(name: text), corner: corner)
                 }
             ]
         }
@@ -182,7 +221,7 @@ final class CornersPane: SettingsPane {
     }
 
     private func linkViews(
-        url: String, browserPath: String?, corner: WritableKeyPath<AppSettings, CornerSetting>
+        url: String, browserPath: String?, corner: Corner
     ) -> [NSView] {
         var browsers: [URL] = []
         if let sample = URL(string: "https://example.com") {
@@ -191,7 +230,7 @@ final class CornersPane: SettingsPane {
         var link = url
         var browser = browserPath
         let save: () -> Void = { [weak self] in
-            self?.settings[keyPath: corner].action = .openLink(url: link, browserPath: browser)
+            self?.assign(.openLink(url: link, browserPath: browser), corner: corner)
         }
         let field = textField(value: url, placeholder: "https://") { text in
             link = text
@@ -209,16 +248,15 @@ final class CornersPane: SettingsPane {
     }
 
     private func keyViews(
-        label: String, corner: WritableKeyPath<AppSettings, CornerSetting>
+        label: String, corner: Corner
     ) -> [NSView] {
         let recorder = KeyRecorderButton(title: "", target: nil, action: nil)
         recorder.show(label: label)
         // This width fills the column, so the row lines up with the popups above it.
         recorder.widthAnchor.constraint(equalToConstant: Self.columnWidth).isActive = true
         recorder.onRecord = { [weak self] code, flags, name in
-            self?.settings[keyPath: corner].action = .keyCombination(
-                keyCode: code, modifiers: flags, label: name)
-            self?.onChange?()
+            self?.assign(
+                .keyCombination(keyCode: code, modifiers: flags, label: name), corner: corner)
         }
         bind(recorder) { [weak recorder] in recorder?.startRecording() }
         return [recorder]

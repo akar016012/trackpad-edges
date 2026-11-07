@@ -30,6 +30,8 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 ### Needs a check
 
 - [ ] [Palm detection](roadmap/palm-detection.md)
+- [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
+- [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Assignable edges from the window and the menu bar](settings.md)
 - [ ] [Click-to-start option](gestures.md)
 - [ ] [Launch at login](menu-bar-and-onboarding.md)
@@ -39,8 +41,6 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 
 ### Incomplete
 
-- [ ] [Seconds per step](roadmap/seconds-per-step.md)
-- [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [More edge actions](roadmap/more-edge-actions.md)
 - [ ] [Top edge](roadmap/top-edge.md)
 - [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
@@ -70,13 +70,13 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 
 ## Feature scope
 
-| Zone             | Input                      | Action                  | Doc                            |
-| ---------------- | -------------------------- | ----------------------- | ------------------------------ |
-| Right edge       | Slide vertically           | System volume           | [volume.md](volume.md)         |
-| Left edge        | Slide vertically           | Built-in brightness     | [brightness.md](brightness.md) |
-| Bottom edge      | Slide sideways and release | Media seek              | [media-seek.md](media-seek.md) |
-| All four corners | 1 to 4 presses             | Configurable action     | [corners.md](corners.md)       |
-| Middle           | Anything                   | Passes through to macOS | [gestures.md](gestures.md)     |
+| Zone             | Input                      | Action                   | Doc                            |
+| ---------------- | -------------------------- | ------------------------ | ------------------------------ |
+| Right edge       | Slide vertically           | System volume            | [volume.md](volume.md)         |
+| Left edge        | Slide vertically           | Built-in brightness      | [brightness.md](brightness.md) |
+| Bottom edge      | Slide sideways and release | Media seek               | [media-seek.md](media-seek.md) |
+| All four corners | 1 to 4 presses             | An action for each count | [corners.md](corners.md)       |
+| Middle           | Anything                   | Passes through to macOS  | [gestures.md](gestures.md)     |
 
 Every package, framework, and system method is listed in [dependencies.md](dependencies.md). The shared behavior is described in [gestures.md](gestures.md), [pointer-freeze.md](pointer-freeze.md), [haptics.md](haptics.md), [settings.md](settings.md), and [menu-bar-and-onboarding.md](menu-bar-and-onboarding.md).
 
@@ -116,7 +116,7 @@ Each batch was reviewed by a review, fixed, committed, and pushed.
 
 ## Roadmap
 
-Phases 0 and 1 are complete, and phases 2 to 6 are not started. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 2. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
+Phases 0, 1, and 2 are complete, and phases 3 to 6 are not started. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 3. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -127,7 +127,7 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 - **[Lighter corner presses](roadmap/lighter-corner-presses.md):** A corner fires on a light press, detected from the pressure in the touch data. This is confirmed working.
 - **[Palm detection](roadmap/palm-detection.md):** A large contact is ignored, so a resting palm does not start a slide or freeze the pointer. This is built, but it still needs a check.
 
-### Phase 2: Small additions (not started)
+### Phase 2: Small additions (complete)
 
 - **[Seconds per step](roadmap/seconds-per-step.md):** The Media pane offers fixed seconds per step as an alternative to a percentage, so steps stay small on long videos.
 - **[Multiple actions per corner](roadmap/multi-action-corners.md):** Each corner can hold a different action for each click count, such as one click to play or pause and two clicks to skip.

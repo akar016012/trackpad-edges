@@ -1,41 +1,5 @@
 import AppKit
 
-/// What a corner does when it fires.
-enum CornerAction: Codable, Equatable {
-    case none
-    case mute
-    case playPause
-    case nextTrack
-    case previousTrack
-    case openApp(path: String)
-    case openLink(url: String, browserPath: String?)
-    case openFile(path: String)
-    /// A nil key code with modifiers presses those modifiers alone. A nil key code with no
-    /// modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
-    case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
-    case shortcut(name: String)
-
-    /// Whether the action has everything it needs. A corner that is not configured stays a normal
-    /// part of the trackpad, so that it never swallows clicks while doing nothing.
-    var isConfigured: Bool {
-        switch self {
-        case .none: return false
-        case .mute, .playPause, .nextTrack, .previousTrack: return true
-        case .openApp(let path), .openFile(let path): return !path.isEmpty
-        case .openLink(let url, _):
-            return ["http", "https"].contains(URL(string: url)?.scheme?.lowercased())
-        case .keyCombination(let keyCode, let modifiers, _): return keyCode != nil || modifiers != 0
-        case .shortcut(let name): return !name.isEmpty && !name.hasPrefix("-")
-        }
-    }
-}
-
-struct CornerSetting: Codable, Equatable {
-    var action: CornerAction
-    /// The number of clicks that fires the action, from 1 to 4.
-    var clicks: Int
-}
-
 enum RequiredModifier: String, Codable, CaseIterable {
     case none, command, option, control, shift
 
@@ -48,6 +12,13 @@ enum RequiredModifier: String, Codable, CaseIterable {
         case .shift: return .shift
         }
     }
+}
+
+/// Whether a seek step is a share of the track or a fixed time.
+enum SeekStepType: String, Codable, CaseIterable {
+    case percent, seconds
+
+    var title: String { self == .percent ? "Percent of Track" : "Seconds" }
 }
 
 /// How the seek preview looks.
@@ -104,6 +75,8 @@ struct AppSettings: Codable, Equatable {
     private var storedBottomLeft: CornerSetting?
     private var storedBottomRight: CornerSetting?
     private var storedSeekStepPercent: Double?
+    private var storedSeekStepSeconds: Double?
+    private var storedSeekStepType: SeekStepType?
     private var storedPressThreshold: Float?
     private var storedOverlayStyle: OverlayStyle?
     private var storedOverlayPlacement: OverlayPlacement?
@@ -127,10 +100,27 @@ struct AppSettings: Codable, Equatable {
         set { storedBottomRight = newValue }
     }
 
-    /// The percentage of the track that one seek step moves, from 0.5 to 10.
-    var seekStepPercent: Double {
-        get { storedSeekStepPercent ?? 1 }
-        set { storedSeekStepPercent = newValue }
+    var seekStepType: SeekStepType {
+        get { storedSeekStepType ?? .percent }
+        set { storedSeekStepType = newValue }
+    }
+
+    /// The amount of one seek step: 0.5 to 10 percent, or 1 to 60 seconds.
+    var seekStepValue: Double {
+        get {
+            seekStepType == .percent ? storedSeekStepPercent ?? 1 : storedSeekStepSeconds ?? 5
+        }
+        set {
+            if seekStepType == .percent {
+                storedSeekStepPercent = newValue
+            } else {
+                storedSeekStepSeconds = newValue
+            }
+        }
+    }
+
+    var seekStep: SeekStep {
+        seekStepType == .percent ? .percent(seekStepValue) : .seconds(seekStepValue)
     }
 
     /// The pressure that fires a corner. Lower values need a lighter press.
@@ -170,10 +160,10 @@ struct AppSettings: Codable, Equatable {
         config.bottomAction = bottomEdge
         config.brightnessAvailable = brightnessAvailable
         config.seekAvailable = seekAvailable
-        config.topLeftClicks = topLeft.action.isConfigured ? topLeft.clicks : nil
-        config.topRightClicks = topRight.action.isConfigured ? topRight.clicks : nil
-        config.bottomLeftClicks = bottomLeft.action.isConfigured ? bottomLeft.clicks : nil
-        config.bottomRightClicks = bottomRight.action.isConfigured ? bottomRight.clicks : nil
+        config.cornerCounts = [
+            .topLeft: topLeft.configuredClicks, .topRight: topRight.configuredClicks,
+            .bottomLeft: bottomLeft.configuredClicks, .bottomRight: bottomRight.configuredClicks,
+        ]
         config.pressThreshold = pressThreshold
         return config
     }
@@ -183,6 +173,7 @@ struct AppSettings: Codable, Equatable {
 final class SettingsStore {
     static let shared = SettingsStore()
     private static let key = "settings"
+    private static let backupKey = "settings.unreadable"
 
     var onChange: (() -> Void)?
 
@@ -197,7 +188,16 @@ final class SettingsStore {
     }
 
     private init() {
-        let data = UserDefaults.standard.data(forKey: Self.key)
-        settings = data.flatMap { try? JSONDecoder().decode(AppSettings.self, from: $0) } ?? AppSettings()
+        guard let data = UserDefaults.standard.data(forKey: Self.key) else {
+            settings = AppSettings()
+            return
+        }
+        if let saved = try? JSONDecoder().decode(AppSettings.self, from: data) {
+            settings = saved
+        } else {
+            // The next save would overwrite these bytes, so they are kept for recovery.
+            UserDefaults.standard.set(data, forKey: Self.backupKey)
+            settings = AppSettings()
+        }
     }
 }

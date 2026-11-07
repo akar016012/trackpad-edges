@@ -1,3 +1,16 @@
+/// How far one seek step moves the media.
+nonisolated enum SeekStep: Equatable, Sendable {
+    case percent(Double)
+    case seconds(Double)
+
+    func length(duration: Double) -> Double {
+        switch self {
+        case .percent(let percent): return duration * percent / 100
+        case .seconds(let seconds): return seconds
+        }
+    }
+}
+
 /// Turns finger travel into whole seek steps, in the same way that a slide changes the volume.
 ///
 /// The distance depends only on how far the finger travels, never on how fast it moves, so the

@@ -1,6 +1,6 @@
 # Seconds per step
 
-Status: this feature is planned for phase 2.
+Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
 
 ## Goal
 
@@ -13,7 +13,7 @@ A percentage step grows with the track, so 1% is about 5 seconds on a short vide
 
 ## Settings
 
-The Media pane gains a **Step type** popup with **Percent** and **Seconds**. The step slider then covers 1 to 60 seconds, with a default of 5 seconds.
+The Media pane has a **Step type** popup with **Percent of Track** and **Seconds**. The **Each step** slider then covers 0.5% to 10% or 1 to 60 seconds, and the default for seconds is 5. Each type remembers its own amount.
 
 ## Implementation plan
 
