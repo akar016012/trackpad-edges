@@ -1,4 +1,4 @@
-# Publishes only the site folder.
+# Publishes only the site folder, with the download link of the newest release.
 name: Deploy landing page
 
 on:
@@ -23,10 +23,28 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      # The link exists only in the published copy, so a release never has to write to main.
+      - name: Point the page at the newest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases \
+            --limit 1 --json tagName --jq '.[0].tagName // ""')"
+          if [ -z "$tag" ]; then
+            echo "No release exists yet, so the page keeps its coming soon button."
+            exit 0
+          fi
+          [[ "$tag" =~ ^v[0-9]+(\.[0-9]+)*$ ]] || { echo "::error::unexpected release tag"; exit 1; }
+          # This file name must match DMG_NAME in mac.yml.
+          url="https://github.com/$GITHUB_REPOSITORY/releases/latest/download/TrackpadEdges.dmg"
+          sed -i -E "s|^  url: \".*\",|  url: \"$url\",|; s|^  version: \".*\",|  version: \"${tag#v}\",|" site/main.js
+          grep -qF "$url" site/main.js || { echo "::error::site/main.js did not take the link"; exit 1; }
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: site
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

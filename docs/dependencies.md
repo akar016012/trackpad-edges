@@ -35,7 +35,7 @@ The app also reads the framework's touch record by byte offset, because the fram
 
 ### Build tools
 
-`scripts/install.sh` and `scripts/build-release.sh` use `xcodebuild`, `codesign`, `security find-identity`, `base64`, `ditto`, `pgrep`, and `lsof`, which all ship with macOS or Xcode. The release workflow also uses `create-dmg` from npm and the GitHub CLI.
+`scripts/install.sh` and `scripts/build-release.sh` use `xcodebuild`, `codesign`, `security find-identity`, `base64`, `ditto`, `pgrep`, and `lsof`, which all ship with macOS or Xcode. The release workflow also uses the GitHub CLI and `create-dmg` from npm, which `.github/dmg/package-lock.json` fixes with all of its dependencies.
 
 ### CoreBrightness private client
 

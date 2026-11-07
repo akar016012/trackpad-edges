@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "The DMG tool for the release job. The lockfile fixes every package it installs, because this tool runs while the signing key is open.",
+  "dependencies": {
+    "create-dmg": "8.1.0"
+  }
+}

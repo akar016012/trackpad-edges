@@ -4,3 +4,13 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # A routine update waits a week, so that a compromised release has time to be caught. Security
+    # updates do not wait.
+    cooldown:
+      default-days: 7
+  - package-ecosystem: npm
+    directory: /.github/dmg
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7

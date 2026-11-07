@@ -4,15 +4,15 @@ Status: the page is built and tested at desktop and phone sizes. It publishes to
 
 ## What it is
 
-`site/` holds a static page with no build step. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The page loads nothing from other sites, because the font is stored in `site/fonts/` under its open font license.
+`site/` holds a static page with no build tools. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The page loads nothing from other sites, because the font is stored in `site/fonts/` under its open font license.
 
 ## Adding a build
 
-The download is a placeholder until a build exists. Set `url`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. The [release workflow](releasing.md) does this by itself.
+The download shows a coming soon button until a release exists. Each deploy reads the newest release and fills `url` and `version` in the published copy of `site/main.js`, and the copy in the repository stays empty. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. The [release workflow](releasing.md) does this by itself.
 
 ## Deploying
 
-`.github/workflows/pages.yml` publishes only `site/`. It runs on every push to `main` that changes `site/`, and it can also run by hand. The custom domain is set in the repository's Pages settings.
+`.github/workflows/pages.yml` publishes only `site/`. It runs on every push to `main` that changes `site/`, after each release, and by hand. The custom domain is set in the repository's Pages settings.
 
 ## Updating it
 

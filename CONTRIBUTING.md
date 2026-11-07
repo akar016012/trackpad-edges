@@ -50,6 +50,14 @@ Touch hardware cannot be simulated, so a change to how gestures feel also needs 
 - Write full sentences in documents and comments, and use American English.
 - Match the formatting of the files around your change.
 - Keep the window's layout on its shared margin, columns, and row heights, which are defined in `SettingsPane`.
+- Pin any new GitHub Action to a full commit SHA, with its version in a comment, because the repository refuses actions that are not pinned.
+- Never commit a secret, such as a certificate, a key, or a token. If one reaches a pull request, say so and treat it as exposed, because deleting it does not remove it from the history.
+
+## How a pull request is merged
+
+The `main` branch accepts contributions only through pull requests, and the `logic-tests` check must pass first. GitHub holds the checks on a first pull request until the maintainer approves the run, so a short wait at that point is normal. The maintainer squashes each pull request into one commit, so its title becomes the commit message and should describe the change.
+
+Pull requests never receive the release secrets, so you can open one from a fork without any setup. The maintainer reads changes to `.github/` and `scripts/` with extra care, because those files build what people download.
 
 ## Private APIs
 

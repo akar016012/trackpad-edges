@@ -1,9 +1,9 @@
 # Builds and tests the app for every pull request that touches it. A release, started by
 # release.yml when a new MARKETING_VERSION lands on main, builds the app with the adapter inside
 # it, signs it with Developer ID, notarizes it, builds and notarizes the DMG, publishes a GitHub
-# release, and points the landing page at the download. Run it by hand from the Actions tab for a
-# dry run: the same build, signing, and notarization, with the DMG kept as a workflow artifact and
-# nothing published.
+# release, and redeploys the landing page, which reads the newest release as it deploys. Run it by
+# hand from the Actions tab for a dry run: the same build, signing, and notarization, with the DMG
+# kept as a workflow artifact and nothing published.
 #
 # The release job uses the "release" environment, which holds these secrets:
 #   MACOS_CERTIFICATE           the Developer ID Application certificate and its private key,
@@ -21,9 +21,10 @@ on:
       - "trackpad-edges.xcodeproj/**"
       - "Tests/**"
       - "scripts/**"
+      - ".github/dmg/**"
       - ".github/workflows/mac.yml"
   workflow_dispatch:
-  # From release.yml, with the tag that it pushed.
+  # From release.yml, with the tag to publish.
   workflow_call:
     inputs:
       tag:
@@ -35,18 +36,24 @@ permissions:
 
 env:
   DMG_NAME: TrackpadEdges.dmg
+  # The project needs the macOS 27.2 SDK, and the SDK in the runner's default Xcode stops at 27.0.
+  DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
 
 jobs:
   test:
-    # The project needs Xcode 27.2.
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - run: swift test
       - run: >
           xcodebuild build -project trackpad-edges.xcodeproj -scheme trackpad-edges
           -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO
+      # This job holds no secrets, so an update to the DMG tool is tried here first.
+      - run: npm ci --prefix .github/dmg
+      - run: .github/dmg/node_modules/.bin/create-dmg --version
 
   release:
     if: inputs.tag != '' || github.event_name == 'workflow_dispatch'
@@ -62,10 +69,12 @@ jobs:
       # Run by hand from the Actions tab, and not through release.yml: build only.
       DRY_RUN: ${{ inputs.tag == '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
-      # This is pinned and installed first, so that it never runs a new version with the key open.
-      - run: npm install --global create-dmg@8.1.0
+      # The lockfile fixes every package, and this runs first, so nothing new runs with the key open.
+      - run: npm ci --prefix .github/dmg
 
       # A throwaway keychain holds the certificate and notary credentials until the job ends.
       - name: Set up signing
@@ -118,7 +127,7 @@ jobs:
       - name: Build and notarize the DMG
         run: |
           mkdir -p build/dmg
-          create-dmg --overwrite --no-code-sign "build/export/Trackpad Edges.app" build/dmg
+          .github/dmg/node_modules/.bin/create-dmg --overwrite --no-code-sign "build/export/Trackpad Edges.app" build/dmg
           mv build/dmg/*.dmg "build/$DMG_NAME"
           identity="$(security find-identity -v -p codesigning "$KEYCHAIN" | sed -n 's/.*) \([0-9A-F]\{40\}\) "Developer ID Application.*/\1/p' | head -n 1)"
           codesign --force --timestamp --sign "$identity" --keychain "$KEYCHAIN" "build/$DMG_NAME"
@@ -127,7 +136,7 @@ jobs:
 
       - name: Keep the DMG (dry run)
         if: env.DRY_RUN == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: trackpad-edges-dmg
           path: build/${{ env.DMG_NAME }}
@@ -138,38 +147,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # This creates the tag too, so a release that fails earlier leaves no tag behind.
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "build/$DMG_NAME" --clobber
-          else
-            gh release create "$TAG" "build/$DMG_NAME" --target "$GITHUB_SHA" \
-              --title "Trackpad Edges ${TAG#v}" --notes-file "release-notes/$TAG.md"
-          fi
+          # This creates the tag too, so a release that fails earlier leaves no tag behind. It fails
+          # if the release exists, so that a published DMG is never replaced.
+          gh release create "$TAG" "build/$DMG_NAME" --target "$GITHUB_SHA" \
+            --title "Trackpad Edges ${TAG#v}" --notes-file "release-notes/$TAG.md"
 
-      # A push made with this workflow's token starts no workflow, so the deploy is started here.
-      - name: Point the landing page at the download
+      # A release made with this workflow's token starts no workflow, so the deploy is started here.
+      - name: Deploy the landing page
         if: env.DRY_RUN != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${TAG#v}"
-          url="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/$DMG_NAME"
-          sed -i '' -E "s|^  url: \".*\",|  url: \"$url\",|; s|^  version: \".*\",|  version: \"$version\",|" site/main.js
-          grep -qF "$url" site/main.js || { echo "::error::site/main.js did not take the download link"; exit 1; }
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet site/main.js; then
-            git add site/main.js
-            git commit -m "chore(site): point the download at $version"
-            # Another push can land first, so this tries a few times.
-            for attempt in 1 2 3 4 5; do
-              git pull --rebase -X theirs origin main && git push origin HEAD:main && break
-              git rebase --abort 2>/dev/null || true
-              [ "$attempt" -lt 5 ] || { echo "::error::could not push the download link"; exit 1; }
-              sleep $((attempt * 5))
-            done
-          fi
-          gh workflow run pages.yml --ref main
+        run: gh workflow run pages.yml --ref main
 
       - name: Remove the signing keychain
         if: always()

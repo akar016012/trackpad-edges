@@ -1,4 +1,4 @@
-// Set these when a build is ready. An empty link keeps the download marked as coming soon.
+// The deploy fills these from the newest release. An empty link keeps the coming soon button.
 const release = {
   url: "",
   version: "",

@@ -4,7 +4,7 @@
 
 Please do not report security problems in public issues or pull requests.
 
-Send your report to adi.kar@adiportfolio.com, or use GitHub's private vulnerability reporting on this repository once it is available. Describe the problem, the steps to reproduce it, and the version you used.
+Use [GitHub's private vulnerability reporting](https://github.com/akar016012/trackpad-edges/security/advisories/new), or send your report to adi.kar@adiportfolio.com. Describe the problem, the steps to reproduce it, and the version you used.
 
 This project has one maintainer, who works on it in their spare time. You can expect a first reply within seven days. Please give the maintainer a reasonable time to fix the problem before you share it publicly. You will be credited unless you prefer not to be.
 
