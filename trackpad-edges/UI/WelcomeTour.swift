@@ -94,7 +94,8 @@ final class WelcomeTour: SettingsPane {
     private var titles: [String] = []
     private var pageIndex = 0
     private var dots: StepDots?
-    private lazy var backButton = button("") { [weak self] in self?.goBack() }
+    private lazy var skipButton = button("Skip Tour") { [weak self] in self?.onFinish?() }
+    private lazy var backButton = button("Back") { [weak self] in self?.goBack() }
     private lazy var nextButton = button("") { [weak self] in self?.goForward() }
 
     private let permissionLabel = NSTextField(labelWithString: "")
@@ -138,7 +139,7 @@ final class WelcomeTour: SettingsPane {
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         nextButton.keyEquivalent = "\r"
-        let bar = NSStackView(views: [dots, spacer, backButton, nextButton])
+        let bar = NSStackView(views: [dots, spacer, skipButton, backButton, nextButton])
         bar.orientation = .horizontal
         bar.spacing = 8
         bar.widthAnchor.constraint(equalToConstant: Self.contentWidth).isActive = true
@@ -150,7 +151,8 @@ final class WelcomeTour: SettingsPane {
         for (position, page) in pages.enumerated() { page.isHidden = position != index }
         dots?.current = index
         announce("Step \(index + 1) of \(pages.count). \(titles[index])")
-        backButton.title = index == 0 ? "Skip Tour" : "Back"
+        skipButton.isHidden = index == pages.count - 1
+        backButton.isHidden = index == 0
         nextButton.title = index == pages.count - 1 ? "Done" : "Continue"
         refreshPermission()
         refreshEdges()
@@ -166,11 +168,7 @@ final class WelcomeTour: SettingsPane {
     }
 
     private func goBack() {
-        if pageIndex == 0 {
-            onFinish?()
-        } else {
-            show(page: pageIndex - 1)
-        }
+        show(page: max(pageIndex - 1, 0))
     }
 
     private func goForward() {
@@ -407,7 +405,11 @@ final class WelcomeTour: SettingsPane {
         refreshPermission()
         permissionTimer?.invalidate()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshPermission() }
+            MainActor.assumeIsolated {
+                self?.refreshPermission()
+                // This also catches an approval given in System Settings.
+                self?.loginCheckbox?.state = LoginItem.isEnabled ? .on : .off
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
         permissionTimer = timer

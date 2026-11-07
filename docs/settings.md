@@ -30,6 +30,8 @@ The Profiles tab gives an app its own edges and corners, and everything it does 
 
 ## Media
 
+The overlay uses the Solid style while **Reduce transparency** is on in System Settings, whatever style is chosen here.
+
 | Setting   | Behavior                                                                        |
 | --------- | ------------------------------------------------------------------------------- |
 | Step type | This popup makes a step a percentage of the track or a fixed number of seconds. |

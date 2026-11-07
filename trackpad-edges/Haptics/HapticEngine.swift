@@ -20,7 +20,8 @@ final class HapticEngine {
 
     private var device: UnsafeRawPointer?
     private var actuator: UnsafeRawPointer?
-    private var lastTick = Date.distantPast
+    /// Uptime rather than the clock, because a clock change must not mute the haptics.
+    private var lastTick = -TimeInterval.infinity
 
     /// Names the trackpad for a gesture. The actuator stays closed until the first haptic, because
     /// opening it requests control of the trackpad's click, and a touch may turn out to be a click.
@@ -41,8 +42,8 @@ final class HapticEngine {
 
     func fire() {
         guard settings.enabled else { return }
-        let now = Date()
-        guard now.timeIntervalSince(lastTick) >= Self.minimumInterval else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        guard now - lastTick >= Self.minimumInterval else { return }
         lastTick = now
         openActuatorIfNeeded()
         if let actuator,

@@ -20,7 +20,7 @@ The tour opens by itself on the first launch of a new install. It has seven step
 | Haptics         | You turn the tick on or off, set its strength and pattern, and try it.                                           |
 | You are all set | You choose whether the app starts at login, and the step says where the settings live.                           |
 
-A preset leaves an edge off when its action cannot work on this Mac. Closing the window or choosing **Skip Tour** ends the tour, and it does not open by itself again.
+A preset leaves an edge off when its action cannot work on this Mac. Closing the window or choosing **Skip Tour**, which every step but the last offers, ends the tour, and it does not open by itself again.
 
 ## When it opens
 

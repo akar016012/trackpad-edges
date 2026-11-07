@@ -72,6 +72,9 @@ final class GestureController {
         NSWorkspace.shared.notificationCenter.addObserver(
             self, selector: #selector(frontAppChanged(_:)),
             name: NSWorkspace.didActivateApplicationNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(displayOptionsChanged),
+            name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
@@ -85,7 +88,7 @@ final class GestureController {
         RunLoop.main.add(timer, forMode: .common)
         healthTimer = timer
         latencyActivity = ProcessInfo.processInfo.beginActivity(
-            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            options: .userInitiatedAllowingIdleSystemSleep,
             reason: "Trackpad gestures must answer every click at once.")
         watchdog.start()
         checkHealth()
@@ -466,6 +469,10 @@ final class GestureController {
         frontBundleID = app?.bundleIdentifier
         // Most apps have no profile, so this usually has nothing to change.
         if wasUsing != SettingsStore.shared.settings.profile(for: frontBundleID) { applySettings() }
+    }
+
+    @objc private func displayOptionsChanged() {
+        seek.applyChosenStyle()
     }
 
     @objc private func screensChanged() {

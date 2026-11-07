@@ -14,7 +14,7 @@ Clicks that do not land in a zone pass through with no delay. Without the Access
 
 ## Limits
 
-Suppression is best effort, because touch frames and pointer events arrive independently. Apple scopes `CGAssociateMouseAndMouseCursorPosition` to a foreground app, so its behavior in a background app needs testing.
+The key recorder uses a tap level that Apple documents for root only, so it could stop working in a macOS update. Suppression is best effort, because touch frames and pointer events arrive independently. Apple scopes `CGAssociateMouseAndMouseCursorPosition` to a foreground app, so its behavior in a background app needs testing.
 
 ## Reliability
 

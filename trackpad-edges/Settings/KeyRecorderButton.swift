@@ -1,5 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
+import IOKit.hidsystem
 
 /// The modifier keys that a shortcut can use, in the order that macOS shows them.
 enum KeyModifier: CaseIterable {
@@ -26,13 +27,13 @@ enum KeyModifier: CaseIterable {
     }
 
     /// The bits that say which physical key is down. The system's event flags carry these
-    /// alongside the general flag, although they have no public names in Swift.
+    /// alongside the general flag.
     private var sideBits: (left: UInt64, right: UInt64)? {
         switch self {
-        case .control: return (0x1, 0x2000)
-        case .shift: return (0x2, 0x4)
-        case .command: return (0x8, 0x10)
-        case .option: return (0x20, 0x40)
+        case .control: return (UInt64(NX_DEVICELCTLKEYMASK), UInt64(NX_DEVICERCTLKEYMASK))
+        case .shift: return (UInt64(NX_DEVICELSHIFTKEYMASK), UInt64(NX_DEVICERSHIFTKEYMASK))
+        case .command: return (UInt64(NX_DEVICELCMDKEYMASK), UInt64(NX_DEVICERCMDKEYMASK))
+        case .option: return (UInt64(NX_DEVICELALTKEYMASK), UInt64(NX_DEVICERALTKEYMASK))
         case .function: return nil
         }
     }

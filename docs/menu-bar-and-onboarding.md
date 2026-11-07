@@ -10,6 +10,8 @@ The app has a window and a menu bar item, and it keeps running in the menu bar a
 
 A new install opens the [welcome tour](welcome-tour.md). After that, the window opens on the General pane whenever the Accessibility permission is missing. That pane explains the permission and how to try a gesture, and it can reopen the tour. The app tries to skip the window when it starts at login, but that has not been confirmed with a real login.
 
+If macOS needs you to approve launch at login, the app opens the Login Items pane of System Settings.
+
 ## Permissions
 
 | Capability                       | Permission needed                  |

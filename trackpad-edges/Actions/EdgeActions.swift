@@ -4,6 +4,8 @@ import Carbon.HIToolbox
 /// Carries out one step of whatever an edge controls.
 final class EdgeActions {
     private static let scrollPixels: Int32 = 48
+    /// How long a frozen app can hold up this thread, which also answers every click.
+    private static let switchTimeout: Float = 0.25
     /// The system's identifiers for moving one Space left and right.
     private static let spaceHotKeys = ["79", "81"]
 
@@ -114,8 +116,10 @@ final class EdgeActions {
         let count = switcherApps.count
         switcherIndex = (switcherIndex + (forward ? 1 : count - 1)) % count
         let app = AXUIElementCreateApplication(switcherApps[switcherIndex].processIdentifier)
+        AXUIElementSetMessagingTimeout(app, Self.switchTimeout)
         let result = AXUIElementSetAttributeValue(
             app, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
-        return result == .success
+        // A slow app can time out and still come forward, and Switch Apps has no limit to report.
+        return result == .success || result == .cannotComplete
     }
 }

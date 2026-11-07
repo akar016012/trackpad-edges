@@ -117,9 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(profileItem)
         menu.addItem(accessibilityItem)
         menu.addItem(.separator())
-        let edgesHeading = NSMenuItem(title: "Edges for All Apps", action: nil, keyEquivalent: "")
-        edgesHeading.isEnabled = false
-        menu.addItem(edgesHeading)
+        menu.addItem(.sectionHeader(title: "Edges for All Apps"))
         for (index, edge) in Self.edges.enumerated() {
             menu.addItem(makeEdgeItem(title: edge.title, edgeIndex: index, path: edge.path))
         }
@@ -226,7 +224,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// Shows the system prompt for the permission that gestures need.
     @objc private func requestAccessibility() {
-        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        let prompt = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        let options = [prompt: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
     }
 }

@@ -87,8 +87,11 @@ final class SeekOverlayPanel: NSPanel {
     /// Shows the target time. The change is the share of the track that it moves, from -1 to 1.
     func show(position: Double, duration: Double, change: Double) {
         timeLabel.stringValue = "\(Self.format(position)) / \(Self.format(duration))"
-        let percent = Int((change * 100).rounded())
-        hintLabel.stringValue = "\(percent > 0 ? "+" : "")\(percent)% · Release to apply"
+        let percent = Int((change * 100).rounded()).formatted(
+            // The rest of this line is English, so the number stays in the same form.
+            .percent.sign(strategy: .always(includingZero: false))
+                .locale(Locale(identifier: "en_US_POSIX")))
+        hintLabel.stringValue = "\(percent) · Release to apply"
         progress.isHidden = false
         hintLabel.isHidden = false
         progress.value = duration > 0 ? position / duration : 0

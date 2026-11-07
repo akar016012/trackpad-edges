@@ -18,6 +18,8 @@ final class SeekController {
     #endif
     private var overlayStyle = OverlayStyle.glass
     private var overlayPlacement = OverlayPlacement.bottom
+    private var appliedStyle: OverlayStyle?
+    private var appliedPlacement: OverlayPlacement?
     private var generation = 0
     private var origin: NowPlayingAdapter.Playback?
     private var finishedLoading = false
@@ -33,10 +35,20 @@ final class SeekController {
     var isAvailable: Bool { adapter != nil }
 
     func applyOverlay(style: OverlayStyle, placement: OverlayPlacement) {
-        guard style != overlayStyle || placement != overlayPlacement else { return }
         overlayStyle = style
         overlayPlacement = placement
-        overlay.apply(style: style, placement: placement)
+        applyChosenStyle()
+    }
+
+    /// Applies the chosen style, or the solid one for someone who has asked for less transparency.
+    /// Rebuilding is skipped when nothing changed, because display options change for other reasons.
+    func applyChosenStyle() {
+        let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+        let style = reduced ? OverlayStyle.solid : overlayStyle
+        guard style != appliedStyle || overlayPlacement != appliedPlacement else { return }
+        appliedStyle = style
+        appliedPlacement = overlayPlacement
+        overlay.apply(style: style, placement: overlayPlacement)
     }
 
     /// Shows a notice in the overlay, using the style and position from the settings.

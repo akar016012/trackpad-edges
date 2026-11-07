@@ -49,7 +49,11 @@ final class GeneralPane: SettingsPane {
         updateLogin()
         permissionTimer?.invalidate()
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.updatePermission() }
+            MainActor.assumeIsolated {
+                self?.updatePermission()
+                // This also catches an approval given in System Settings.
+                self?.updateLogin()
+            }
         }
         RunLoop.main.add(timer, forMode: .common)
         permissionTimer = timer

@@ -1,4 +1,5 @@
 import CoreGraphics
+import OSLog
 
 /// Holds the pointer still during a slide and leaves it exactly where it was.
 ///
@@ -11,13 +12,16 @@ final class PointerFreeze {
     private var tap: CFMachPort?
     var port: CFMachPort? { tap }
     private var source: CFRunLoopSource?
+    private let log = Logger(subsystem: "com.adityakar.trackpad-edges", category: "taps")
     private var frozenPoint: CGPoint?
 
     func begin() {
         guard frozenPoint == nil, let location = CGEvent(source: nil)?.location else { return }
         installTapIfPossible()
         frozenPoint = location
-        CGAssociateMouseAndMouseCursorPosition(0)
+        // Apple scopes this call to a foreground app, so the log shows if the tap is doing the work.
+        let result = CGAssociateMouseAndMouseCursorPosition(0)
+        if result != .success { log.notice("The pointer stayed attached, error \(result.rawValue).") }
         if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
     }
 
