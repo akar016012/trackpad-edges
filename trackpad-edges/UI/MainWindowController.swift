@@ -12,13 +12,20 @@ private final class PaneTabViewController: NSTabViewController {
 
 /// Owns the app window. The app appears in the Dock only while this window is open.
 final class MainWindowController: NSWindowController, NSWindowDelegate {
+    /// The tabs in window order.
+    enum Tab: Int {
+        case edges, corners, media, haptics, profiles, general
+    }
+
     private let edges: EdgesPane
+    private let corners: CornersPane
+    private let profiles: ProfilesPane
     private let tabs = PaneTabViewController()
-    private static let generalTab = 4
 
     init(actions: WindowActions) {
         edges = EdgesPane(title: "Edges", actions: actions)
-        let corners = CornersPane(title: "Corners", actions: actions)
+        corners = CornersPane(title: "Corners", actions: actions)
+        profiles = ProfilesPane(title: "Profiles", actions: actions)
         let media = MediaPane(title: "Media", actions: actions)
         let haptics = HapticsPane(title: "Haptics", actions: actions)
         let general = GeneralPane(title: "General", actions: actions)
@@ -28,7 +35,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         tabs.canPropagateSelectedChildViewControllerTitle = false
         let glyphs = [
             (edges as SettingsPane, "GlyphEdges"), (corners, "GlyphCorners"),
-            (media, "GlyphMedia"), (haptics, "GlyphHaptics"), (general, "GlyphGeneral"),
+            (media, "GlyphMedia"), (haptics, "GlyphHaptics"), (profiles, "GlyphProfiles"),
+            (general, "GlyphGeneral"),
         ]
         for (pane, glyph) in glyphs {
             let item = NSTabViewItem(viewController: pane)
@@ -52,6 +60,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             self?.fitPane()
         }
         general.onLayoutChange = { [weak self] in self?.fitPane() }
+        for pane in [edges as ProfilePane, corners] {
+            pane.onLayoutChange = { [weak self] in self?.fitPane() }
+            pane.onSelectProfile = { [weak self] bundleID in self?.selectProfile(bundleID) }
+        }
+        profiles.onEdit = { [weak self] bundleID, tab in
+            self?.selectProfile(bundleID)
+            self?.tabs.selectedTabViewItemIndex = tab.rawValue
+        }
     }
 
     @available(*, unavailable)
@@ -92,7 +108,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     func show() {
         let wasOpen = isOpen
         // The General pane explains the permission, and gestures do nothing without it.
-        if !AXIsProcessTrusted() { tabs.selectedTabViewItemIndex = Self.generalTab }
+        if !AXIsProcessTrusted() { tabs.selectedTabViewItemIndex = Tab.general.rawValue }
         #if DEBUG
             // Launching with `-debugTab 2` opens that pane, which makes each pane easy to inspect.
             let defaults = UserDefaults.standard
@@ -114,7 +130,19 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func settingsChanged() {
-        if edges.isViewLoaded { edges.refresh() }
+        if edges.isViewLoaded {
+            edges.refreshProfiles()
+            edges.refresh()
+        }
+        corners.refreshProfiles()
+        profiles.refresh()
+    }
+
+    /// Shows one profile on both panes that edit a profile.
+    private func selectProfile(_ bundleID: String?) {
+        edges.select(bundleID)
+        corners.select(bundleID)
+        fitPane()
     }
 
     func windowWillClose(_ notification: Notification) {

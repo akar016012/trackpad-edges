@@ -1046,6 +1046,17 @@ final class GestureEngineTests: XCTestCase {
         XCTAssertFalse(engine.isSliding)
     }
 
+    func testSlideKeepsItsActionWhenTheProfileChanges() {
+        var engine = twoFingerEngine(oneFinger: .volume)
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.40)], now: 0)
+        engine.config.rightAction = .zoom
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.46)], now: 0.1)
+        XCTAssertEqual(
+            engine.process([TouchPoint(id: 1, x: 0.95, y: 0.50)], now: 0.15), [.stepped(1)])
+        _ = engine.process([], now: 0.2)
+        XCTAssertEqual(engine.tick(now: 0.4), [.slideEnded(.volume), .pointerReleased])
+    }
+
     func testTwoFingerCornerKeepsPriority() {
         var config = GestureConfig()
         config.twoFingerActions = [.right: .volume]

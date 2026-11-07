@@ -3,7 +3,7 @@ import UniformTypeIdentifiers
 
 /// Lets you choose an action for each click count of each corner. The clicks popup picks the
 /// count to edit, so a corner with several actions needs no extra rows.
-final class CornersPane: SettingsPane {
+final class CornersPane: ProfilePane {
     private enum Choice: Int, CaseIterable {
         case none, mute, playPause, nextTrack, previousTrack, app, link, file, keys, shortcut
 
@@ -53,6 +53,7 @@ final class CornersPane: SettingsPane {
     override func loadView() {
         // The grid matches the trackpad, so each section sits where its corner is.
         setContent([
+            makePickerRow(),
             columns(
                 section("Top left", corner: \.topLeft), section("Top right", corner: \.topRight)),
             columns(
@@ -61,6 +62,17 @@ final class CornersPane: SettingsPane {
             pressControls(),
             note("Press a corner lightly to fire it. A corner with no action stays normal."),
         ])
+    }
+
+    override func profileChanged() {
+        for (corner, action) in actionPopups {
+            selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
+            action.selectItem(at: Choice(currentAction(corner)).rawValue)
+            clickPopups[corner]?.selectItem(at: (selectedClicks[corner] ?? 1) - 1)
+            refreshClickTitles(corner)
+            rebuildDetails(corner: corner)
+        }
+        onChange?()
     }
 
     private func pressControls() -> NSView {

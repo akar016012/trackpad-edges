@@ -19,7 +19,7 @@ scripts/install.sh
 
 ## Configure
 
-The app window and the menu bar icon both let you choose what each edge does. The window also sets the corners, the haptic strength and pattern, and launch at login.
+The app window and the menu bar icon both let you choose what each edge does. The window also sets the corners, profiles for individual apps, the haptic strength and pattern, and launch at login.
 
 ## Build and run
 

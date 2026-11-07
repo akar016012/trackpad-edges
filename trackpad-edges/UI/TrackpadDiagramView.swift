@@ -6,13 +6,19 @@ final class TrackpadDiagramView: NSView {
         didSet { needsDisplay = true }
     }
 
+    /// The app whose profile is shown, where nil shows the default settings.
+    var bundleID: String? {
+        didSet { needsDisplay = true }
+    }
+
+    private var settings: AppSettings { SettingsStore.shared.settings.resolved(for: bundleID) }
+
     override var intrinsicContentSize: NSSize { NSSize(width: 294, height: 196) }
 
     override func isAccessibilityElement() -> Bool { true }
     override func accessibilityRole() -> NSAccessibility.Role? { .image }
 
     override func accessibilityLabel() -> String? {
-        let settings = SettingsStore.shared.settings
         let left = settings.leftEdge?.title ?? "Off"
         let right = settings.rightEdge?.title ?? "Off"
         let bottom = settings.bottomEdge?.title ?? "Off"
@@ -25,7 +31,6 @@ final class TrackpadDiagramView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        let settings = SettingsStore.shared.settings
         let pad = bounds.insetBy(dx: 1, dy: 1)
         let outline = NSBezierPath(roundedRect: pad, xRadius: 12, yRadius: 12)
         NSColor.controlBackgroundColor.setFill()

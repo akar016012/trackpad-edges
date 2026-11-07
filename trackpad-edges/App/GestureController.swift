@@ -32,6 +32,8 @@ final class GestureController {
     var onTouches: (([TouchPoint]) -> Void)?
     /// Runs when an edge action becomes available or stops being available.
     var onAvailabilityChanged: (() -> Void)?
+    /// The app in front, which decides the profile.
+    private var frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
     /// Whether the user has paused all gestures from the menu.
     var paused = false {
         didSet { if paused { abortAll() } }
@@ -58,9 +60,14 @@ final class GestureController {
         monitor.onDevicesChanged = { [weak self] in self?.rebuildDevices() }
         monitor.start()
         observeLocking()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(frontAppChanged(_:)),
+            name: NSWorkspace.didActivateApplicationNotification, object: nil)
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
+        // The front app can change during launch, before the observer above exists.
+        frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         applySettings()
 
         let timer = Timer(timeInterval: Self.healthCheckInterval, repeats: true) { [weak self] _ in
@@ -108,8 +115,19 @@ final class GestureController {
         return kinds
     }
 
+    /// The name of the profile in use, for the menu bar item.
+    var activeProfileName: String {
+        SettingsStore.shared.settings.profile(for: frontBundleID)?.name ?? "All Apps"
+    }
+
+    /// The settings as the app in front sees them.
+    private var effectiveSettings: AppSettings {
+        SettingsStore.shared.settings.resolved(for: frontBundleID)
+    }
+
+    /// A gesture in progress keeps its action, because the engine holds it until the gesture ends.
     private func currentConfig() -> GestureConfig {
-        SettingsStore.shared.settings.gestureConfig(unavailable: unavailableKinds)
+        effectiveSettings.gestureConfig(unavailable: unavailableKinds)
     }
 
     /// Shows a sample of the seek preview, so that a style can be judged as it is chosen.
@@ -313,7 +331,7 @@ final class GestureController {
     private func fireCorner(
         _ zone: Zone, clicks: Int, device: UnsafeRawPointer, confirm: Bool
     ) {
-        let settings = SettingsStore.shared.settings
+        let settings = effectiveSettings
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if confirm, settings.haptics.onCorner,
@@ -398,6 +416,17 @@ final class GestureController {
 
     @objc private func screenUnlocked() {
         locked = false
+        frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        applySettings()
+    }
+
+    @objc private func frontAppChanged(_ notification: Notification) {
+        let app =
+            notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+        let wasUsing = SettingsStore.shared.settings.profile(for: frontBundleID)
+        frontBundleID = app?.bundleIdentifier
+        // Most apps have no profile, so this usually has nothing to change.
+        if wasUsing != SettingsStore.shared.settings.profile(for: frontBundleID) { applySettings() }
     }
 
     @objc private func screensChanged() {

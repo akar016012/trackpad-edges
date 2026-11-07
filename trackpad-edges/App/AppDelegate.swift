@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
     private var edgeMenus: [(menu: NSMenu, path: WritableKeyPath<AppSettings, SlideKind?>)] = []
     private let trackpadsItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+    private let profileItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
     private let accessibilityItem = NSMenuItem(
         title: "", action: #selector(requestAccessibility), keyEquivalent: "")
     private let pauseItem = NSMenuItem(
@@ -55,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         trackpadsItem.title = "Trackpads Found: \(controller.trackpadCount)"
+        profileItem.title = "Profile: \(controller.activeProfileName)"
         let trusted = AXIsProcessTrusted()
         accessibilityItem.title = trusted ? "Accessibility Is On" : "Grant Accessibility…"
         accessibilityItem.isEnabled = !trusted
@@ -89,11 +91,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         menu.autoenablesItems = false
         trackpadsItem.isEnabled = false
+        profileItem.isEnabled = false
         accessibilityItem.target = self
         pauseItem.target = self
         menu.addItem(trackpadsItem)
+        menu.addItem(profileItem)
         menu.addItem(accessibilityItem)
         menu.addItem(.separator())
+        let edgesHeading = NSMenuItem(title: "Edges for All Apps", action: nil, keyEquivalent: "")
+        edgesHeading.isEnabled = false
+        menu.addItem(edgesHeading)
         for (index, edge) in Self.edges.enumerated() {
             menu.addItem(makeEdgeItem(title: edge.title, edgeIndex: index, path: edge.path))
         }

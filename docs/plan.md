@@ -34,6 +34,7 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - [ ] [More edge actions](roadmap/more-edge-actions.md)
 - [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
 - [ ] [Installed build](roadmap/installed-build.md)
+- [ ] [Per-app profiles](roadmap/per-app-profiles.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Assignable edges from the window and the menu bar](settings.md)
@@ -44,8 +45,6 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - [ ] Media seek in Safari, because only Chrome was tried
 
 ### Incomplete
-
-- [ ] [Per-app profiles](roadmap/per-app-profiles.md)
 
 ### Known limits
 
@@ -122,7 +121,7 @@ Each batch was reviewed by a review, fixed, committed, and pushed.
 
 ## Roadmap
 
-Phases 0 to 4 are complete, and phase 5 is built but needs a real install. Phase 6 is not finished. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 6. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
+Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then do a real install. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -151,15 +150,9 @@ See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a s
 
 See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it moves the adapter library inside the signed app, where the app checks it against its signature.
 
-### Phase 6: Per-app profiles (not started)
+### Phase 6: Per-app profiles (complete)
 
-See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. This comes last because it changes how every setting is stored.
-
-### Risks for the remaining phases
-
-| Risk                                             | Plan                                                                  |
-| ------------------------------------------------ | --------------------------------------------------------------------- |
-| Per-app profiles change how settings are stored. | Keep the current settings as the default profile, so nothing is lost. |
+See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. The saved settings stay as the default profile, so nothing needed converting. This is built, but it still needs a check.
 
 ## Verification
 

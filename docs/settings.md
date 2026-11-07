@@ -2,7 +2,7 @@
 
 Status: the app window is built and connected. Its layout has been inspected, but changing each option has not been confirmed on hardware yet.
 
-The window is built with AppKit, and it opens at launch, from the Dock, and from the menu bar item. It opens in the center of the screen under the pointer. Every pane uses one layout: a 24-point margin on all sides, two equal columns, one label width, and rows of one height. The window fits each pane exactly, so controls stay in the same place from tab to tab and no pane has leftover space. It opens on the General pane while the Accessibility permission is missing. The Dock icon appears only while the window is open. No website documents a similar app's real settings layout, so the layout and ranges here are this project's own design.
+The window is built with AppKit, and it opens at launch, from the Dock, and from the menu bar item. It opens in the center of the screen under the pointer. Every pane uses one layout: a 24-point margin on all sides, two equal columns, one label width, and rows of one height. The window fits each pane exactly, so controls stay in the same place from tab to tab and no pane has leftover space. The tabs are Edges, Corners, Media, Haptics, Profiles, and General. It opens on the General pane while the Accessibility permission is missing. The Dock icon appears only while the window is open. No website documents a similar app's real settings layout, so the layout and ranges here are this project's own design.
 
 ## Edges
 
@@ -18,11 +18,15 @@ The pane shows a diagram of the trackpad with each zone and your fingers live.
 | Require a click to start      | This option makes slides start on a click rather than on touch. Two-finger slides always start on touch.                                                                                                  |
 | Sides                         | This option limits side slides to the bottom quarter of the pad.                                                                                                                                          |
 
-The menu bar item can also assign each edge, and the window stays in step with it. Two-finger slides are set on the Edges pane only.
+The menu bar item can also assign each edge for All Apps, and the window stays in step with it. Two-finger slides are set on the Edges pane only.
 
 ## Corners
 
 All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. See [corners.md](corners.md).
+
+## Profiles
+
+The Profiles tab gives an app its own edges and corners, and everything it does not change follows All Apps. See [per-app-profiles.md](roadmap/per-app-profiles.md).
 
 ## Media
 

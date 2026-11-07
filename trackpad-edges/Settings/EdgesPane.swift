@@ -1,7 +1,7 @@
 import AppKit
 
 /// Lets you choose what each edge does, and shows the result on a live trackpad diagram.
-final class EdgesPane: SettingsPane {
+final class EdgesPane: ProfilePane {
     private static let choices: [(title: String, kind: SlideKind?)] =
         SlideKind.allCases.map { ($0.title, $0) } + [("Off", nil)]
 
@@ -56,6 +56,7 @@ final class EdgesPane: SettingsPane {
             [("Top:", edgePopup(\.twoFingerTop)), ("Bottom:", edgePopup(\.twoFingerBottom))],
         ])
         setContent([
+            makePickerRow(),
             columns(diagram, form),
             options,
             column([heading("Two-finger slides"), twoFinger]),
@@ -80,6 +81,11 @@ final class EdgesPane: SettingsPane {
 
     override func viewWillAppear() {
         super.viewWillAppear()
+        refresh()
+    }
+
+    override func profileChanged() {
+        diagram.bundleID = bundleID
         refresh()
     }
 
