@@ -33,6 +33,7 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - [ ] [Top edge](roadmap/top-edge.md)
 - [ ] [More edge actions](roadmap/more-edge-actions.md)
 - [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
+- [ ] [Installed build](roadmap/installed-build.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Assignable edges from the window and the menu bar](settings.md)
@@ -44,7 +45,6 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 
 ### Incomplete
 
-- [ ] [Installed build](roadmap/installed-build.md)
 - [ ] [Per-app profiles](roadmap/per-app-profiles.md)
 
 ### Known limits
@@ -58,7 +58,8 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - Keyboard Backlight relies on keys that some Macs no longer have, so it may do nothing.
 - Monitor Brightness works only on monitors and ports that answer over DDC.
 - Media seek relies on undocumented behavior, so a macOS update could break it.
-- The adapter library sits in a user-writable folder until the installed build moves it inside the signed app.
+- The adapter library sits in a folder that your account can write to, so the app checks it before every run.
+- Copies from Xcode and from the Applications folder both act on every gesture if they run together.
 
 ## Decisions
 
@@ -104,6 +105,7 @@ All source lives under `trackpad-edges/`.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
 - `UI/` holds the app window, the trackpad diagram, and the seek overlay.
+- `scripts/` holds the install script.
 - `Resources/` holds the bundled adapter, its license, and the About box text, and `Vendor/` holds the adapter source.
 
 ## What was done
@@ -120,7 +122,7 @@ Each batch was reviewed by a review, fixed, committed, and pushed.
 
 ## Roadmap
 
-Phases 0 to 4 are complete, and phases 5 and 6 are not started. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 5. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
+Phases 0 to 4 are complete, and phase 5 is built but needs a real install. Phase 6 is not finished. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 6. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -145,9 +147,9 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 
 See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a second action for a two-finger slide, such as one finger for volume and two for brightness. This is built, but it still needs a check.
 
-### Phase 5: Installed build (not started)
+### Phase 5: Installed build (built, needs a real install)
 
-See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it lets the adapter library move inside the signed app, away from a user-writable folder.
+See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it moves the adapter library inside the signed app, where the app checks it against its signature.
 
 ### Phase 6: Per-app profiles (not started)
 
@@ -155,10 +157,9 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 
 ### Risks for the remaining phases
 
-| Risk                                                                             | Plan                                                                  |
-| -------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Moving the library inside the app needs a build phase in the new project format. | Test it in phase 5, and keep the current unpacking if that fails.     |
-| Per-app profiles change how settings are stored.                                 | Keep the current settings as the default profile, so nothing is lost. |
+| Risk                                             | Plan                                                                  |
+| ------------------------------------------------ | --------------------------------------------------------------------- |
+| Per-app profiles change how settings are stored. | Keep the current settings as the default profile, so nothing is lost. |
 
 ## Verification
 

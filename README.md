@@ -9,6 +9,14 @@ The app is for everyday use. It relies on the private `MultitouchSupport` framew
 - The app needs an Apple silicon Mac with a Force Touch trackpad for haptics. It currently targets macOS 27.2.
 - Gestures need the Accessibility permission, which you can grant from the menu bar icon.
 
+## Install
+
+This command builds a signed Release copy and installs it in the Applications folder. A build with a new signing identity asks for the Accessibility permission again.
+
+```bash
+scripts/install.sh
+```
+
 ## Configure
 
 The app window and the menu bar icon both let you choose what each edge does. The window also sets the corners, the haptic strength and pattern, and launch at login.

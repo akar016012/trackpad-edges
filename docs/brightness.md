@@ -1,8 +1,8 @@
 # Brightness
 
-Status: this feature is built and confirmed working on the built-in trackpad.
+Status: this feature is built and confirmed working on the built-in trackpad, including with the pointer on an external monitor that a monitor utility controls.
 
-The left edge controls the brightness of the built-in display by default. It uses the same slide motion as [volume](volume.md).
+The left edge presses the brightness keys by default, which controls the built-in display. It uses the same slide motion as [volume](volume.md).
 
 ## Behavior
 
@@ -11,11 +11,11 @@ The left edge controls the brightness of the built-in display by default. It use
 - The native macOS brightness indicator appears, because the app presses the brightness keys on your behalf.
 - The edge stays off when no built-in display is active, such as on a closed MacBook. The app rechecks this whenever the displays change.
 
-External display brightness is out of scope for the first version.
+A monitor utility can send the brightness keys to the display under the pointer. The app can read only the built-in display's level, so it always presses the key, and it reports a limit only when the pointer is on the built-in display. The separate [Monitor Brightness](roadmap/more-edge-actions.md) action talks to a monitor directly.
 
 ## Implementation notes
 
-`BrightnessController` posts `.systemDefined` brightness key events, which requires the Accessibility permission. It reads the current level through the private `DisplayServices` API so that it knows when it has reached a limit.
+`BrightnessController` posts `.systemDefined` brightness key events, which requires the Accessibility permission. It reads the built-in level through the private `DisplayServices` API, which decides when the limit haptic fires.
 
 ## Haptics
 

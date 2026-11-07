@@ -24,14 +24,14 @@ The bottom edge seeks through the media that is playing. You touch the strip, sl
 Apple has blocked third-party apps from using `MediaRemote` directly since macOS 15.4, and no public Swift or AppKit API can read or seek another app's playback. The system's own `/usr/bin/perl` can still reach it, so the app uses the third-party `mediaremote-adapter` project, pinned to v0.7.7 at upstream commit `e3ff502`. A macOS update could break this, because it relies on undocumented behavior.
 
 - `NowPlayingAdapter` runs Perl as a child process and reads JSON from it. Each call has a two-second limit.
-- The child process very likely inherits the app's Accessibility permission, and the unpacked library sits in a folder that anything running as you can write to. So the app gives Perl a clean environment, and it checks the library's bytes against the bundled copy before each call. A signed build that keeps the library inside the app would be stronger.
+- The child process very likely inherits the app's Accessibility permission, and anything running as you can write to the library. The app therefore gives Perl a clean environment and checks the library before each call. A build run from Xcode compares the unpacked library's bytes with the bundled copy, and the installed build validates the whole app against its signature.
 - `SeekController` reads the position only after a slide starts moving, so an ordinary touch on the strip never starts a process.
 - `SeekScrubber` turns finger travel into whole steps, and unit tests cover it.
 - `SeekOverlayPanel` shows the preview, and it never takes focus or receives clicks. It uses `NSGlassEffectView` for the two glass styles, and `NSVisualEffectView` with a mask image for the frosted style, because a layer's corner radius does not round a material that draws behind the window. Its bar is a custom view with no animation, so it snaps to each step in time with the haptic tick.
 
 ### Updating the adapter
 
-The adapter's source is in `Vendor/mediaremote-adapter`, and its script is copied unchanged to `Resources/mediaremote-adapter.pl`. Xcode treats any compiled binary in the resources folder as something to link and leaves it out of the app, so the library ships as base64 text in `Resources/MediaRemoteAdapter.base64`. The app unpacks it into `~/Library/Application Support/Trackpad Edges/MediaRemoteAdapter.framework` on launch.
+The adapter's source is in `Vendor/mediaremote-adapter`, and its script is copied unchanged to `Resources/mediaremote-adapter.pl`. Xcode treats any compiled binary in the resources folder as something to link and leaves it out of the app, so the library ships as base64 text in `Resources/MediaRemoteAdapter.base64`. A build run from Xcode unpacks it into `~/Library/Application Support/Trackpad Edges/MediaRemoteAdapter.framework` on launch. The [installed build](roadmap/installed-build.md) instead holds the library inside the signed app, and it needs no unpacking.
 
 To update it, build the framework from the vendored source with `cmake`, encode its binary with `base64`, and replace those two resource files.
 
