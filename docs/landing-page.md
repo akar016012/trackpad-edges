@@ -12,6 +12,14 @@ The download shows a coming soon button until a release exists. Each deploy read
 
 The download section also shows how many times every version's DMG has been downloaded. `site/main.js` reads that total from the public releases list in the visitor's browser, keeps it for ten minutes, and leaves it hidden when the request fails or the total is 0.
 
+## Search engines
+
+The page's title and description name what people search for: a free Mac app for volume and brightness on the trackpad. The page declares its canonical address, and a `SoftwareApplication` block in the page head describes the app as free software for macOS on Apple silicon. That block has no rating, because a rating must come from real reviews. Search results can show richer app details only after the page has such reviews.
+
+`site/robots.txt` allows every crawler and points to `site/sitemap.xml`, which lists the one page. After each deploy, `.github/workflows/pages.yml` sends the page's address to IndexNow, which passes it to the search engines that take part. `site/9a65610ca2f8f1bb7a90909a043d3a57.txt` holds the key that proves the request comes from this site. The key is public by design, and it must stay in place while the workflow uses it.
+
+Registering the site with each search engine's own webmaster tools needs the maintainer's accounts, so that step happens outside this repository.
+
 ## Deploying
 
 `.github/workflows/pages.yml` publishes only `site/`. It also adds `appcast.xml`, the update feed, from the newest release, so that file is not in the repository. It runs on every push to `main` that changes `site/`, after each release, and by hand. The custom domain is set in the repository's Pages settings.

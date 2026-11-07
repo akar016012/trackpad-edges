@@ -57,3 +57,12 @@ jobs:
           path: site
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+
+      # IndexNow tells participating search engines that the page changed. The key file in site/
+      # proves ownership. A refused request leaves a warning, and the deploy still counts.
+      - name: Tell search engines about the change
+        run: |
+          curl -fsS -X POST https://api.indexnow.org/indexnow \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d '{"host":"trackpad.adiworks.dev","key":"9a65610ca2f8f1bb7a90909a043d3a57","keyLocation":"https://trackpad.adiworks.dev/9a65610ca2f8f1bb7a90909a043d3a57.txt","urlList":["https://trackpad.adiworks.dev/"]}' ||
+            echo "::warning::IndexNow did not accept the update"
