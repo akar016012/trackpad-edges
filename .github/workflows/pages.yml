@@ -1,8 +1,10 @@
 # Publishes only the site folder.
-# This runs by hand for now. Add a push trigger for site/** once GitHub Pages is turned on.
 name: Deploy landing page
 
 on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:

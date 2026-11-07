@@ -48,7 +48,7 @@ Touch hardware cannot be simulated, so a change to how gestures feel also needs 
 - Add tests for logic in `trackpad-edges/Gestures/`, which is where decisions should live so that they can be tested.
 - Update any document that your change makes out of date, in the same pull request.
 - Write full sentences in documents and comments, and use American English.
-- Format Swift with the project's existing style, and format Markdown, YAML, HTML, CSS, and JavaScript with Prettier.
+- Match the formatting of the files around your change.
 - Keep the window's layout on its shared margin, columns, and row heights, which are defined in `SettingsPane`.
 
 ## Private APIs

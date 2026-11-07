@@ -26,24 +26,25 @@ This list was last updated on 2026-11-07. **Done** means that it was tried on a 
 - [x] [Recording any key combination, including the left or right modifier](corners.md)
 - [x] [App window with aligned panes](settings.md)
 - [x] [Custom icons in the window](dependencies.md)
+- [x] [Assignable edges from the window and the menu bar](settings.md)
+- [x] [Top edge](roadmap/top-edge.md)
+- [x] [More edge actions, apart from Monitor Brightness](roadmap/more-edge-actions.md)
+- [x] [Two-finger edge slides](roadmap/two-finger-slides.md)
+- [x] [Per-app profiles](roadmap/per-app-profiles.md)
+- [x] [Welcome tour](welcome-tour.md)
 
 ### Needs a check
 
+- [ ] [Monitor Brightness](roadmap/more-edge-actions.md), because the one monitor tried refused it
 - [ ] [Palm detection](roadmap/palm-detection.md)
-- [ ] [Top edge](roadmap/top-edge.md)
-- [ ] [More edge actions](roadmap/more-edge-actions.md)
-- [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
 - [ ] [Installed build](roadmap/installed-build.md)
-- [ ] [Per-app profiles](roadmap/per-app-profiles.md)
-- [ ] [Welcome tour](welcome-tour.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Seconds per step](roadmap/seconds-per-step.md)
-- [ ] [Assignable edges from the window and the menu bar](settings.md)
 - [ ] [Click-to-start option](gestures.md)
 - [ ] [Launch at login](menu-bar-and-onboarding.md)
 - [ ] [Custom app and menu bar icons](dependencies.md)
-- [ ] External Apple trackpad support, because all testing used the built-in trackpad
-- [ ] Media seek in Safari, because only Chrome was tried
+- [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
+- [ ] Media seek in Safari still needs a check, because only Chrome was tried.
 
 ### Known limits
 
@@ -141,7 +142,7 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 
 ### Phase 4: Two-finger edge slides (complete)
 
-See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a second action for a two-finger slide, such as one finger for volume and two for brightness. This is built, but it still needs a check.
+See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a second action for a two-finger slide, such as one finger for volume and two for brightness. This is confirmed working.
 
 ### Phase 5: Installed build (built, needs a real install)
 
@@ -149,7 +150,7 @@ See [installed-build.md](roadmap/installed-build.md). A signed copy in the Appli
 
 ### Phase 6: Per-app profiles (complete)
 
-See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. The saved settings stay as the default profile, so nothing needed converting. This is built, but it still needs a check.
+See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. The saved settings stay as the default profile, so nothing needed converting. This is confirmed working.
 
 ## Verification
 

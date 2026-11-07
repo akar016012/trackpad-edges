@@ -1,6 +1,6 @@
 # More edge actions
 
-Status: these actions are built and unit tested, but they have not been confirmed on the trackpad yet. External monitor brightness also needs a monitor that answers over DDC.
+Status: these actions are built, unit tested, and confirmed working. External monitor brightness is the exception: the one monitor tried refused DDC, so it has never been seen working.
 
 ## Goal
 
@@ -37,7 +37,7 @@ The edge popups on the Edges pane and in the menu bar item list the new actions.
 
 - The keyboard backlight has no public API for setting it. The app presses the public media keys, and it reads the state from the private CoreBrightness client so that it knows when nothing can change.
 - A Mac with no keyboard backlight, or one that ignores these keys, gets no effect, and the app cannot always tell.
-- macOS locks the keyboard backlight off while the room reads as bright, and the system slider then does not move. Covering the light sensor beside the camera unlocked it on this Mac, and the level moved from 0 to 100%. While it is locked, the app gives the limit haptic if that setting is on, and it shows a short notice in the overlay style from the Media pane, which says that macOS turns the light off when the room is bright. VoiceOver announces the same notice. The app counts the backlight as locked only while automatic brightness is on. Turning off **Adjust keyboard brightness in low light** in System Settings may allow manual control, but that has not been tried.
+- macOS locks the keyboard backlight off while the room reads as bright, and the system slider then does not move. Covering the light sensor beside the camera unlocked it in testing, and the level moved from 0 to 100%. While it is locked, the app gives the limit haptic if that setting is on, and it shows a short notice in the overlay style from the Media pane, which says that macOS turns the light off when the room is bright. VoiceOver announces the same notice. The app counts the backlight as locked only while automatic brightness is on. Turning off **Adjust keyboard brightness in low light** in System Settings may allow manual control, but that has not been tried.
 - Other Apple options were tested and do not help. A CoreHID virtual device is refused, the real backlight device has an undocumented vendor protocol, and setting the level through CoreBrightness has no effect while it is locked.
 - DDC varies by monitor and port, and it fails on some HDMI ports and on most TVs. The action is dimmed until a monitor answers.
 - Switch Spaces is dimmed when the system's shortcuts for moving between Spaces are off, and the dimmed item's tooltip says why.
@@ -45,7 +45,7 @@ The edge popups on the Edges pane and in the menu bar item list the new actions.
 ## Verification
 
 - Unit tests cover step handling, the DDC messages, and how replies are checked.
-- On the trackpad, each action should work from each edge, and an unavailable action should be dimmed.
+- On the trackpad, each action works from an edge, and an unavailable action is dimmed.
 
 ## Related docs
 

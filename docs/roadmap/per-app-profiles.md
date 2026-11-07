@@ -1,6 +1,6 @@
 # Per-app profiles
 
-Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
+Status: this feature is built, unit tested, and confirmed working.
 
 ## Goal
 
@@ -36,7 +36,7 @@ Only edges and corners belong to a profile. Edge width, sensitivity, the require
 ## Verification
 
 - Unit tests cover loading older settings, overrides, clearing an override, and a profile change during a slide.
-- On the trackpad, switching apps should change what an edge does without restarting anything.
+- On the trackpad, switching apps changes what an edge does without restarting anything.
 
 ## Related docs
 

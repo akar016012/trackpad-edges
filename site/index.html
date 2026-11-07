@@ -14,8 +14,13 @@
       content="The sides and corners of your trackpad become controls, and the middle stays a normal trackpad."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="assets/share.jpg" />
+    <meta property="og:url" content="https://trackpad.adiworks.dev/" />
+    <meta
+      property="og:image"
+      content="https://trackpad.adiworks.dev/assets/share.jpg"
+    />
     <meta name="twitter:card" content="summary_large_image" />
+    <link rel="author" href="https://adiportfolio.com/" />
     <link rel="icon" href="assets/favicon.png" />
     <link
       rel="preload"
@@ -41,8 +46,9 @@
           <h1>Your trackpad has edges. Use them.</h1>
           <p class="lede">
             Slide along the side of your Mac's trackpad to change the volume,
-            the brightness, or your place in a video. Press a corner to run
-            whatever you choose. The middle stays a normal trackpad.
+            the brightness, or your place in a video, and feel a haptic tick on
+            each step. Press a corner to run whatever you choose. The middle
+            stays a normal trackpad.
           </p>
           <div class="actions">
             <a class="download" href="#download">Get Trackpad Edges</a>
@@ -132,7 +138,8 @@
           <li><b>Media seek</b> shows a preview before you let go.</li>
           <li><b>Scroll</b> moves the window under the pointer.</li>
           <li>
-            <b>Zoom</b> works in apps that use the standard zoom shortcuts.
+            <b>Zoom</b> works in apps that use the standard zoom shortcuts on a
+            US keyboard layout.
           </li>
           <li>
             <b>Switch apps</b> moves through your open apps one at a time.
@@ -140,7 +147,8 @@
           <li><b>Switch Spaces</b> moves one Space left or right.</li>
           <li><b>Keyboard backlight</b> changes the light under your keys.</li>
           <li>
-            <b>Monitor brightness</b> works on external displays that allow it.
+            <b>Monitor brightness</b> is experimental, and it needs an external
+            display that allows it.
           </li>
         </ul>
         <figure class="shot">
@@ -216,6 +224,17 @@
             alt="The Profiles tab, listing apps with their own settings."
           />
         </figure>
+        <article class="row">
+          <div class="map" data-zone="tour" aria-hidden="true"></div>
+          <div>
+            <h3>A guided start</h3>
+            <p>
+              A short tour walks you through the permission and your first
+              slide, and then helps you choose your edges, corners, and haptics.
+              You can take it again at any time.
+            </p>
+          </div>
+        </article>
       </section>
 
       <section class="answers">
@@ -234,8 +253,9 @@
             The app needs this permission to press keys for you, including any
             shortcut you assign, to bring apps forward, and to watch trackpad
             clicks so that a slide or corner press does not also click. It reads
-            your keyboard only while you record a shortcut. Without the
-            permission, gestures stay off.
+            key presses only while you record a shortcut, and during a gesture
+            it checks which modifier keys are held. Without the permission,
+            gestures stay off.
           </dd>
           <dt>Does it collect anything?</dt>
           <dd>
@@ -245,7 +265,8 @@
           <dt>Does media seek work everywhere?</dt>
           <dd>
             It works with whatever your Mac shows as now playing. An app that
-            does not share its position cannot be moved.
+            does not share its position cannot be moved, and testing so far has
+            used Chrome.
           </dd>
           <dt>Why does keyboard backlight sometimes stop?</dt>
           <dd>
@@ -259,24 +280,36 @@
       <section class="get" id="download">
         <img src="assets/icon.png" alt="" width="96" height="96" />
         <h2>Get Trackpad Edges</h2>
-        <p class="coming" id="coming-soon">The download is coming soon.</p>
-        <a class="download" id="download-link" hidden>Download for Mac</a>
+        <div class="get-actions">
+          <span class="download is-soon" id="coming-soon"
+            >macOS download coming soon</span
+          >
+          <a class="download" id="download-link" hidden>Download for Mac</a>
+          <a
+            class="download"
+            href="https://github.com/akar016012/trackpad-edges#build-and-run"
+            >Build from source</a
+          >
+        </div>
         <p class="version" id="version" hidden></p>
         <p class="needs">
           Needs a Mac with Apple silicon and a Force Touch trackpad, running
-          macOS 27.2 or later. Haptic control is tested on built-in trackpads.
+          macOS 27.2 or later. All testing so far has used built-in trackpads.
         </p>
       </section>
     </main>
 
     <footer>
       <p>
+        © 2026 <a href="https://adiportfolio.com/" rel="author">Aditya Kar</a>.
+      </p>
+      <p>
         Trackpad Edges is free software under the
         <a href="https://www.gnu.org/licenses/gpl-3.0.html"
           >GNU General Public License version 3</a
         >.
-        <span id="source" hidden
-          ><a id="source-link">Read the source code.</a></span
+        <a href="https://github.com/akar016012/trackpad-edges"
+          >Read the source code.</a
         >
       </p>
       <p>

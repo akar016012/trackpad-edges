@@ -2,7 +2,6 @@
 const release = {
   url: "",
   version: "",
-  source: "",
 };
 
 const pad = document.getElementById("pad");
@@ -176,10 +175,37 @@ document.getElementById("next").addEventListener("click", () => {
   report("Skipped to the next track.");
 });
 
-if (release.source) {
-  document.getElementById("source-link").href = release.source;
-  document.getElementById("source").hidden = false;
+// The page opens by ticking the volume up to its level, which shows what a slide feels like.
+function openWithTicks() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+  const strip = document.getElementById("volume");
+  let shown = 0;
+  strip.style.setProperty("--value", "0%");
+  const timer = setInterval(() => {
+    shown += 1;
+    if (shown > state.volume) {
+      stop();
+      return;
+    }
+    strip.style.setProperty(
+      "--value",
+      `${(shown / controls.volume.steps) * 100}%`,
+    );
+    tick();
+  }, 80);
+  // Any use of the volume controls takes over from the opening.
+  function stop() {
+    clearInterval(timer);
+    render("volume");
+  }
+  strip.addEventListener("pointerdown", stop, { once: true });
+  strip.addEventListener("keydown", stop, { once: true });
+  mute.addEventListener("click", stop, { once: true });
 }
+
+openWithTicks();
 
 if (release.url) {
   const link = document.getElementById("download-link");

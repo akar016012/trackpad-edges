@@ -1,33 +1,22 @@
 # Landing page
 
-Status: the page is built and tested locally at desktop and phone sizes, but it is not deployed. The repository is private, and nothing has been published.
+Status: the page is built and tested at desktop and phone sizes. It publishes to https://trackpad.adiworks.dev.
 
 ## What it is
 
-`site/` holds a static page with no build step. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. All of it works by keyboard too. The page loads nothing from other sites, because the font is stored in `site/fonts/` under its open font license.
+`site/` holds a static page with no build step. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The page loads nothing from other sites, because the font is stored in `site/fonts/` under its open font license.
 
 ## Adding a build
 
-The download is a placeholder until a build exists. Set `url`, `source`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, the footer links to the source code as the GPL requires, and the hero button keeps leading there, so that visitors see the requirements first. Sharing a build needs notarization, as [installed-build.md](roadmap/installed-build.md) explains.
+The download is a placeholder until a build exists. Set `url`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. Sharing a build needs notarization, as [installed-build.md](roadmap/installed-build.md) explains.
 
 ## Deploying
 
-`.github/workflows/pages.yml` publishes only `site/`, and it runs by hand until GitHub Pages is turned on.
-
-1. Make sure that this repository's plan or visibility allows Pages.
-2. In the repository settings, set the Pages source to **GitHub Actions**.
-3. Set `og:image` in `site/index.html` to the full address of `assets/share.jpg`, because link previews need an absolute address. Add an `og:url` tag with the page's address.
-4. Run the **Deploy landing page** workflow.
-
-All other links in the page are relative, so it works at a project address and on a custom domain. A project address shows your account and repository name, and only a custom domain avoids that.
-
-## Before it goes live
-
-The more edge actions, two-finger slides, and profiles are on the page, but they have not all been confirmed on a trackpad. Confirm them first, or take them off the page.
+`.github/workflows/pages.yml` publishes only `site/`. It runs on every push to `main` that changes `site/`, and it can also run by hand. The custom domain is set in the repository's Pages settings.
 
 ## Updating it
 
-Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The screenshots in `site/assets/` were captured from a debug build with temporary settings. Update them when the Edges or Profiles tab changes.
+Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The screenshots in `site/assets/` and `docs/images/` were captured from a debug build with example settings, so a new install looks different. Update them when a tab changes.
 
 ## Related docs
 

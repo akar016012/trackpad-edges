@@ -4,4 +4,6 @@ DerivedData/
 xcuserdata/
 .build/
 .swiftpm/
-temp_docs/
+.env
+.env.*
+!.env.example

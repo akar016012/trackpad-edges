@@ -19,6 +19,10 @@
   --strip: clamp(44px, 6vw, 72px);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 *,
 *::before,
 *::after {
@@ -483,6 +487,16 @@ main > .feel {
     var(--pad);
 }
 
+.map[data-zone="tour"] {
+  --edge: linear-gradient(var(--orange), var(--orange));
+  background:
+    var(--edge) 0 0 / 100% 12% no-repeat,
+    var(--edge) 0 100% / 100% 12% no-repeat,
+    var(--edge) 0 0 / 8% 100% no-repeat,
+    var(--edge) 100% 0 / 8% 100% no-repeat,
+    var(--pad);
+}
+
 .shot-small {
   max-width: 720px;
   margin-left: calc(clamp(120px, 20vw, 200px) + clamp(20px, 5vw, 56px));
@@ -525,6 +539,18 @@ main > .get {
 .coming,
 .version {
   font-weight: 650;
+}
+
+.get-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.download.is-soon {
+  background: rgb(29 31 34 / 0.16);
+  color: var(--ink);
 }
 
 .needs {

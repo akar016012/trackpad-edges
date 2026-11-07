@@ -17,7 +17,7 @@ Only the latest release receives security fixes.
 These details explain what a vulnerability in this app could affect.
 
 - The app holds the Accessibility permission, so it can post keyboard and media key events, hold back or swallow left clicks, block pointer and scroll events during a slide, and bring apps forward.
-- While you record a shortcut, the app reads and swallows keyboard events. It does not read the keyboard at any other time.
+- While you record a shortcut, the app reads and swallows keyboard events. It reads no key presses at any other time, although it checks which modifier keys are held during a gesture.
 - Its event taps sit in the path of every left click, so a stalled or misbehaving app can hold up clicks for the whole Mac. A watchdog turns the taps off if the app's main thread stalls.
 - The app reads touches from the trackpad through a private framework, and it does not store them.
 - The app itself makes no network requests, and it has no accounts, tracking, or analytics. An action that you assign can still reach the network, such as a link or a shortcut.

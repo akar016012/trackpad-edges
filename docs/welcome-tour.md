@@ -1,6 +1,6 @@
 # Welcome tour
 
-Status: the tour is built and its pages have been inspected, but it has not been walked through from a clean install.
+Status: the tour is built and confirmed working, but it has not been walked through from a clean install.
 
 ## Goal
 
