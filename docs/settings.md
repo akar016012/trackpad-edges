@@ -37,7 +37,7 @@ The overlay uses the Solid style while **Reduce transparency** is on in System S
 | Step type | This popup makes a step a percentage of the track or a fixed number of seconds. |
 | Each step | This slider sets one step, from 0.5% to 10% or from 1 to 60 seconds.            |
 
-The **Style** popup sets how the seek preview looks: Glass, Clear Glass, Frosted, or Solid. Glass and Solid follow light and dark mode. Clear Glass and Frosted always use a dimmed tint with light text, so they stay readable over any content. The **Position** popup places it at the bottom, center, or top of the screen. Changing either one shows a sample for two seconds.
+The **Style** popup sets how the seek preview looks: Glass, Clear Glass, Frosted, or Solid. Before macOS 26, which introduced glass, both glass styles look like Frosted. On macOS 26 or later, Glass follows light and dark mode, and Solid always does. Clear Glass and Frosted always use a dimmed tint with light text, so they stay readable over any content. The **Position** popup places it at the bottom, center, or top of the screen. Changing either one shows a sample for two seconds.
 
 See [media-seek.md](media-seek.md).
 

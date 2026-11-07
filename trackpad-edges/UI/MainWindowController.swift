@@ -122,7 +122,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // The window only reaches its final size once it is on screen with its toolbar.
         fitPane()
         if !wasOpen { window?.centerOnPointerScreen() }
-        NSApp.activate()
+        NSApp.bringForward()
         window?.makeKeyAndOrderFront(nil)
     }
 

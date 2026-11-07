@@ -6,6 +6,8 @@ This document lists every package, framework, and system method the app uses. It
 
 The app bundles `mediaremote-adapter` v0.7.7 (upstream commit `e3ff502`) by Jonas van den Berg, which provides media seeking. It is BSD 3-Clause licensed, and its license text ships in the app as `MediaRemoteAdapter-LICENSE`. Its source is in `Vendor/mediaremote-adapter`, and [media-seek.md](media-seek.md) explains how it is bundled and updated.
 
+The library ships as base64 text in `trackpad-edges/Resources/MediaRemoteAdapter.base64`. It is built from `Vendor/mediaremote-adapter` with a macOS 13 minimum, so that it loads on every system the app supports. To rebuild it, run `cmake -S Vendor/mediaremote-adapter -B <folder> -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0`, then `cmake --build <folder>`, and encode `MediaRemoteAdapter.framework/Versions/A/MediaRemoteAdapter` with `base64 -i <file> | tr -d '\n'`, writing the result to that resource file. `scripts/build-release.sh` refuses a library whose minimum is newer than the app's.
+
 Sparkle 2.10.1 provides automatic updates. It is the only Swift package, `project.xcproj` pins that exact version, and `project.xcworkspace/xcshareddata/swiftpm/Package.resolved` records its commit. Automated dependency updates cannot see a package in an Xcode project, so check its releases by hand. `Package.swift` exists only so that `swift test` can run the gesture tests.
 
 Open source projects were read as references for how the private frameworks behave, but no code was copied from them. The main references were Subsurface (Apache-2.0), TrackEdge by apurv-1 (MIT), TrackpadKit (MIT), and HapticKey (MIT).
@@ -31,11 +33,11 @@ The framework lives at `/System/Library/PrivateFrameworks/MultitouchSupport.fram
 | `MTActuatorActuate`                | This call fires a haptic with a chosen strength. | `Haptics/HapticEngine.swift`   |
 | `MTActuatorClose`                  | This call closes the actuator after a slide.     | `Haptics/HapticEngine.swift`   |
 
-The app also reads the framework's touch record by byte offset, because the framework has no public header. The offsets were read from the macOS 27.2 binary, and they are listed in `TouchLayout` in `Input/MultitouchBridge.swift`.
+The app also reads the framework's touch record by byte offset, because the framework has no public header. The offsets were read from the macOS 27.2 binary, and they are listed in `TouchLayout` in `Input/MultitouchBridge.swift`. The app supports macOS 13 or later, but nobody has checked these offsets or the other private frameworks on a system before 27.2.
 
 ### Build tools
 
-`scripts/install.sh` and `scripts/build-release.sh` use `xcodebuild`, `codesign`, `security find-identity`, `base64`, `ditto`, `pgrep`, and `lsof`, which all ship with macOS or Xcode. The release workflow also uses the GitHub CLI and `create-dmg` from npm, which `.github/dmg/package-lock.json` fixes with all of its dependencies. It signs updates with Sparkle's `sign_update`, checks them with `scripts/verify-update.swift`, and writes the feed with `scripts/make-appcast.py`.
+`scripts/install.sh` and `scripts/build-release.sh` use `xcodebuild`, `xcrun vtool`, `PlistBuddy`, `codesign`, `security find-identity`, `base64`, `ditto`, `pgrep`, and `lsof`, which all ship with macOS or Xcode. Rebuilding the media adapter also needs `cmake`. The release workflow also uses the GitHub CLI and `create-dmg` from npm, which `.github/dmg/package-lock.json` fixes with all of its dependencies. It signs updates with Sparkle's `sign_update`, checks them with `scripts/verify-update.swift`, and writes the feed with `scripts/make-appcast.py`.
 
 ### CoreBrightness private client
 

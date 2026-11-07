@@ -16,7 +16,7 @@ The app should run from the Applications folder as a signed Release build, rathe
 
 1. The script looks for the project's Developer ID identity first, and it signs by hash so that a renewed certificate is never ambiguous. Without one, it warns you and falls back to an Apple Development identity.
 2. It builds without signing, because the app must be signed after the adapter goes inside it.
-3. It decodes the base64 text into a real `MediaRemoteAdapter.framework` in `Contents/Frameworks`, and it removes the text from the app.
+3. It decodes the base64 text into a real `MediaRemoteAdapter.framework` in `Contents/Frameworks`, and it removes the text from the app. It stops if the library needs a newer macOS than the app supports, because such a library would not load there.
 4. It signs the framework and then the app with the Hardened Runtime. A Developer ID build also gets a secure timestamp.
 5. It copies and verifies the new app beside the old one before it changes anything. Two renames then swap the copies, and a failed rename puts the old copy back.
 6. It stops only a copy that is running from the exact destination, so an Xcode copy keeps running. It warns you when another copy is left running, because both copies act on every gesture.

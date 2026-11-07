@@ -49,6 +49,7 @@ This list was last updated on 2026-11-07. **Done** means that it was tried on a 
 
 ### Known limits
 
+- The app supports macOS 13 or later, but it has been tried only on macOS 27.2. The private frameworks that read touches could behave differently on earlier systems.
 - A finger that lands in a strip freezes the pointer until it leaves, because slides start on touch.
 - A tap with tap-to-click can still count as a click in a corner.
 - A click from a second pointing device can be captured while a finger rests in a zone.

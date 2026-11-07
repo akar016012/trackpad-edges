@@ -45,7 +45,7 @@ final class Updater: NSObject, SPUStandardUserDriverDelegate {
 
     func checkForUpdates() {
         // An app without a Dock icon otherwise opens the update window behind the front app.
-        NSApp.activate()
+        NSApp.bringForward()
         controller?.checkForUpdates(nil)
     }
 

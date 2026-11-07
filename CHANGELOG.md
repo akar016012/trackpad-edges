@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 1.2 - 2026-11-07
+
+- The app now runs on macOS 13 or later. All testing so far has used macOS 27.2.
+- On systems before macOS 26, the glass styles for the seek preview look frosted.
+
 ## 1.1 - 2026-11-07
 
 - The app checks for updates every 24 hours and can install them for you. You can turn that off in the General pane.

@@ -1,6 +1,6 @@
 # Releasing
 
-Status: versions 1.0 and 1.1 are published. Version 1.0 was released by hand, and 1.1 released itself when its version change landed on `main`. Version 1.1 is the first version with automatic updates, so no installed copy has updated itself yet.
+Status: version 1.0 was released by hand, and later versions release themselves when their version change lands on `main`. Version 1.2 is the first update that installed copies of 1.1 can receive on their own.
 
 Releases are automatic. Merging a change that bumps the version to `main` tags the commit, builds and signs the app, notarizes it, publishes a DMG on this repository's Releases page, and points the landing page at the download.
 
@@ -43,7 +43,7 @@ A version that already has a tag is not released again. To release a version tha
 ## What a release does
 
 1. `release.yml` reads the version and checks that the release notes exist.
-2. `mac.yml` runs the tests, and `scripts/build-release.sh` builds the app with the adapter inside it and signs it.
+2. `mac.yml` runs the tests, and `scripts/build-release.sh` builds the app with the adapter inside it, checks that the adapter loads on the app's oldest supported macOS, and signs it.
 3. The job notarizes and staples the app, and it does the same for the DMG. It then signs the DMG with the update key, checks that signature against the public key inside the built app, and writes `appcast.xml`.
 4. The job creates the tag `v<version>` and publishes the release with `appcast.xml` and `TrackpadEdges.dmg`, so the link `releases/latest/download/TrackpadEdges.dmg` always gives the newest version.
 5. The job starts the landing page's deploy, which reads the newest release, adds its link to the published copy of `site/main.js`, and publishes its `appcast.xml`. Installed copies learn about a version only at this point, so a release is finished when the deploy is green. A release writes nothing to `main`.

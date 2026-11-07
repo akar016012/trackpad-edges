@@ -123,7 +123,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(profileItem)
         menu.addItem(accessibilityItem)
         menu.addItem(.separator())
-        menu.addItem(.sectionHeader(title: "Edges for All Apps"))
+        if #available(macOS 14.0, *) {
+            menu.addItem(.sectionHeader(title: "Edges for All Apps"))
+        } else {
+            // macOS 13 has no section header, so a disabled item stands in for one.
+            let header = NSMenuItem(title: "Edges for All Apps", action: nil, keyEquivalent: "")
+            header.isEnabled = false
+            menu.addItem(header)
+        }
         for (index, edge) in Self.edges.enumerated() {
             menu.addItem(makeEdgeItem(title: edge.title, edgeIndex: index, path: edge.path))
         }
@@ -212,7 +219,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func showAbout() {
-        NSApp.activate()
+        NSApp.bringForward()
         NSApp.orderFrontStandardAboutPanel(nil)
     }
 

@@ -22,7 +22,7 @@ Open an issue with the feature request form before you write code, so that nobod
 
 ## Setting up
 
-You need a Mac with Apple silicon, a Force Touch trackpad, and Xcode 27.2 or later.
+You need a Mac with Apple silicon, a Force Touch trackpad, and Xcode 27.2 or later. The app runs on macOS 13 or later, so put any API newer than macOS 13 behind an `#available` check.
 
 1. Clone the repository, and open `trackpad-edges.xcodeproj` in Xcode.
 2. Choose your own team under **Signing & Capabilities**, and leave that change out of your pull request.

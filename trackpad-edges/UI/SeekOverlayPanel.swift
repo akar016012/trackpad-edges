@@ -65,8 +65,9 @@ final class SeekOverlayPanel: NSPanel {
     }
 
     /// Rebuilds the background, because each style is a different kind of view.
-    func apply(style: OverlayStyle, placement: OverlayPlacement) {
+    func apply(style chosen: OverlayStyle, placement: OverlayPlacement) {
         self.placement = placement
+        let style = Self.drawnStyle(for: chosen)
         // Clear glass and the frosted material show whatever is behind them, so they always use a
         // dimmed tint with light text, which stays readable over bright and dark content.
         let alwaysDark = style == .clearGlass || style == .frosted
@@ -82,6 +83,13 @@ final class SeekOverlayPanel: NSPanel {
         hasShadow = style != .clearGlass
         invalidateShadow()
         if isVisible { moveIntoPlace() }
+    }
+
+    /// Glass arrived in macOS 26, so earlier systems draw the frosted style instead, with its
+    /// colors and shadow as well as its background.
+    private static func drawnStyle(for style: OverlayStyle) -> OverlayStyle {
+        if #available(macOS 26.0, *) { return style }
+        return style == .glass || style == .clearGlass ? .frosted : style
     }
 
     /// Shows the target time. The change is the share of the track that it moves, from -1 to 1.
@@ -145,6 +153,8 @@ final class SeekOverlayPanel: NSPanel {
     private func makeBackground(for style: OverlayStyle) -> NSView {
         switch style {
         case .glass, .clearGlass:
+            // Glass arrived in macOS 26, so earlier systems show the frosted style instead.
+            guard #available(macOS 26.0, *) else { return makeBackground(for: .frosted) }
             let glass = NSGlassEffectView()
             glass.style = style == .glass ? .regular : .clear
             glass.tintColor = style == .glass ? nil : NSColor.black.withAlphaComponent(0.45)

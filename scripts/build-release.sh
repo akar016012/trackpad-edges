@@ -81,6 +81,21 @@ ln -s A "$framework/Versions/Current"
 ln -s Versions/Current/MediaRemoteAdapter "$framework/MediaRemoteAdapter"
 ln -s Versions/Current/Resources "$framework/Resources"
 
+# A library built for a newer system than the app's minimum refuses to load there, and media seek
+# then fails without a word. A default build targets the build machine's system, so this stops it.
+app_minimum="$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$app/Contents/Info.plist")"
+adapter_minimum="$(xcrun vtool -show-build "$framework/Versions/A/MediaRemoteAdapter" |
+  awk '/minos/ {print $2}' | sort -V | tail -n 1)"
+if [[ -z "$adapter_minimum" ]]; then
+  echo "Could not read the minimum macOS of the adapter." >&2
+  exit 1
+fi
+if [[ "$(printf '%s\n%s\n' "$adapter_minimum" "$app_minimum" | sort -V | tail -n 1)" != "$app_minimum" ]]; then
+  echo "The adapter needs macOS $adapter_minimum, but the app supports macOS $app_minimum." >&2
+  echo "Rebuild it as docs/dependencies.md describes." >&2
+  exit 1
+fi
+
 # Inner code is signed first, because the app's signature records the signatures inside it. The
 # updater's helpers are signed one at a time, because each must carry the hardened runtime.
 sparkle="$app/Contents/Frameworks/Sparkle.framework"

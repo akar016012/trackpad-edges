@@ -493,13 +493,13 @@ final class WelcomeWindowController: NSWindowController, NSWindowDelegate {
         NSApp.setActivationPolicy(.regular)
         showWindow(nil)
         window?.centerOnPointerScreen()
-        NSApp.activate()
+        NSApp.bringForward()
         window?.makeKeyAndOrderFront(nil)
     }
 
     /// Brings an open tour to the front, without moving it or changing its step.
     func bringForward() {
-        NSApp.activate()
+        NSApp.bringForward()
         window?.makeKeyAndOrderFront(nil)
     }
 

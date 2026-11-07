@@ -5,7 +5,7 @@ import PackageDescription
 // dependencies. The app itself is built from the Xcode project.
 let package = Package(
     name: "EdgeGestures",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v13)],
     targets: [
         .target(name: "EdgeGestures", path: "trackpad-edges/Gestures"),
         .testTarget(
