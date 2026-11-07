@@ -4,11 +4,13 @@ Status: the page is built and tested at desktop and phone sizes. It publishes to
 
 ## What it is
 
-`site/` holds a static page with no build tools. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The page loads nothing from other sites, because the font is stored in `site/fonts/` under its open font license.
+`site/` holds a static page with no build tools. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The font is stored in `site/fonts/` under its open font license, and the page makes one request to another site, which reads the public releases list for the download count. That host sees the visitor's IP address, but the request carries no referrer and no cookies.
 
 ## Adding a build
 
 The download shows a coming soon button until a release exists. Each deploy reads the newest release and fills `url` and `version` in the published copy of `site/main.js`, and the copy in the repository stays empty. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. The [release workflow](releasing.md) does this by itself.
+
+The download section also shows how many times every version's DMG has been downloaded. `site/main.js` reads that total from the public releases list in the visitor's browser, keeps it for ten minutes, and leaves it hidden when the request fails or the total is 0.
 
 ## Deploying
 

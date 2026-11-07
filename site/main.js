@@ -218,3 +218,64 @@ if (release.url) {
     version.hidden = false;
   }
 }
+
+// Every element with data-download-count shows how many times any version's DMG has been
+// downloaded, written into the attribute's "{count}" placeholder. The total is kept for ten
+// minutes in this tab, so that a few reloads stay within the release host's request limit. The
+// elements stay hidden until there is a count, and when the release host cannot be reached. The request
+// sends no referrer, so the release host does not learn which page asked.
+const releasesApi =
+  "https://api.github.com/repos/akar016012/trackpad-edges/releases?per_page=100";
+const countKey = "downloads:v1";
+const countLifetime = 10 * 60 * 1000;
+
+function readCount() {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(countKey));
+    if (cached && Date.now() - cached.at < countLifetime) return cached.total;
+  } catch {
+    // Storage is blocked or holds something else, so the count is fetched again.
+  }
+  return null;
+}
+
+function writeCount(total) {
+  try {
+    sessionStorage.setItem(countKey, JSON.stringify({ at: Date.now(), total }));
+  } catch {
+    // Storage is blocked or full, so the count is simply not kept.
+  }
+}
+
+async function showDownloadCount() {
+  let total = readCount();
+  if (total === null) {
+    try {
+      const response = await fetch(releasesApi, {
+        headers: { Accept: "application/vnd.github+json" },
+        referrerPolicy: "no-referrer",
+      });
+      if (!response.ok) return;
+      const releases = await response.json();
+      total = releases
+        .flatMap((release) => release.assets ?? [])
+        .filter((asset) => asset.name.endsWith(".dmg"))
+        .reduce((sum, asset) => sum + (asset.download_count ?? 0), 0);
+      writeCount(total);
+    } catch {
+      // The page is offline or the request was refused, so the count stays hidden.
+      return;
+    }
+  }
+  if (!total) return;
+  const count = `${total.toLocaleString("en-US")} ${total === 1 ? "download" : "downloads"}`;
+  document.querySelectorAll("[data-download-count]").forEach((element) => {
+    element.textContent = element.dataset.downloadCount.replace(
+      "{count}",
+      count,
+    );
+    element.hidden = false;
+  });
+}
+
+showDownloadCount();

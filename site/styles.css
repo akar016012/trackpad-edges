@@ -541,6 +541,11 @@ main > .get {
   font-weight: 650;
 }
 
+.downloads {
+  margin-top: -8px;
+  color: var(--ink);
+}
+
 .get-actions {
   display: flex;
   flex-wrap: wrap;
