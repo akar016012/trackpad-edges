@@ -134,6 +134,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         about.target = self
         menu.addItem(about)
         menu.addItem(updatesItem)
+        let notes = NSMenuItem(
+            title: "Release Notes", action: #selector(showReleaseNotes), keyEquivalent: "")
+        notes.target = self
+        notes.toolTip = "Opens the notes for this version in your browser."
+        menu.addItem(notes)
         let tour = NSMenuItem(
             title: "Welcome Tour…", action: #selector(showWelcomeTour), keyEquivalent: "")
         tour.target = self
@@ -245,6 +250,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func checkForUpdates() {
         updater.checkForUpdates()
+    }
+
+    @objc private func showReleaseNotes() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString")
+        NSWorkspace.shared.open(ProjectLinks.releaseNotes(for: version as? String))
     }
 
     @objc private func togglePause() {

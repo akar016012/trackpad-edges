@@ -2,7 +2,7 @@
 
 ## Context
 
-This project is a macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. Haptics are controlled in the settings. The app has no license keys, activation, or update checks.
+This project is a macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. Haptics are controlled in the settings. The app has no license keys or activation, and it checks for updates once a day.
 
 ## Feature status
 
@@ -97,7 +97,7 @@ Any edge can use any action, and the full list is in [more edge actions](roadmap
 
 All source lives under `trackpad-edges/`.
 
-- `App/` holds the app delegate, the gesture controller, and the main menu.
+- `App/` holds the app delegate, the gesture controller, the main menu, the updater, and the project's links.
 - `Input/` holds the `MultitouchSupport` bridge, device hot-plug and sleep handling, the event taps, and the watchdog that protects clicks.
 - `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it.
 - `Actions/` holds the edge actions, including volume, brightness, media seek, and external displays, and the corner actions.

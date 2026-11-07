@@ -395,7 +395,23 @@ final class WelcomeTour: SettingsPane {
                             "Two fingers can do something different on each edge, and each app can have a profile of its own. Both are in the app window.",
                             width: Self.contentWidth),
                     ], spacing: 6),
+                column(
+                    [
+                        heading("Enjoying it?"),
+                        paragraph(
+                            "A star on GitHub helps other people find the app.",
+                            width: Self.contentWidth),
+                        starButton(),
+                    ], spacing: 6),
             ])
+    }
+
+    /// GitHub cannot star a project from a link, so this opens the page that holds the Star button.
+    private func starButton() -> NSButton {
+        let star = button("Star on GitHub") { NSWorkspace.shared.open(ProjectLinks.repository) }
+        star.toolTip = "Opens the project page in your browser."
+        star.setAccessibilityHelp(star.toolTip)
+        return star
     }
 
     // MARK: Live updates

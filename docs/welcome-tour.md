@@ -8,17 +8,17 @@ Someone who has just downloaded the app should be able to grant the permission, 
 
 ## Behavior
 
-The tour opens by itself on the first launch of a new install. It has seven steps, and every control changes the real settings.
+The tour opens by itself on the first launch of a new install. It has seven steps, and every control except the link to the project changes the real settings.
 
-| Step            | What it does                                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Welcome         | The step explains what the app does.                                                                             |
-| Permission      | The step shows live whether Accessibility is on, and it opens the system prompt.                                 |
-| First slide     | A live diagram shows your fingers, and the step confirms your first real slide.                                  |
-| Edges           | You pick Everyday, Browsing, or Volume Only as a starting point, and then change any edge.                       |
-| Corners         | You choose a simple action for each corner. A corner set up in more detail keeps its setup unless you change it. |
-| Haptics         | You turn the tick on or off, set its strength and pattern, and try it.                                           |
-| You are all set | You choose whether the app starts at login, and the step says where the settings live.                           |
+| Step            | What it does                                                                                                                                                                        |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Welcome         | The step explains what the app does.                                                                                                                                                |
+| Permission      | The step shows live whether Accessibility is on, and it opens the system prompt.                                                                                                    |
+| First slide     | A live diagram shows your fingers, and the step confirms your first real slide.                                                                                                     |
+| Edges           | You pick Everyday, Browsing, or Volume Only as a starting point, and then change any edge.                                                                                          |
+| Corners         | You choose a simple action for each corner. A corner set up in more detail keeps its setup unless you change it.                                                                    |
+| Haptics         | You turn the tick on or off, set its strength and pattern, and try it.                                                                                                              |
+| You are all set | You choose whether the app starts at login, and the step says where the settings live. **Star on GitHub** opens the project page, because GitHub cannot star a project from a link. |
 
 A preset leaves an edge off when its action cannot work on this Mac. Closing the window or choosing **Skip Tour**, which every step but the last offers, ends the tour, and it does not open by itself again.
 

@@ -1,6 +1,6 @@
 # Releasing
 
-Status: version 1.0 is published. It was released by running the **Release** workflow by hand, so the automatic release that follows a merged version change has not run yet.
+Status: version 1.0 is published, and it was released by hand. Version 1.1 is the first version set to release itself when its version change lands on `main`. No installed copy has updated itself yet.
 
 Releases are automatic. Merging a change that bumps the version to `main` tags the commit, builds and signs the app, notarizes it, publishes a DMG on this repository's Releases page, and points the landing page at the download.
 

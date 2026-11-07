@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+## 1.1 - 2026-11-07
+
 - The app checks for updates every 24 hours and can install them for you. You can turn that off in the General pane.
+- The menu bar menu has a new Release Notes item, which opens the notes for your version.
+- The welcome tour ends with a link to the project on GitHub.
 
 ## 1.0 - 2026-11-07
 
