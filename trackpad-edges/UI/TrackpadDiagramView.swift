@@ -13,10 +13,11 @@ final class TrackpadDiagramView: NSView {
 
     override func accessibilityLabel() -> String? {
         let settings = SettingsStore.shared.settings
-        let left = Self.title(for: settings.leftEdge) ?? "Off"
-        let right = Self.title(for: settings.rightEdge) ?? "Off"
-        let bottom = Self.title(for: settings.bottomEdge) ?? "Off"
-        return "Trackpad diagram. The left edge is \(left), the right edge is \(right), and the bottom edge is \(bottom)."
+        let left = settings.leftEdge?.title ?? "Off"
+        let right = settings.rightEdge?.title ?? "Off"
+        let bottom = settings.bottomEdge?.title ?? "Off"
+        let top = settings.topEdge?.title ?? "Off"
+        return "Trackpad diagram. The left edge is \(left), the right edge is \(right), the top edge is \(top), and the bottom edge is \(bottom)."
     }
 
     func settingsChanged() {
@@ -37,14 +38,18 @@ final class TrackpadDiagramView: NSView {
         let side = pad.height * quarter
         drawZone(
             NSRect(x: pad.minX, y: pad.minY, width: pad.width * width, height: side),
-            title: Self.title(for: settings.leftEdge), rotated: true)
+            title: settings.leftEdge?.title, rotated: true)
         drawZone(
             NSRect(
                 x: pad.maxX - pad.width * width, y: pad.minY, width: pad.width * width, height: side
-            ), title: Self.title(for: settings.rightEdge), rotated: true)
+            ), title: settings.rightEdge?.title, rotated: true)
         drawZone(
             NSRect(x: pad.minX, y: pad.minY, width: pad.width, height: pad.height * width),
-            title: Self.title(for: settings.bottomEdge), rotated: false)
+            title: settings.bottomEdge?.title, rotated: false)
+        drawZone(
+            NSRect(
+                x: pad.minX, y: pad.maxY - pad.height * width, width: pad.width,
+                height: pad.height * width), title: settings.topEdge?.title, rotated: false)
         let cornerSize = NSSize(width: pad.width * 0.20, height: pad.height * 0.17)
         let leftX = pad.minX
         let rightX = pad.maxX - cornerSize.width
@@ -76,15 +81,6 @@ final class TrackpadDiagramView: NSView {
         }
     }
 
-    private static func title(for kind: SlideKind?) -> String? {
-        switch kind {
-        case .volume: return "Volume"
-        case .brightness: return "Brightness"
-        case .seek: return "Media Seek"
-        case nil: return nil
-        }
-    }
-
     private func drawZone(_ rect: NSRect, title: String?, rotated: Bool) {
         guard let title else { return }
         NSColor.controlAccentColor.withAlphaComponent(0.22).setFill()
@@ -96,6 +92,8 @@ final class TrackpadDiagramView: NSView {
         ]
         let text = title as NSString
         let size = text.size(withAttributes: attributes)
+        // A short strip shows its color alone, because a label would run past its ends.
+        guard size.width <= (rotated ? rect.height : rect.width) else { return }
         NSGraphicsContext.saveGraphicsState()
         let transform = NSAffineTransform()
         transform.translateX(by: rect.midX, yBy: rect.midY)

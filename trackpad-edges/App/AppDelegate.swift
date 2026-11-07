@@ -3,11 +3,11 @@ import AppKit
 /// Starts the app, and owns its window and its menu bar item.
 @main
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private static let edgeChoices: [(title: String, kind: SlideKind?)] = [
-        ("Volume", .volume), ("Brightness", .brightness), ("Media Seek", .seek), ("Off", nil),
-    ]
+    private static let edgeChoices: [(title: String, kind: SlideKind?)] =
+        SlideKind.allCases.map { ($0.title, $0) } + [("Off", nil)]
     private static let edges: [(title: String, path: WritableKeyPath<AppSettings, SlideKind?>)] = [
-        ("Left Edge", \.leftEdge), ("Right Edge", \.rightEdge), ("Bottom Edge", \.bottomEdge),
+        ("Left Edge", \.leftEdge), ("Right Edge", \.rightEdge), ("Top Edge", \.topEdge),
+        ("Bottom Edge", \.bottomEdge),
     ]
 
     private let controller = GestureController()
@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.controller.applySettings()
             self?.mainWindow?.settingsChanged()
         }
+        controller.onAvailabilityChanged = { [weak self] in self?.mainWindow?.settingsChanged() }
         controller.onTouches = { [weak self] touches in
             guard let window = self?.mainWindow, window.isOpen else { return }
             window.updateTouches(touches)
@@ -59,9 +60,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accessibilityItem.isEnabled = !trusted
         pauseItem.state = controller.paused ? .on : .off
         let settings = SettingsStore.shared.settings
+        let unavailable = controller.unavailableKinds
         for (edgeMenu, path) in edgeMenus {
             for (index, item) in edgeMenu.items.enumerated() {
-                item.state = Self.edgeChoices[index].kind == settings[keyPath: path] ? .on : .off
+                let kind = Self.edgeChoices[index].kind
+                item.state = kind == settings[keyPath: path] ? .on : .off
+                item.isEnabled = kind.map { !unavailable.contains($0) } ?? true
+                item.toolTip = item.isEnabled ? nil : kind?.unavailableReason
             }
         }
     }
@@ -111,11 +116,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         title: String, edgeIndex: Int, path: WritableKeyPath<AppSettings, SlideKind?>
     ) -> NSMenuItem {
         let submenu = NSMenu()
+        submenu.autoenablesItems = false
         for (choiceIndex, choice) in Self.edgeChoices.enumerated() {
             let item = NSMenuItem(
                 title: choice.title, action: #selector(chooseEdgeAction(_:)), keyEquivalent: "")
             item.target = self
-            item.tag = edgeIndex * 10 + choiceIndex
+            item.tag = edgeIndex * 100 + choiceIndex
             submenu.addItem(item)
         }
         edgeMenus.append((submenu, path))
@@ -125,8 +131,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func chooseEdgeAction(_ sender: NSMenuItem) {
-        let path = Self.edges[sender.tag / 10].path
-        SettingsStore.shared.settings[keyPath: path] = Self.edgeChoices[sender.tag % 10].kind
+        let path = Self.edges[sender.tag / 100].path
+        SettingsStore.shared.settings[keyPath: path] = Self.edgeChoices[sender.tag % 100].kind
     }
 
     @objc private func openWindow() {
@@ -136,7 +142,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     testHaptic: { [weak self] in self?.controller.testHaptic() },
                     hapticStatus: { [weak self] in self?.controller.hapticStatus ?? "" },
                     requestAccessibility: { [weak self] in self?.requestAccessibility() },
-                    previewSeekOverlay: { [weak self] in self?.controller.previewSeekOverlay() }))
+                    previewSeekOverlay: { [weak self] in self?.controller.previewSeekOverlay() },
+                    unavailableKinds: { [weak self] in self?.controller.unavailableKinds ?? [] }))
         }
         mainWindow?.show()
     }

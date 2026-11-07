@@ -1,6 +1,6 @@
 # Top edge
 
-Status: this feature is planned for phase 3.
+Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
 
 ## Goal
 
@@ -26,7 +26,6 @@ The Edges pane and the menu bar item gain a **Top edge** choice, and the diagram
 ## Risks
 
 - A top strip shrinks the room for ordinary pointer starts, which is why it stays off by default.
-- A seventh form row changes the Edges pane, so the diagram must stay level with the controls.
 
 ## Verification
 

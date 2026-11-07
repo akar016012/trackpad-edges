@@ -61,7 +61,10 @@ final class PointerFreeze {
             if frozenPoint != nil, let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return Unmanaged.passUnretained(event)
         }
-        guard let point = frozenPoint else { return Unmanaged.passUnretained(event) }
+        // A scroll action posts its own scrolling during a slide, and that must get through.
+        guard let point = frozenPoint,
+            event.getIntegerValueField(.eventSourceUserData) != ClickTap.ownEventMarker
+        else { return Unmanaged.passUnretained(event) }
         CGWarpMouseCursorPosition(point)
         return nil
     }

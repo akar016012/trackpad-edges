@@ -30,6 +30,8 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 ### Needs a check
 
 - [ ] [Palm detection](roadmap/palm-detection.md)
+- [ ] [Top edge](roadmap/top-edge.md)
+- [ ] [More edge actions](roadmap/more-edge-actions.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Assignable edges from the window and the menu bar](settings.md)
@@ -41,8 +43,6 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 
 ### Incomplete
 
-- [ ] [More edge actions](roadmap/more-edge-actions.md)
-- [ ] [Top edge](roadmap/top-edge.md)
 - [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
 - [ ] [Installed build](roadmap/installed-build.md)
 - [ ] [Per-app profiles](roadmap/per-app-profiles.md)
@@ -54,6 +54,9 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - A click from a second pointing device can be captured while a finger rests in a zone.
 - A finger that is already down after a wake or an unpause can count as a landing.
 - A palm that first looks like a finger can cancel a slide before it is recognized.
+- Switch Spaces needs the system's Control-arrow shortcuts turned on.
+- Keyboard Backlight relies on keys that some Macs no longer have, so it may do nothing.
+- Monitor Brightness works only on monitors and ports that answer over DDC.
 - Media seek relies on undocumented behavior, so a macOS update could break it.
 - The adapter library sits in a user-writable folder until the installed build moves it inside the signed app.
 
@@ -63,24 +66,25 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - Touch input uses the private `MultitouchSupport` framework. `NSTouch` cannot work because Apple's documentation says touches latch to the view under the cursor, so a background app never receives them.
 - Haptics use the private `MTActuator` API, because it is the only API with strength control. `NSHapticFeedbackManager` is the fallback when the private API is unavailable.
 - Testing focuses on the built-in MacBook trackpad. external Apple trackpad support stays in place, but it gets less testing.
-- The app has a window and a menu bar icon, and each edge can be assigned to volume, brightness, seek, or nothing.
+- The app has a window and a menu bar icon, and each edge can be assigned to any of nine actions or to nothing.
 - Each batch of features is reviewed by a review, fixed, committed, and pushed.
 - Media seeking uses the third-party `mediaremote-adapter`, because no public API can reach other apps. It is confirmed working on macOS 27.2, so there is no AppleScript fallback.
 - All four corners are hot corners, and corners can control media playback.
 
 ## Feature scope
 
-| Zone             | Input                      | Action                   | Doc                            |
-| ---------------- | -------------------------- | ------------------------ | ------------------------------ |
-| Right edge       | Slide vertically           | System volume            | [volume.md](volume.md)         |
-| Left edge        | Slide vertically           | Built-in brightness      | [brightness.md](brightness.md) |
-| Bottom edge      | Slide sideways and release | Media seek               | [media-seek.md](media-seek.md) |
-| All four corners | 1 to 4 presses             | An action for each count | [corners.md](corners.md)       |
-| Middle           | Anything                   | Passes through to macOS  | [gestures.md](gestures.md)     |
+| Zone             | Input                      | Action                   | Doc                                |
+| ---------------- | -------------------------- | ------------------------ | ---------------------------------- |
+| Right edge       | Slide vertically           | System volume            | [volume.md](volume.md)             |
+| Left edge        | Slide vertically           | Built-in brightness      | [brightness.md](brightness.md)     |
+| Bottom edge      | Slide sideways and release | Media seek               | [media-seek.md](media-seek.md)     |
+| Top edge         | Slide sideways             | Off until you assign it  | [top-edge.md](roadmap/top-edge.md) |
+| All four corners | 1 to 4 presses             | An action for each count | [corners.md](corners.md)           |
+| Middle           | Anything                   | Passes through to macOS  | [gestures.md](gestures.md)         |
 
 Every package, framework, and system method is listed in [dependencies.md](dependencies.md). The shared behavior is described in [gestures.md](gestures.md), [pointer-freeze.md](pointer-freeze.md), [haptics.md](haptics.md), [settings.md](settings.md), and [menu-bar-and-onboarding.md](menu-bar-and-onboarding.md).
 
-External display brightness is not built yet, and it is part of [more edge actions](roadmap/more-edge-actions.md).
+Any edge can use any action, and the full list is in [more edge actions](roadmap/more-edge-actions.md).
 
 ## Project setup
 
@@ -96,7 +100,7 @@ All source lives under `trackpad-edges/`.
 - `App/` holds the app delegate, the gesture controller, and the main menu.
 - `Input/` holds the `MultitouchSupport` bridge, device hot-plug and sleep handling, and the event tap.
 - `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it.
-- `Actions/` holds the volume, brightness, media seek, and corner actions.
+- `Actions/` holds the edge actions, including volume, brightness, media seek, and external displays, and the corner actions.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
 - `UI/` holds the app window, the trackpad diagram, and the seek overlay.
@@ -116,7 +120,7 @@ Each batch was reviewed by a review, fixed, committed, and pushed.
 
 ## Roadmap
 
-Phases 0, 1, and 2 are complete, and phases 3 to 6 are not started. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 3. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
+Phases 0 to 3 are complete, and phases 4 to 6 are not started. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then build phase 4. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -132,7 +136,7 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 - **[Seconds per step](roadmap/seconds-per-step.md):** The Media pane offers fixed seconds per step as an alternative to a percentage, so steps stay small on long videos.
 - **[Multiple actions per corner](roadmap/multi-action-corners.md):** Each corner can hold a different action for each click count, such as one click to play or pause and two clicks to skip.
 
-### Phase 3: More controls (not started)
+### Phase 3: More controls (complete)
 
 - **[More edge actions](roadmap/more-edge-actions.md):** An edge can scroll, zoom, switch apps or Spaces, change the keyboard backlight, or change external monitor brightness.
 - **[Top edge](roadmap/top-edge.md):** The top edge becomes a fourth assignable strip between the top corners.
@@ -154,10 +158,6 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 | Risk                                                                             | Plan                                                                                           |
 | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Two-finger slides can collide with scrolling and system gestures.                | The slide must start with both fingers in the strip. If that is unreliable, it becomes opt-in. |
-| Keyboard backlight has no public API.                                            | Use its media key first, and leave the action out if that does not work on this Mac.           |
-| External brightness over DDC varies by monitor and port.                         | Show the action only when a monitor responds.                                                  |
-| Switching Spaces depends on system shortcuts being turned on.                    | Tell the user in the settings when the shortcut is off.                                        |
-| A top strip shrinks the room for ordinary pointer starts.                        | It stays off by default.                                                                       |
 | Moving the library inside the app needs a build phase in the new project format. | Test it in phase 5, and keep the current unpacking if that fails.                              |
 | Per-app profiles change how settings are stored.                                 | Keep the current settings as the default profile, so nothing is lost.                          |
 

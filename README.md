@@ -1,6 +1,6 @@
 # Trackpad Edges
 
-Trackpad Edges is a personal macOS app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. You touch a strip and slide to change the volume or brightness, and you feel a haptic tick on each step.
+Trackpad Edges is a personal macOS app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. You touch a strip and slide to change the volume or brightness, seek through media, scroll, zoom, or switch apps and Spaces, and you feel a haptic tick on each step.
 
 The app is for everyday use. It relies on the private `MultitouchSupport` framework, so a macOS update could break it.
 

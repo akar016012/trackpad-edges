@@ -6,6 +6,7 @@ struct WindowActions {
     var hapticStatus: () -> String
     var requestAccessibility: () -> Void
     var previewSeekOverlay: () -> Void
+    var unavailableKinds: () -> Set<SlideKind>
 }
 
 /// Forwards a control's action to a closure.
@@ -146,8 +147,10 @@ class SettingsPane: NSViewController {
         let grid = NSGridView(
             views: rows.map { row in
                 row.flatMap { cell -> [NSView] in
+                    // An empty cell holds nothing, so that VoiceOver has nothing to stop on.
+                    guard !cell.0.isEmpty else { return [NSGridCell.emptyContentView, cell.1] }
                     let label = NSTextField(labelWithString: cell.0)
-                    if !cell.0.isEmpty { cell.1.setAccessibilityTitleUIElement(label) }
+                    cell.1.setAccessibilityTitleUIElement(label)
                     return [label, cell.1]
                 }
             })

@@ -1,6 +1,6 @@
 # Gestures
 
-Status: touch slides on all three edges and the corners are confirmed working on the built-in trackpad. Click mode and palm detection are built and unit tested, but they have not been confirmed on hardware yet.
+Status: touch slides on the left, right, and bottom edges and the corners are confirmed working on the built-in trackpad. The top edge, click mode, and palm detection are built and unit tested, but they have not been confirmed on hardware yet.
 
 ## Zones
 
@@ -11,11 +11,12 @@ The trackpad is divided into zones using normalized coordinates, where the origi
 | Right edge       | 10% of the pad width                |
 | Left edge        | 10% of the pad width                |
 | Bottom edge      | 10% of the pad height               |
+| Top edge         | 10% of the pad height               |
 | Top-left corner  | 20% of the width, 17% of the height |
 | Top-right corner | 20% of the width, 17% of the height |
 | Bottom corners   | 20% of the width, 17% of the height |
 
-Zones are tested in this order: corners, bottom edge, left edge, then right edge. A corner counts only if it has an action, so the bottom strip otherwise spans the full width of the pad. There is no top edge strip.
+Zones are tested in this order: corners, top edge, bottom edge, left edge, then right edge. A corner counts only if it has an action, so the top and bottom strips otherwise span the full width of the pad. The top edge is off until you assign it.
 
 ## Starting a slide
 

@@ -95,8 +95,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         if !AXIsProcessTrusted() { tabs.selectedTabViewItemIndex = Self.generalTab }
         #if DEBUG
             // Launching with `-debugTab 2` opens that pane, which makes each pane easy to inspect.
-            let tab = UserDefaults.standard.integer(forKey: "debugTab")
-            if tab > 0 { tabs.selectedTabViewItemIndex = tab }
+            let defaults = UserDefaults.standard
+            if defaults.object(forKey: "debugTab") != nil {
+                tabs.selectedTabViewItemIndex = defaults.integer(forKey: "debugTab")
+            }
         #endif
         NSApp.setActivationPolicy(.regular)
         showWindow(nil)

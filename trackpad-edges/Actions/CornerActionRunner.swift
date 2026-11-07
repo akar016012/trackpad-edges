@@ -25,10 +25,11 @@ final class CornerActionRunner {
             let flags = CGEventFlags(rawValue: modifiers)
             let modifier = KeyModifier.allCases.first { flags.contains($0.eventFlag) }
             if let keyCode {
-                press(keyCode: keyCode, modifiers: modifiers, releaseFlags: modifiers)
+                KeyPoster.press(keyCode: keyCode, modifiers: modifiers, releaseFlags: modifiers)
             } else if let modifier {
                 // The release clears the flags, or the modifier would look stuck down.
-                press(keyCode: modifier.keyCode(in: modifiers), modifiers: modifiers, releaseFlags: 0)
+                KeyPoster.press(
+                    keyCode: modifier.keyCode(in: modifiers), modifiers: modifiers, releaseFlags: 0)
             }
         case .shortcut(let name):
             runShortcut(named: name)
@@ -58,17 +59,6 @@ final class CornerActionRunner {
         NSWorkspace.shared.open(
             [url], withApplicationAt: URL(fileURLWithPath: browserPath),
             configuration: NSWorkspace.OpenConfiguration())
-    }
-
-    private func press(keyCode: UInt16, modifiers: UInt64, releaseFlags: UInt64) {
-        let source = CGEventSource(stateID: .hidSystemState)
-        for isDown in [true, false] {
-            let event = CGEvent(
-                keyboardEventSource: source, virtualKey: keyCode, keyDown: isDown)
-            event?.flags = CGEventFlags(rawValue: isDown ? modifiers : releaseFlags)
-            event?.setIntegerValueField(.eventSourceUserData, value: ClickTap.ownEventMarker)
-            event?.post(tap: .cghidEventTap)
-        }
     }
 
     /// Runs in the background so that the shortcut does not open the Shortcuts app.

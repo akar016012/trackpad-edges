@@ -10,8 +10,7 @@ final class GestureController {
     private static let healthCheckInterval: TimeInterval = 0.25
 
     private let log = Logger(subsystem: "com.adityakar.trackpad-edges", category: "gestures")
-    private let volume = VolumeController()
-    private let brightness = BrightnessController()
+    private let edgeActions = EdgeActions()
     private let corners = CornerActionRunner()
     private let seek = SeekController()
     private let haptics = HapticEngine()
@@ -31,6 +30,8 @@ final class GestureController {
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
     var onTouches: (([TouchPoint]) -> Void)?
+    /// Runs when an edge action becomes available or stops being available.
+    var onAvailabilityChanged: (() -> Void)?
     /// Whether the user has paused all gestures from the menu.
     var paused = false {
         didSet { if paused { abortAll() } }
@@ -50,6 +51,10 @@ final class GestureController {
             self?.mouseUp(event, proxy: proxy) ?? false
         }
 
+        edgeActions.onAvailabilityChanged = { [weak self] in
+            self?.applySettings()
+            self?.onAvailabilityChanged?()
+        }
         monitor.onDevicesChanged = { [weak self] in self?.rebuildDevices() }
         monitor.start()
         observeLocking()
@@ -96,9 +101,15 @@ final class GestureController {
         for device in engines.keys { engines[device]?.config = config }
     }
 
+    /// The edge actions that cannot work right now.
+    var unavailableKinds: Set<SlideKind> {
+        var kinds = edgeActions.unavailable
+        if !seek.isAvailable { kinds.insert(.seek) }
+        return kinds
+    }
+
     private func currentConfig() -> GestureConfig {
-        SettingsStore.shared.settings.gestureConfig(
-            brightnessAvailable: brightness.isAvailable, seekAvailable: seek.isAvailable)
+        SettingsStore.shared.settings.gestureConfig(unavailable: unavailableKinds)
     }
 
     /// Shows a sample of the seek preview, so that a style can be judged as it is chosen.
@@ -251,6 +262,7 @@ final class GestureController {
             case .slideBegan(let kind):
                 activeSlide = kind
                 reachedLimit = false
+                edgeActions.begin(kind)
                 PointerFreeze.shared.begin()
                 haptics.begin(device: device)
             case .stepped(let steps):
@@ -285,14 +297,9 @@ final class GestureController {
         let settings = SettingsStore.shared.settings.haptics
         let modifiers = NSEvent.modifierFlags
         let fine = modifiers.contains(.shift) && modifiers.contains(.option)
+        guard let kind = activeSlide else { return }
         for _ in 0..<abs(steps) {
-            let moved: Bool
-            switch activeSlide {
-            case .volume: moved = volume.step(up: steps > 0, fine: fine)
-            case .brightness: moved = brightness.step(up: steps > 0, fine: fine)
-            case .seek, nil: return
-            }
-            if moved {
+            if edgeActions.step(kind, up: steps > 0, fine: fine) {
                 reachedLimit = false
                 if settings.onStep { haptics.fire() }
             } else if !reachedLimit {
@@ -393,6 +400,7 @@ final class GestureController {
     }
 
     @objc private func screensChanged() {
+        edgeActions.refreshDisplays()
         applySettings()
     }
 }

@@ -2,9 +2,8 @@ import AppKit
 
 /// Lets you choose what each edge does, and shows the result on a live trackpad diagram.
 final class EdgesPane: SettingsPane {
-    private static let choices: [(title: String, kind: SlideKind?)] = [
-        ("Volume", .volume), ("Brightness", .brightness), ("Media Seek", .seek), ("Off", nil),
-    ]
+    private static let choices: [(title: String, kind: SlideKind?)] =
+        SlideKind.allCases.map { ($0.title, $0) } + [("Off", nil)]
 
     let diagram = TrackpadDiagramView()
     private var edgePopups: [(popup: NSPopUpButton, path: KeyPath<AppSettings, SlideKind?>)] = []
@@ -14,6 +13,7 @@ final class EdgesPane: SettingsPane {
         let form = form([
             ("Left edge:", edgePopup(\.leftEdge)),
             ("Right edge:", edgePopup(\.rightEdge)),
+            ("Top edge:", edgePopup(\.topEdge)),
             ("Bottom edge:", edgePopup(\.bottomEdge)),
             (
                 "Edge width:",
@@ -28,16 +28,19 @@ final class EdgesPane: SettingsPane {
                     self?.settings.sensitivity = Float(value)
                 }
             ),
-            ("Require key:", modifierPopup(current.requiredModifier)),
         ])
         let options = wideForm([
             [
+                ("Require key:", modifierPopup(current.requiredModifier)),
                 (
                     "Options:",
                     checkbox("Require a click to start", isOn: current.requireClick) {
                         [weak self] isOn in self?.settings.requireClick = isOn
                     }
                 ),
+            ],
+            [
+                ("", NSGridCell.emptyContentView),
                 (
                     "",
                     checkbox("Sides: bottom quarter only", isOn: current.bottomQuarterOnly) {
@@ -46,7 +49,7 @@ final class EdgesPane: SettingsPane {
                         self?.diagram.settingsChanged()
                     }
                 ),
-            ]
+            ],
         ])
         setContent([
             columns(diagram, form),
@@ -59,10 +62,20 @@ final class EdgesPane: SettingsPane {
 
     /// Brings the pane back in step after the menu bar item changes an edge.
     func refresh() {
+        let unavailable = actions.unavailableKinds()
         for (popup, path) in edgePopups {
             popup.selectItem(at: Self.index(of: settings[keyPath: path]))
+            for (item, choice) in zip(popup.itemArray, Self.choices) {
+                item.isEnabled = choice.kind.map { !unavailable.contains($0) } ?? true
+                item.toolTip = item.isEnabled ? nil : choice.kind?.unavailableReason
+            }
         }
         diagram.settingsChanged()
+    }
+
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        refresh()
     }
 
     private static func index(of kind: SlideKind?) -> Int {
@@ -76,6 +89,7 @@ final class EdgesPane: SettingsPane {
             self?.settings[keyPath: path] = Self.choices[index].kind
             self?.diagram.settingsChanged()
         }
+        edge.autoenablesItems = false
         edgePopups.append((edge, path))
         return edge
     }

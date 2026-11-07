@@ -8,6 +8,8 @@ enum MediaKeys {
     static let brightnessUp = 2
     static let brightnessDown = 3
     static let mute = 7
+    static let illuminationUp = 21
+    static let illuminationDown = 22
     static let playPause = 16
     static let nextTrack = 17
     static let previousTrack = 18
@@ -23,6 +25,19 @@ enum MediaKeys {
                 windowNumber: 0, context: nil, subtype: 8, data1: (key << 16) | (phase << 8),
                 data2: -1)
             event?.cgEvent?.post(tap: .cghidEventTap)
+        }
+    }
+}
+
+/// Presses a key on the user's behalf. The mark tells the app's own taps to ignore the event.
+enum KeyPoster {
+    static func press(keyCode: UInt16, modifiers: UInt64, releaseFlags: UInt64) {
+        let source = CGEventSource(stateID: .hidSystemState)
+        for isDown in [true, false] {
+            let event = CGEvent(keyboardEventSource: source, virtualKey: keyCode, keyDown: isDown)
+            event?.flags = CGEventFlags(rawValue: isDown ? modifiers : releaseFlags)
+            event?.setIntegerValueField(.eventSourceUserData, value: ClickTap.ownEventMarker)
+            event?.post(tap: .cghidEventTap)
         }
     }
 }

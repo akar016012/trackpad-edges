@@ -452,6 +452,69 @@ final class GestureEngineTests: XCTestCase {
         XCTAssertFalse(engine.isBusy)
     }
 
+    func testTopEdgeIsOffUntilAssigned() {
+        var config = GestureConfig()
+        config.cornerCounts = [:]
+        XCTAssertNil(config.zone(x: 0.5, y: 0.95))
+        config.topAction = .scroll
+        XCTAssertEqual(config.zone(x: 0.5, y: 0.95), .top)
+        XCTAssertEqual(config.zone(x: 0.5, y: 0.5), nil)
+    }
+
+    func testTopCornerWithAnActionTakesOverTheTopEdge() {
+        var config = GestureConfig()
+        config.topAction = .scroll
+        XCTAssertEqual(config.zone(x: 0.05, y: 0.95), .topLeft)
+        XCTAssertEqual(config.zone(x: 0.95, y: 0.95), .top)
+    }
+
+    func testTopEdgeSlidesAlongItsLength() {
+        var config = GestureConfig()
+        config.topAction = .zoom
+        config.cornerCounts = [:]
+        var engine = pressed(0.5, 0.95, config: config)
+        XCTAssertEqual(engine.process(finger(0.58, 0.95)), [.stepped(2)])
+    }
+
+    func testLeavingTheTopStripCancels() {
+        var config = GestureConfig()
+        config.topAction = .zoom
+        config.cornerCounts = [:]
+        var engine = pressed(0.5, 0.95, config: config)
+        XCTAssertEqual(
+            engine.process(finger(0.5, 0.5)),
+            [.slideCanceled(.zoom), .pointerReleased, .passthroughClick])
+    }
+
+    func testSwitchActionsNeedMoreTravelThanLevels() {
+        for kind in [SlideKind.switchApps, .switchSpaces] {
+            var config = GestureConfig()
+            config.rightAction = kind
+            var engine = pressed(0.95, 0.5, config: config)
+            XCTAssertEqual(engine.process(finger(0.95, 0.58)), [], "\(kind)")
+            XCTAssertEqual(engine.process(finger(0.95, 0.62)), [.stepped(1)], "\(kind)")
+        }
+    }
+
+    func testTouchOnTheTopStripStartsWithoutAClick() {
+        var config = GestureConfig()
+        config.topAction = .scroll
+        config.cornerCounts = [:]
+        config.requireClick = false
+        var engine = GestureEngine()
+        engine.config = config
+        XCTAssertEqual(engine.process(finger(0.5, 0.95), now: 0), [.slideBegan(.scroll)])
+        XCTAssertEqual(engine.process(finger(0.56, 0.95), now: 0.1), [])
+        XCTAssertEqual(engine.process(finger(0.6, 0.95), now: 0.15), [.stepped(1)])
+    }
+
+    func testUnavailableActionLeavesItsEdgeNormal() {
+        var config = GestureConfig()
+        config.rightAction = .externalBrightness
+        config.unavailableKinds = [.externalBrightness]
+        XCTAssertNil(config.zone(x: 0.95, y: 0.5))
+    }
+
     func testBottomCornersTakePriorityOnlyWhenTheyHaveAnAction() {
         var config = GestureConfig()
         XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottom)
@@ -496,7 +559,7 @@ final class GestureEngineTests: XCTestCase {
 
     func testDisabledBrightnessLeavesThatEdgeNormal() {
         var config = GestureConfig()
-        config.brightnessAvailable = false
+        config.unavailableKinds = [.brightness]
         XCTAssertNil(config.zone(x: 0.05, y: 0.5))
         XCTAssertEqual(config.zone(x: 0.95, y: 0.5), .right)
     }

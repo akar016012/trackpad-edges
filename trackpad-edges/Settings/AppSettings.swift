@@ -14,6 +14,34 @@ enum RequiredModifier: String, Codable, CaseIterable {
     }
 }
 
+extension SlideKind {
+    var title: String {
+        switch self {
+        case .volume: return "Volume"
+        case .brightness: return "Brightness"
+        case .seek: return "Media Seek"
+        case .scroll: return "Scroll"
+        case .zoom: return "Zoom"
+        case .switchApps: return "Switch Apps"
+        case .switchSpaces: return "Switch Spaces"
+        case .keyboardBacklight: return "Keyboard Backlight"
+        case .externalBrightness: return "Monitor Brightness"
+        }
+    }
+
+    /// Explains why this action is dimmed in the edge menus.
+    var unavailableReason: String {
+        switch self {
+        case .brightness: return "This Mac does not allow the app to read its brightness."
+        case .seek: return "The media adapter could not start."
+        case .switchSpaces:
+            return "Turn on the Mission Control shortcuts for moving between Spaces in System Settings."
+        case .externalBrightness: return "No external monitor answered the app."
+        default: return ""
+        }
+    }
+}
+
 /// Whether a seek step is a share of the track or a fixed time.
 enum SeekStepType: String, Codable, CaseIterable {
     case percent, seconds
@@ -69,6 +97,7 @@ struct AppSettings: Codable, Equatable {
     var leftEdge: SlideKind? = .brightness
     var rightEdge: SlideKind? = .volume
     var bottomEdge: SlideKind? = .seek
+    var topEdge: SlideKind?
     var topLeft = CornerSetting(action: .mute, clicks: 1)
     var topRight = CornerSetting(action: .none, clicks: 1)
     /// These are optional in storage, so that settings saved before they existed still load.
@@ -145,11 +174,11 @@ struct AppSettings: Codable, Equatable {
         case .topRight: return topRight
         case .bottomLeft: return bottomLeft
         case .bottomRight: return bottomRight
-        case .left, .right, .bottom: return nil
+        case .left, .right, .bottom, .top: return nil
         }
     }
 
-    func gestureConfig(brightnessAvailable: Bool, seekAvailable: Bool) -> GestureConfig {
+    func gestureConfig(unavailable: Set<SlideKind>) -> GestureConfig {
         var config = GestureConfig()
         config.edgeWidth = edgeWidth
         config.stepSize = 0.035 / sensitivity
@@ -158,8 +187,8 @@ struct AppSettings: Codable, Equatable {
         config.leftAction = leftEdge
         config.rightAction = rightEdge
         config.bottomAction = bottomEdge
-        config.brightnessAvailable = brightnessAvailable
-        config.seekAvailable = seekAvailable
+        config.topAction = topEdge
+        config.unavailableKinds = unavailable
         config.cornerCounts = [
             .topLeft: topLeft.configuredClicks, .topRight: topRight.configuredClicks,
             .bottomLeft: bottomLeft.configuredClicks, .bottomRight: bottomRight.configuredClicks,

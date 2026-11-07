@@ -14,17 +14,20 @@ nonisolated struct TouchPoint: Sendable, Equatable {
 }
 
 nonisolated enum Zone: String, Sendable, Equatable, Hashable {
-    case left, right, bottom, topLeft, topRight, bottomLeft, bottomRight
+    case left, right, bottom, top, topLeft, topRight, bottomLeft, bottomRight
 }
 
-nonisolated enum SlideKind: String, Sendable, Equatable, Codable, CaseIterable {
-    case volume, brightness, seek
+nonisolated enum SlideKind: String, Sendable, Equatable, Hashable, Codable, CaseIterable {
+    case volume, brightness, seek, scroll, zoom, switchApps, switchSpaces
+    case keyboardBacklight, externalBrightness
 }
 
 /// The values that shape gesture recognition. All sizes are fractions of the pad.
 nonisolated struct GestureConfig: Sendable, Equatable {
     var edgeWidth: Float = 0.10
     var stepSize: Float = 0.035
+    /// Actions that jump between whole things need more travel for each step than a level does.
+    var switchStepFactor: Float = 3
     var seekDeadZone: Float = 0.025
     /// How far a finger may stray past a strip before the slide cancels.
     var exitMargin: Float = 0.03
@@ -48,8 +51,9 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var leftAction: SlideKind? = .brightness
     var rightAction: SlideKind? = .volume
     var bottomAction: SlideKind? = .seek
-    var brightnessAvailable = true
-    var seekAvailable = true
+    var topAction: SlideKind?
+    /// Actions that cannot work right now, so their edges stay normal parts of the trackpad.
+    var unavailableKinds: Set<SlideKind> = []
     /// The click counts that fire each corner. A corner with none is a normal part of the pad.
     var cornerCounts: [Zone: Set<Int>] = [.topLeft: [1]]
     /// The pressure that counts as a corner press, or nil to need a physical click. Measured on
@@ -64,8 +68,8 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     /// A contact this large is a palm whatever its shape.
     var palmSize: Float = 1.6
 
-    /// Returns the zone at a point, testing corners, then bottom, left, and right. A corner with
-    /// no action does not count, so the edge beneath it still works.
+    /// Returns the zone at a point, testing corners, then top, bottom, left, and right. A corner
+    /// with no action does not count, so the edge beneath it still works.
     func zone(x: Float, y: Float) -> Zone? {
         if y >= 1 - cornerHeight {
             if x <= cornerWidth, hasCorner(.topLeft) { return .topLeft }
@@ -75,6 +79,7 @@ nonisolated struct GestureConfig: Sendable, Equatable {
             if x <= cornerWidth, hasCorner(.bottomLeft) { return .bottomLeft }
             if x >= 1 - cornerWidth, hasCorner(.bottomRight) { return .bottomRight }
         }
+        if y >= 1 - edgeWidth, slideKind(for: .top) != nil { return .top }
         if y <= edgeWidth, slideKind(for: .bottom) != nil { return .bottom }
         guard !bottomQuarterOnly || y <= 0.25 else { return nil }
         if x <= edgeWidth, slideKind(for: .left) != nil { return .left }
@@ -90,16 +95,20 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         touch.size >= palmSize || (touch.majorAxis >= palmAxis && touch.size >= palmAxisSize)
     }
 
+    func stepSize(for kind: SlideKind) -> Float {
+        kind == .switchApps || kind == .switchSpaces ? stepSize * switchStepFactor : stepSize
+    }
+
     func slideKind(for zone: Zone) -> SlideKind? {
         let kind: SlideKind?
         switch zone {
         case .left: kind = leftAction
         case .right: kind = rightAction
         case .bottom: kind = bottomAction
+        case .top: kind = topAction
         case .topLeft, .topRight, .bottomLeft, .bottomRight: kind = nil
         }
-        if kind == .brightness, !brightnessAvailable { return nil }
-        if kind == .seek, !seekAvailable { return nil }
+        if let kind, unavailableKinds.contains(kind) { return nil }
         return kind
     }
 
@@ -109,6 +118,7 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         case .left: return touch.x <= limit
         case .right: return touch.x >= 1 - limit
         case .bottom: return touch.y <= limit
+        case .top: return touch.y >= 1 - limit
         case .topLeft, .topRight, .bottomLeft, .bottomRight: return true
         }
     }
@@ -188,13 +198,17 @@ nonisolated struct GestureEngine {
             liftedAt = nil
         }
 
-        /// The bottom edge runs along the pad's width, and the side edges along its height.
+        /// The top and bottom edges run along the pad's width, and the sides along its height.
         static func position(of touch: TouchPoint, in zone: Zone) -> Float {
-            zone == .bottom ? touch.x : touch.y
+            isHorizontal(zone) ? touch.x : touch.y
         }
 
         static func crossPosition(of touch: TouchPoint, in zone: Zone) -> Float {
-            zone == .bottom ? touch.y : touch.x
+            isHorizontal(zone) ? touch.y : touch.x
+        }
+
+        private static func isHorizontal(_ zone: Zone) -> Bool {
+            zone == .bottom || zone == .top
         }
     }
 
@@ -472,7 +486,7 @@ nonisolated struct GestureEngine {
             return [.seekMoved(travel)]
         }
 
-        let steps = Int(travel / config.stepSize)
+        let steps = Int(travel / config.stepSize(for: current.kind))
         guard steps != current.emittedSteps else {
             slide = current
             return []
