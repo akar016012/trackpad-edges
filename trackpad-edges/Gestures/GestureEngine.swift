@@ -38,7 +38,8 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var multiClickWindow: TimeInterval = 0.45
     /// How long a finger can lose contact before a slide ends. Contact drops out near the pad's rim.
     var liftGrace: TimeInterval = 0.18
-    /// Whether a slide needs a physical click. Otherwise, landing in a strip starts it.
+    /// Whether a one-finger slide needs a physical click. Otherwise, landing in a strip starts it.
+    /// A two-finger slide always starts on touch, because a two-finger click is a secondary click.
     var requireClick = true
     /// The travel needed before a touch counts as a slide, which is what keeps a tap inert.
     var slideDeadZone: Float = 0.04
@@ -52,6 +53,10 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var rightAction: SlideKind? = .volume
     var bottomAction: SlideKind? = .seek
     var topAction: SlideKind?
+    /// What a two-finger slide controls on each edge. An edge with none ignores two fingers.
+    var twoFingerActions: [Zone: SlideKind] = [:]
+    /// How soon a second finger must land for two fingers to count as one gesture.
+    var twoFingerWindow: TimeInterval = 0.15
     /// Actions that cannot work right now, so their edges stay normal parts of the trackpad.
     var unavailableKinds: Set<SlideKind> = []
     /// The click counts that fire each corner. A corner with none is a normal part of the pad.
@@ -71,6 +76,16 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     /// Returns the zone at a point, testing corners, then top, bottom, left, and right. A corner
     /// with no action does not count, so the edge beneath it still works.
     func zone(x: Float, y: Float) -> Zone? {
+        corner(x: x, y: y) ?? strip(x: x, y: y) { slideKind(for: $0) != nil }
+    }
+
+    /// Returns the strip at a point that has a two-finger action. Corners keep their priority.
+    func twoFingerZone(x: Float, y: Float) -> Zone? {
+        guard corner(x: x, y: y) == nil else { return nil }
+        return strip(x: x, y: y) { twoFingerKind(for: $0) != nil }
+    }
+
+    private func corner(x: Float, y: Float) -> Zone? {
         if y >= 1 - cornerHeight {
             if x <= cornerWidth, hasCorner(.topLeft) { return .topLeft }
             if x >= 1 - cornerWidth, hasCorner(.topRight) { return .topRight }
@@ -79,11 +94,15 @@ nonisolated struct GestureConfig: Sendable, Equatable {
             if x <= cornerWidth, hasCorner(.bottomLeft) { return .bottomLeft }
             if x >= 1 - cornerWidth, hasCorner(.bottomRight) { return .bottomRight }
         }
-        if y >= 1 - edgeWidth, slideKind(for: .top) != nil { return .top }
-        if y <= edgeWidth, slideKind(for: .bottom) != nil { return .bottom }
+        return nil
+    }
+
+    private func strip(x: Float, y: Float, where isActive: (Zone) -> Bool) -> Zone? {
+        if y >= 1 - edgeWidth, isActive(.top) { return .top }
+        if y <= edgeWidth, isActive(.bottom) { return .bottom }
         guard !bottomQuarterOnly || y <= 0.25 else { return nil }
-        if x <= edgeWidth, slideKind(for: .left) != nil { return .left }
-        if x >= 1 - edgeWidth, slideKind(for: .right) != nil { return .right }
+        if x <= edgeWidth, isActive(.left) { return .left }
+        if x >= 1 - edgeWidth, isActive(.right) { return .right }
         return nil
     }
 
@@ -112,6 +131,11 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         return kind
     }
 
+    func twoFingerKind(for zone: Zone) -> SlideKind? {
+        guard let kind = twoFingerActions[zone], !unavailableKinds.contains(kind) else { return nil }
+        return kind
+    }
+
     func isInside(strip zone: Zone, touch: TouchPoint, moved: Bool = false) -> Bool {
         let limit = edgeWidth + exitMargin + (moved ? movedExitMargin : 0)
         switch zone {
@@ -127,8 +151,9 @@ nonisolated struct GestureConfig: Sendable, Equatable {
 /// Turns touch frames and physical clicks from one trackpad into gesture events.
 ///
 /// This type has no system dependencies, so unit tests can drive it with plain values. A gesture
-/// needs a single finger that landed in a zone. A slide starts on landing, or on a physical click
-/// in click mode, and a corner fires on a press or a physical click. A click that stays swallowed
+/// needs a single finger that landed in a zone, or two that landed together in a strip with a
+/// two-finger action. A slide starts on landing, or on a physical click in click mode for one
+/// finger, and a corner fires on a press or a physical click. A click that stays swallowed
 /// loses both halves, and a click that turns out to be ordinary is replayed. The controller
 /// handles the rare cases where macOS loses a mouse-up.
 nonisolated struct GestureEngine {
@@ -138,8 +163,8 @@ nonisolated struct GestureEngine {
         case seekMoved(Float)
         case slideEnded(SlideKind)
         case slideCanceled(SlideKind)
-        /// The pointer may move again. If a slide changed a level before it was canceled, this
-        /// comes only after that finger lifts.
+        /// The pointer may move again. If a slide changed a level before it was canceled, or a
+        /// two-finger slide ended with a finger still down, this comes only after they lift.
         case pointerReleased
         /// The swallowed mouse-down must be delivered now, and the real mouse-up will follow it.
         case passthroughClick
@@ -160,6 +185,10 @@ nonisolated struct GestureEngine {
         let zone: Zone
         let kind: SlideKind
         var id: Int32
+        /// The fingers of a two-finger slide and where each last was along the slide's axis. A
+        /// two-finger slide follows the point between them, and a one-finger slide leaves this empty.
+        var fingers: [Int32: Float] = [:]
+        var isPair: Bool { !fingers.isEmpty }
         /// The position along the slide's axis that steps are counted from.
         var anchor: Float
         var lastPosition: Float
@@ -226,16 +255,25 @@ nonisolated struct GestureEngine {
     private var pressedCorner: Zone?
     private var cornerClicks: CornerClicks?
     private var swallowedDown = false
-    /// The finger of a canceled slide. The pointer stays frozen until this finger lifts.
-    private var drainingFinger: Int32?
+    /// The fingers of a slide that is over. The pointer stays frozen until they have all lifted.
+    private var drainingFingers: Set<Int32> = []
+    /// Every contact on the pad, including palms, because a finger that becomes a palm is still down.
+    private var rawTouchIDs: Set<Int32> = []
+    /// The strip with a two-finger action where each contact landed, which can be none.
+    private var landedStrips: [Int32: Zone?] = [:]
     /// Contacts judged to be palms, which stay palms until they lift.
     private var palms: Set<Int32> = []
     private var pressHeld = false
     /// True when a pressure press already counted, so the physical click that follows does not.
     private var pressCounted = false
+    /// When the first of the current fingers landed, while a second can still join it.
+    private var firstContactAt: TimeInterval?
 
-    private var draining: Bool { drainingFinger != nil }
+    private var draining: Bool { !drainingFingers.isEmpty }
+    var isDraining: Bool { draining }
     var isSliding: Bool { slide != nil }
+    /// Whether a slide's fingers have left, so that it ends if they stay away.
+    var isAwaitingLift: Bool { slide?.liftedAt != nil }
     var hasTouches: Bool { !touches.isEmpty }
     /// Whether this trackpad has a gesture in progress, so that it owns the next click.
     var isBusy: Bool { slide != nil || draining || swallowedDown }
@@ -245,13 +283,19 @@ nonisolated struct GestureEngine {
     mutating func process(
         _ rawTouches: [TouchPoint], now: TimeInterval = 0, modifierSatisfied: Bool = true
     ) -> [Event] {
-        palms.formIntersection(rawTouches.map(\.id))
+        rawTouchIDs = Set(rawTouches.map(\.id))
+        palms.formIntersection(rawTouchIDs)
         palms.formUnion(rawTouches.filter(config.isPalm).map(\.id))
         let newTouches = rawTouches.filter { !palms.contains($0.id) }
         let wasEmpty = touches.isEmpty
         touches = newTouches
         // A new contact starts fresh, unless its click from the last contact is still open.
         if wasEmpty, !newTouches.isEmpty, !swallowedDown { pressCounted = false }
+        if wasEmpty, !newTouches.isEmpty { firstContactAt = now }
+        landedStrips = landedStrips.filter { rawTouchIDs.contains($0.key) }
+        for touch in newTouches where !landedStrips.keys.contains(touch.id) {
+            landedStrips[touch.id] = .some(config.twoFingerZone(x: touch.x, y: touch.y))
+        }
         if newTouches.count != 1 {
             landing = nil
         } else if wasEmpty, let touch = newTouches.first,
@@ -259,13 +303,20 @@ nonisolated struct GestureEngine {
         {
             landing = (touch.id, zone)
         }
-        if let finger = drainingFinger {
-            // This reads the raw touches, because a finger that becomes a palm is still down.
-            guard !rawTouches.contains(where: { $0.id == finger }) else { return [] }
-            drainingFinger = nil
-            return [.pointerReleased]
+        if draining {
+            drainingFingers.formIntersection(rawTouchIDs)
+            return draining ? [] : [.pointerReleased]
         }
-        if slide != nil { return updateSlide(now: now, modifierSatisfied: modifierSatisfied) }
+        if let events = startPairSlide(now: now, modifierSatisfied: modifierSatisfied) {
+            return events
+        }
+        if slide?.isPair == true { return updatePairSlide(now: now) }
+        if slide != nil {
+            let events = updateSlide(now: now, modifierSatisfied: modifierSatisfied)
+            // A slide that a second finger ended uses up that finger's chance to join it.
+            if slide == nil { firstContactAt = nil }
+            return events
+        }
         return updateCornerPress(now: now)
             + startTouchSlide(now: now, modifierSatisfied: modifierSatisfied)
     }
@@ -314,9 +365,90 @@ nonisolated struct GestureEngine {
         guard let current = slide, let liftedAt = current.liftedAt,
             now - liftedAt >= config.liftGrace
         else { return [] }
+        return leave(current)
+    }
+
+    /// Starts a two-finger slide when both fingers landed in one strip within a short window. A
+    /// slide that one finger began gives way, as long as it has done nothing yet.
+    private mutating func startPairSlide(now: TimeInterval, modifierSatisfied: Bool) -> [Event]? {
+        guard touches.count == 2, let firstContactAt, now - firstContactAt <= config.twoFingerWindow,
+            modifierSatisfied, !swallowedDown, slide?.engaged != true, slide?.moved != true,
+            let zone = landedStrips[touches[0].id] ?? nil,
+            (landedStrips[touches[1].id] ?? nil) == zone,
+            let kind = config.twoFingerKind(for: zone)
+        else { return nil }
+        let canceled: [Event] = slide.map { [.slideCanceled($0.kind)] } ?? []
+        var pair = Slide(zone: zone, kind: kind, touch: midpoint, now: now)
+        pair.fingers = fingerPositions(in: zone)
+        slide = pair
+        self.firstContactAt = nil
+        return canceled + [.slideBegan(kind)]
+    }
+
+    /// The point between two fingers, which moves like one finger.
+    private var midpoint: TouchPoint {
+        TouchPoint(
+            id: touches[0].id, x: (touches[0].x + touches[1].x) / 2,
+            y: (touches[0].y + touches[1].y) / 2)
+    }
+
+    private func fingerPositions(in zone: Zone) -> [Int32: Float] {
+        Dictionary(
+            touches.map { ($0.id, Slide.position(of: $0, in: zone)) }, uniquingKeysWith: { $1 })
+    }
+
+    private mutating func updatePairSlide(now: TimeInterval) -> [Event] {
+        guard var current = slide else { return [] }
+        guard touches.count <= 2 else { return leave(current) }
+        let hasNewFinger = touches.contains { current.fingers[$0.id] == nil }
+        guard touches.count == 2 else {
+            guard !hasNewFinger else { return leave(current) }
+            // One finger leaves before the other, and contact can drop out near the pad's rim.
+            if current.liftedAt == nil { current.liftedAt = now }
+            slide = current
+            return []
+        }
+        let touch = midpoint
+        let position = Slide.position(of: touch, in: current.zone)
+        let cross = Slide.crossPosition(of: touch, in: current.zone)
+        // A lost contact can return as a new finger, but only close to where the pair was.
+        let isReturning =
+            current.liftedAt != nil && abs(cross - current.lastCross) <= config.maxFrameJump
+            && abs(position - current.lastPosition) <= config.maxFrameJump
+        guard !hasNewFinger || isReturning,
+            config.isInside(strip: current.zone, touch: touch, moved: current.moved)
+        else { return leave(current) }
+
+        // The midpoint halves one finger's glitch, so each finger is checked on its own.
+        let positions = fingerPositions(in: current.zone)
+        let hasGlitch = positions.contains { id, value in
+            current.fingers[id].map { abs(value - $0) > config.maxFrameJump } ?? false
+        }
+        current.fingers = positions
+        if current.liftedAt != nil || hasGlitch {
+            // Shifting the anchor means that this change of contact produces no steps.
+            current.anchor += position - current.lastPosition
+            current.lastPosition = position
+            current.lastCross = cross
+            current.liftedAt = nil
+        }
+        guard !hasGlitch else {
+            slide = current
+            return []
+        }
+        return advance(current, position: position, cross: cross, now: now)
+    }
+
+    /// Ends a slide whose fingers are gone or have become another gesture. If it changed
+    /// something, the pointer stays frozen until the fingers of that motion lift.
+    private mutating func leave(_ current: Slide) -> [Event] {
         slide = nil
         guard current.moved else { return cancelUnmoved(current) }
-        return [.slideEnded(current.kind), .pointerReleased]
+        let isFinished = current.liftedAt != nil
+        let event: Event = isFinished ? .slideEnded(current.kind) : .slideCanceled(current.kind)
+        drainingFingers =
+            isFinished ? Set(current.fingers.keys).intersection(rawTouchIDs) : rawTouchIDs
+        return drainingFingers.isEmpty ? [event, .pointerReleased] : [event]
     }
 
     private mutating func startTouchSlide(now: TimeInterval, modifierSatisfied: Bool) -> [Event] {
@@ -444,57 +576,67 @@ nonisolated struct GestureEngine {
             slide = nil
             guard current.moved else { return cancelUnmoved(current) }
             // The pointer stays frozen until the finger lifts, so it cannot jump mid-motion.
-            drainingFinger = current.id
+            drainingFingers = [current.id]
             return [.slideCanceled(current.kind)]
         }
 
-        let position = Slide.position(of: touch, in: current.zone)
+        return advance(
+            current, position: Slide.position(of: touch, in: current.zone),
+            cross: Slide.crossPosition(of: touch, in: current.zone), now: now)
+    }
+
+    /// Moves a slide to a new position, and returns whatever that changes.
+    private mutating func advance(
+        _ slide: Slide, position: Float, cross: Float, now: TimeInterval
+    ) -> [Event] {
+        var current = slide
         let jump = position - current.lastPosition
         current.lastPosition = position
-        current.lastCross = Slide.crossPosition(of: touch, in: current.zone)
+        current.lastCross = cross
         if abs(jump) > config.maxFrameJump {
             current.anchor += jump
-            slide = current
+            self.slide = current
             return []
         }
 
         let travel = position - current.anchor
-        if !config.requireClick, !current.engaged {
-            let sideways = abs(Slide.crossPosition(of: touch, in: current.zone) - current.crossAnchor)
+        // A two-finger slide never needs a click, because a two-finger click is a secondary click.
+        if !config.requireClick || current.isPair, !current.engaged {
+            let sideways = abs(cross - current.crossAnchor)
             guard abs(travel) >= config.slideDeadZone, abs(travel) > sideways,
                 now - current.startedAt >= config.slideSettleTime
             else {
-                slide = current
+                self.slide = current
                 return []
             }
             current.engaged = true
             if current.kind != .seek {
                 // Steps count from here, so crossing the dead zone cannot jump the level.
                 current.anchor = position
-                slide = current
+                self.slide = current
                 return []
             }
         }
 
         if current.kind == .seek {
             guard current.moved || current.engaged || abs(travel) >= config.seekDeadZone else {
-                slide = current
+                self.slide = current
                 return []
             }
             current.moved = true
-            slide = current
+            self.slide = current
             return [.seekMoved(travel)]
         }
 
         let steps = Int(travel / config.stepSize(for: current.kind))
         guard steps != current.emittedSteps else {
-            slide = current
+            self.slide = current
             return []
         }
         let change = steps - current.emittedSteps
         current.emittedSteps = steps
         current.moved = true
-        slide = current
+        self.slide = current
         return [.stepped(change)]
     }
 

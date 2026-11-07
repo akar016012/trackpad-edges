@@ -1,6 +1,6 @@
 # Two-finger edge slides
 
-Status: this feature is planned for phase 4. This feature depends on palm detection, because a palm must not count as a second finger.
+Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
 
 ## Goal
 
@@ -15,26 +15,31 @@ Each edge should hold a second action for a two-finger slide, such as one finger
 
 ## Settings
 
-The Edges pane gains a second action for each edge, and it keeps the same aligned rows.
+The Edges pane has a **Two-finger slides** section with one popup for each edge.
 
-## Implementation plan
+## How it works
 
-1. Let `GestureEngine` record a two-finger landing, and require both contacts to land in the strip within a short window.
-2. Track the midpoint, so that the existing step logic works unchanged.
-3. Keep the pointer freeze for the slide, and also drop scroll events during it.
-4. Add the setting as an optional stored value, so that saved settings still load.
+1. `GestureEngine` records the strip where each contact landed. A two-finger slide starts only when both fingers landed in the same strip within 0.15 seconds, so fingers that slide into a strip do not count. If one finger already started a slide that has done nothing yet, that slide gives way.
+2. The midpoint of the fingers drives the existing step logic. Each finger is also checked for a contact glitch on its own, because the midpoint would hide half of one.
+3. The pointer freeze drops scroll events during the slide, so that macOS does not scroll as well.
+4. A two-finger slide starts on touch even in click mode, because a two-finger click is a secondary click.
+5. One finger leaving starts the lift grace, so a brief loss of contact does not end the slide. A lost contact may return as a new finger, but only close to where the pair was. Any other new finger ends the slide.
+6. If a slide changed something, the pointer stays frozen until the fingers of that motion lift. A slide that changed nothing releases the pointer at once.
+7. The settings are optional stored values, so saved settings still load. They are set on the Edges pane only, and not from the menu bar item.
 
 ## Risks
 
-- This can collide with two-finger scrolling and system gestures, because macOS reads the same touches. If a scroll still leaks through, the feature becomes opt-in for each edge.
+- This can collide with two-finger scrolling and system gestures, because macOS reads the same touches. The feature is off for each edge until you assign it, and a scroll that coasts on after the fingers lift can still reach the app under the pointer.
+- A firm press during a slide can still produce a secondary click, and a pinch in a strip can still reach apps, because neither passes through the pointer freeze. Both need a check on the trackpad.
+- A palm that first looks like a finger can count as a second finger until it is recognized.
 - The strip is narrow, so two fingers may be hard to place in it. Testing may show that the strip needs to be wider for this gesture.
 
 ## Verification
 
-- Unit tests cover landing, midpoint travel, and a second finger that lands outside the strip.
+- Unit tests cover landing, midpoint travel, glitches, returning contacts, new fingers, clicks, palms, and when the pointer is released.
 - On the trackpad, two-finger scrolling near an edge still works normally.
 
 ## Related docs
 
 - [gestures.md](../gestures.md) describes multi-finger handling today.
-- [palm-detection.md](palm-detection.md) must be finished first.
+- [palm-detection.md](palm-detection.md) describes how a palm is recognized.

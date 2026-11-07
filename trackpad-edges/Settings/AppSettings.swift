@@ -98,6 +98,11 @@ struct AppSettings: Codable, Equatable {
     var rightEdge: SlideKind? = .volume
     var bottomEdge: SlideKind? = .seek
     var topEdge: SlideKind?
+    /// What a two-finger slide does on each edge, which is nothing until you assign it.
+    var twoFingerLeft: SlideKind?
+    var twoFingerRight: SlideKind?
+    var twoFingerBottom: SlideKind?
+    var twoFingerTop: SlideKind?
     var topLeft = CornerSetting(action: .mute, clicks: 1)
     var topRight = CornerSetting(action: .none, clicks: 1)
     /// These are optional in storage, so that settings saved before they existed still load.
@@ -188,6 +193,11 @@ struct AppSettings: Codable, Equatable {
         config.rightAction = rightEdge
         config.bottomAction = bottomEdge
         config.topAction = topEdge
+        let twoFinger: [(Zone, SlideKind?)] = [
+            (.left, twoFingerLeft), (.right, twoFingerRight), (.bottom, twoFingerBottom),
+            (.top, twoFingerTop),
+        ]
+        for case (let zone, let kind?) in twoFinger { config.twoFingerActions[zone] = kind }
         config.unavailableKinds = unavailable
         config.cornerCounts = [
             .topLeft: topLeft.configuredClicks, .topRight: topRight.configuredClicks,

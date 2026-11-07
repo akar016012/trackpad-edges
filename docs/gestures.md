@@ -30,13 +30,13 @@ The pointer freezes at landing, but a touch counts as a slide only after the fin
 
 - Lifting the finger ends the slide, so easing off the click during a slide does not stop it.
 - Contact can drop out near the rim of the pad, which was seen about every 0.2 seconds in testing. A slide therefore survives a gap of up to 0.18 seconds, and wherever the contact returns in the strip produces no steps. A contact that returns outside the strip, or with a second finger, ends the slide and starts fresh.
-- Leaving the strip by more than 3% of the pad cancels a slide that has not changed anything yet. Once a slide has changed something, it can stray a further 25% of the pad, because a real slide drifts. A second finger cancels a slide at any time.
+- Leaving the strip by more than 3% of the pad cancels a slide that has not changed anything yet. Once a slide has changed something, it can stray a further 25% of the pad, because a real slide drifts. A second finger cancels a one-finger slide, unless it lands soon enough to start a [two-finger slide](roadmap/two-finger-slides.md).
 - Volume and brightness steps that were already applied stay applied after a cancel.
 - A click with no slide passes through to macOS as a normal click when you release it.
 
 ## What is ignored
 
-Multi-finger gestures and ordinary pointer movement never start a slide, and a finger that moves into a strip does not count. A palm is recognized from its size and shape, and it does not start a gesture. A palm that is already full size does not cancel one either, although a palm that first looks like a finger can cancel a slide before it is recognized. Corners fire on pressure, so a tap does not normally reach them, although a tap with tap-to-click can still count as a click.
+Ordinary pointer movement and multi-finger gestures never start a slide, and a finger that moves into a strip does not count. The one exception is two fingers that land together in a strip with a two-finger action. A palm is recognized from its size and shape, and it does not start a gesture. A palm that is already full size does not cancel one either, although a palm that first looks like a finger can cancel a slide before it is recognized. Corners fire on pressure, so a tap does not normally reach them, although a tap with tap-to-click can still count as a click.
 
 A contact counts as lifted if no touch data arrives for 0.25 seconds, because the framework can drop the final frame. Gestures stop while the screen is locked.
 

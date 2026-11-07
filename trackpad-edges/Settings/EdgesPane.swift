@@ -51,9 +51,14 @@ final class EdgesPane: SettingsPane {
                 ),
             ],
         ])
+        let twoFinger = wideForm([
+            [("Left:", edgePopup(\.twoFingerLeft)), ("Right:", edgePopup(\.twoFingerRight))],
+            [("Top:", edgePopup(\.twoFingerTop)), ("Bottom:", edgePopup(\.twoFingerBottom))],
+        ])
         setContent([
             columns(diagram, form),
             options,
+            column([heading("Two-finger slides"), twoFinger]),
             note("Touch a strip and slide. A click without a slide stays a normal click."),
         ])
         // The diagram matches the controls beside it, so both columns end on the same line.

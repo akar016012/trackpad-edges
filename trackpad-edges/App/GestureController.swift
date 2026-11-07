@@ -159,7 +159,7 @@ final class GestureController {
         engines[device] = engine
         dispatch(events, device: device)
         // This asks the engine, because a palm keeps frames arriving after the finger has lifted.
-        if engine.isSliding, !engine.hasTouches, !tickScheduled {
+        if engine.isAwaitingLift, !tickScheduled {
             scheduleTick(device: device, grace: engine.config.liftGrace)
         }
     }
@@ -343,7 +343,8 @@ final class GestureController {
             discardNextUp = true
         }
         for device in Array(engines.keys) {
-            guard let engine = engines[device], engine.hasTouches || engine.isSliding,
+            guard let engine = engines[device],
+                engine.hasTouches || engine.isSliding || engine.isDraining,
                 now - (lastFrames[device] ?? 0) > Self.lostFingerInterval
             else { continue }
             handle(device: device, touches: [])

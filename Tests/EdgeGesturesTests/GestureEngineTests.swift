@@ -768,4 +768,296 @@ final class GestureEngineTests: XCTestCase {
             XCTAssertEqual(engine.mouseUp(now: time).events, [.cornerCounted])
         }
     }
+
+    // MARK: Two-finger slides
+
+    private func twoFingerEngine(oneFinger: SlideKind? = nil) -> GestureEngine {
+        var config = GestureConfig()
+        config.requireClick = false
+        config.cornerCounts = [:]
+        config.rightAction = oneFinger
+        config.twoFingerActions = [.right: .brightness]
+        var engine = GestureEngine()
+        engine.config = config
+        return engine
+    }
+
+    private func pair(_ x: Float, _ first: Float, _ second: Float) -> [TouchPoint] {
+        [TouchPoint(id: 1, x: x, y: first), TouchPoint(id: 2, x: x, y: second)]
+    }
+
+    func testTwoFingersInAStripStartTheirOwnSlide() {
+        var engine = twoFingerEngine()
+        XCTAssertEqual(engine.process(pair(0.95, 0.4, 0.55), now: 0), [.slideBegan(.brightness)])
+    }
+
+    func testSecondFingerTakesOverAnIdleOneFingerSlide() {
+        var engine = twoFingerEngine(oneFinger: .volume)
+        let first = [TouchPoint(id: 1, x: 0.95, y: 0.4)]
+        XCTAssertEqual(engine.process(first, now: 0), [.slideBegan(.volume)])
+        XCTAssertEqual(
+            engine.process(pair(0.95, 0.4, 0.55), now: 0.05),
+            [.slideCanceled(.volume), .slideBegan(.brightness)])
+    }
+
+    func testLateSecondFingerDoesNotStartATwoFingerSlide() {
+        var engine = twoFingerEngine()
+        XCTAssertEqual(engine.process([TouchPoint(id: 1, x: 0.95, y: 0.4)], now: 0), [])
+        XCTAssertEqual(engine.process(pair(0.95, 0.4, 0.55), now: 0.3), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testSecondFingerOutsideTheStripStaysAnOrdinaryGesture() {
+        var engine = twoFingerEngine()
+        let touches = [TouchPoint(id: 1, x: 0.95, y: 0.4), TouchPoint(id: 2, x: 0.5, y: 0.4)]
+        XCTAssertEqual(engine.process(touches, now: 0), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testEdgeWithoutATwoFingerActionIgnoresTwoFingers() {
+        var engine = twoFingerEngine()
+        let touches = [TouchPoint(id: 1, x: 0.05, y: 0.4), TouchPoint(id: 2, x: 0.05, y: 0.55)]
+        XCTAssertEqual(engine.process(touches, now: 0), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testTheMidpointDrivesSteps() {
+        var engine = twoFingerEngine()
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        XCTAssertEqual(engine.process(pair(0.95, 0.45, 0.60), now: 0.1), [])
+        // Only one finger moves here, so the midpoint moves half as far as that finger.
+        XCTAssertEqual(engine.process(pair(0.95, 0.45, 0.68), now: 0.15), [.stepped(1)])
+    }
+
+    func testTwoFingerSlideNeedsNoClickInClickMode() {
+        var engine = twoFingerEngine()
+        engine.config.requireClick = true
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        _ = engine.process(pair(0.95, 0.45, 0.60), now: 0.1)
+        XCTAssertEqual(engine.process(pair(0.95, 0.49, 0.64), now: 0.15), [.stepped(1)])
+    }
+
+    func testOneFingerLeavingFirstEndsTheSlideAfterTheGrace() {
+        var engine = twoFingerEngine()
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        _ = engine.process(pair(0.95, 0.45, 0.60), now: 0.1)
+        _ = engine.process(pair(0.95, 0.49, 0.64), now: 0.15)
+        let last = [TouchPoint(id: 2, x: 0.95, y: 0.64)]
+        XCTAssertEqual(engine.process(last, now: 0.2), [])
+        XCTAssertTrue(engine.isAwaitingLift)
+        XCTAssertEqual(engine.tick(now: 0.4), [.slideEnded(.brightness)])
+        XCTAssertEqual(engine.process([], now: 0.45), [.pointerReleased])
+    }
+
+    func testPairThatReturnsWithinTheGraceKeepsGoingWithoutSteps() {
+        var engine = twoFingerEngine()
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        _ = engine.process(pair(0.95, 0.45, 0.60), now: 0.1)
+        _ = engine.process(pair(0.95, 0.49, 0.64), now: 0.15)
+        _ = engine.process([TouchPoint(id: 2, x: 0.95, y: 0.64)], now: 0.2)
+        XCTAssertEqual(engine.process(pair(0.95, 0.49, 0.64), now: 0.25), [])
+        XCTAssertFalse(engine.isAwaitingLift)
+    }
+
+    func testThirdFingerCancelsAPairSlide() {
+        var engine = twoFingerEngine()
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        let three = pair(0.95, 0.40, 0.55) + [TouchPoint(id: 3, x: 0.5, y: 0.5)]
+        XCTAssertEqual(
+            engine.process(three, now: 0.05), [.slideCanceled(.brightness), .pointerReleased])
+    }
+
+    func testFingersThatSlideIntoAStripDoNotStartASlide() {
+        var engine = twoFingerEngine()
+        XCTAssertEqual(engine.process(pair(0.80, 0.4, 0.55), now: 0), [])
+        XCTAssertEqual(engine.process(pair(0.85, 0.4, 0.55), now: 0.05), [])
+        XCTAssertEqual(engine.process(pair(0.92, 0.4, 0.55), now: 0.1), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testSecondFingerThatSlidesInDoesNotJoinASlide() {
+        var engine = twoFingerEngine(oneFinger: .volume)
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.4)], now: 0)
+        let outside = [TouchPoint(id: 1, x: 0.95, y: 0.4), TouchPoint(id: 2, x: 0.82, y: 0.55)]
+        XCTAssertEqual(
+            engine.process(outside, now: 0.05), [.slideCanceled(.volume), .pointerReleased])
+        let inside = [TouchPoint(id: 1, x: 0.95, y: 0.4), TouchPoint(id: 2, x: 0.91, y: 0.55)]
+        XCTAssertEqual(engine.process(inside, now: 0.1), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    /// Returns an engine with a two-finger slide that has changed something.
+    private func movedPair(kind: SlideKind = .brightness) -> GestureEngine {
+        var engine = twoFingerEngine()
+        engine.config.twoFingerActions = [.right: kind]
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        _ = engine.process(pair(0.95, 0.45, 0.60), now: 0.1)
+        _ = engine.process(pair(0.95, 0.49, 0.64), now: 0.15)
+        return engine
+    }
+
+    func testGlitchOfOneFingerProducesNoSteps() {
+        var engine = movedPair()
+        XCTAssertEqual(engine.process(pair(0.95, 0.49, 0.84), now: 0.2), [])
+        XCTAssertEqual(engine.process(pair(0.95, 0.49, 0.64), now: 0.25), [])
+    }
+
+    func testPairKeepsCountingAfterAGlitch() {
+        var engine = movedPair()
+        _ = engine.process(pair(0.95, 0.49, 0.84), now: 0.2)
+        _ = engine.process(pair(0.95, 0.49, 0.64), now: 0.25)
+        XCTAssertEqual(engine.process(pair(0.95, 0.53, 0.68), now: 0.3), [.stepped(1)])
+    }
+
+    func testReleasedSeekCommitsWhenNewFingersLand() {
+        var engine = movedPair(kind: .seek)
+        _ = engine.process([], now: 0.2)
+        let fresh = [TouchPoint(id: 3, x: 0.5, y: 0.5), TouchPoint(id: 4, x: 0.6, y: 0.5)]
+        XCTAssertEqual(engine.process(fresh, now: 0.3), [.slideEnded(.seek), .pointerReleased])
+    }
+
+    func testFreshPairNearbyAfterALiftIsANewGesture() {
+        var engine = movedPair()
+        _ = engine.process([], now: 0.2)
+        let fresh = [TouchPoint(id: 3, x: 0.70, y: 0.5), TouchPoint(id: 4, x: 0.70, y: 0.65)]
+        XCTAssertEqual(
+            engine.process(fresh, now: 0.3), [.slideEnded(.brightness), .pointerReleased])
+    }
+
+    func testNewFingerOutsideReplacesALostOne() {
+        var engine = movedPair()
+        _ = engine.process([TouchPoint(id: 2, x: 0.95, y: 0.64)], now: 0.2)
+        let mixed = [TouchPoint(id: 2, x: 0.95, y: 0.64), TouchPoint(id: 3, x: 0.5, y: 0.5)]
+        XCTAssertEqual(engine.process(mixed, now: 0.25), [.slideEnded(.brightness)])
+        XCTAssertEqual(engine.process([TouchPoint(id: 3, x: 0.5, y: 0.5)], now: 0.3), [.pointerReleased])
+    }
+
+    func testContactThatReturnsAsANewFingerKeepsTheSlide() {
+        var engine = movedPair()
+        _ = engine.process([TouchPoint(id: 2, x: 0.95, y: 0.64)], now: 0.2)
+        let returned = [TouchPoint(id: 2, x: 0.95, y: 0.64), TouchPoint(id: 3, x: 0.95, y: 0.49)]
+        XCTAssertEqual(engine.process(returned, now: 0.25), [])
+        XCTAssertTrue(engine.isSliding)
+        XCTAssertFalse(engine.isAwaitingLift)
+    }
+
+    func testFingerSwappedWithinOneFrameEndsTheSlide() {
+        var engine = movedPair()
+        let swapped = [TouchPoint(id: 1, x: 0.95, y: 0.49), TouchPoint(id: 3, x: 0.95, y: 0.70)]
+        XCTAssertEqual(engine.process(swapped, now: 0.2), [.slideCanceled(.brightness)])
+    }
+
+    func testNewFingerAfterALiftReleasesThePointerAtOnce() {
+        var engine = movedPair()
+        _ = engine.process([], now: 0.2)
+        XCTAssertEqual(
+            engine.process([TouchPoint(id: 3, x: 0.5, y: 0.5)], now: 0.3),
+            [.slideEnded(.brightness), .pointerReleased])
+    }
+
+    func testThirdFingerHoldsThePointerUntilEveryFingerLifts() {
+        var engine = movedPair()
+        let three = pair(0.95, 0.49, 0.64) + [TouchPoint(id: 3, x: 0.5, y: 0.5)]
+        XCTAssertEqual(engine.process(three, now: 0.2), [.slideCanceled(.brightness)])
+        XCTAssertEqual(engine.process(pair(0.95, 0.49, 0.64), now: 0.25), [])
+        XCTAssertEqual(engine.process([TouchPoint(id: 2, x: 0.95, y: 0.64)], now: 0.3), [])
+        XCTAssertEqual(engine.process([], now: 0.35), [.pointerReleased])
+    }
+
+    func testLeavingTheStripCancelsAndHoldsThePointer() {
+        var engine = movedPair()
+        XCTAssertEqual(
+            engine.process(pair(0.5, 0.49, 0.64), now: 0.2), [.slideCanceled(.brightness)])
+        XCTAssertTrue(engine.isDraining)
+    }
+
+    func testPairThatReturnsElsewhereInTheStripProducesNoSteps() {
+        var engine = movedPair()
+        _ = engine.process([TouchPoint(id: 2, x: 0.95, y: 0.64)], now: 0.2)
+        XCTAssertEqual(engine.process(pair(0.95, 0.59, 0.74), now: 0.25), [])
+        XCTAssertEqual(engine.process(pair(0.95, 0.63, 0.78), now: 0.3), [.stepped(1)])
+    }
+
+    func testPairNeedsTheDeadZoneInClickMode() {
+        var engine = twoFingerEngine()
+        engine.config.requireClick = true
+        _ = engine.process(pair(0.95, 0.40, 0.55), now: 0)
+        XCTAssertEqual(engine.process(pair(0.95, 0.437, 0.587), now: 0.1), [])
+    }
+
+    func testMovedOneFingerSlideDoesNotBecomeAPair() {
+        var engine = twoFingerEngine(oneFinger: .volume)
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.40)], now: 0)
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.46)], now: 0.09)
+        XCTAssertEqual(
+            engine.process(pair(0.95, 0.46, 0.60), now: 0.1),
+            [.slideCanceled(.volume), .pointerReleased])
+        XCTAssertEqual(engine.process(pair(0.95, 0.46, 0.60), now: 0.12), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testPairWaitsForTheRequiredKey() {
+        var engine = twoFingerEngine()
+        XCTAssertEqual(engine.process(pair(0.95, 0.4, 0.55), now: 0, modifierSatisfied: false), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testHeldClickKeepsAPairFromStarting() {
+        var engine = twoFingerEngine(oneFinger: .volume)
+        _ = engine.process([TouchPoint(id: 1, x: 0.95, y: 0.4)], now: 0)
+        XCTAssertTrue(engine.mouseDown(now: 0.02).swallow)
+        XCTAssertEqual(
+            engine.process(pair(0.95, 0.4, 0.55), now: 0.05),
+            [.slideCanceled(.volume), .pointerReleased, .passthroughClick])
+        XCTAssertEqual(engine.process(pair(0.95, 0.4, 0.55), now: 0.07), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testClickOnAnIdlePairPassesThrough() {
+        var engine = twoFingerEngine()
+        _ = engine.process(pair(0.95, 0.4, 0.55), now: 0)
+        XCTAssertTrue(engine.mouseDown(now: 0.02).swallow)
+        XCTAssertEqual(
+            engine.mouseUp(now: 0.05).events,
+            [.slideCanceled(.brightness), .pointerReleased, .passthroughClick])
+    }
+
+    func testTwoFingerSeekPreviewsAndCommits() {
+        var engine = twoFingerEngine()
+        engine.config.twoFingerActions = [.bottom: .seek]
+        let bottom: (Float, Float) -> [TouchPoint] = { first, second in
+            [TouchPoint(id: 1, x: first, y: 0.05), TouchPoint(id: 2, x: second, y: 0.05)]
+        }
+        XCTAssertEqual(engine.process(bottom(0.40, 0.55), now: 0), [.slideBegan(.seek)])
+        guard case .seekMoved = engine.process(bottom(0.46, 0.61), now: 0.1).first else {
+            return XCTFail("The slide should preview a seek.")
+        }
+        _ = engine.process([], now: 0.15)
+        XCTAssertEqual(engine.tick(now: 0.4), [.slideEnded(.seek), .pointerReleased])
+    }
+
+    func testPalmIsNotASecondFinger() {
+        var engine = twoFingerEngine()
+        let palm = [
+            TouchPoint(id: 1, x: 0.95, y: 0.4),
+            TouchPoint(id: 2, x: 0.95, y: 0.55, size: 2),
+        ]
+        XCTAssertEqual(engine.process(palm, now: 0), [])
+        XCTAssertFalse(engine.isSliding)
+    }
+
+    func testTwoFingerCornerKeepsPriority() {
+        var config = GestureConfig()
+        config.twoFingerActions = [.right: .volume]
+        config.cornerCounts = [.topRight: [1]]
+        XCTAssertNil(config.twoFingerZone(x: 0.95, y: 0.95))
+        XCTAssertEqual(config.twoFingerZone(x: 0.95, y: 0.5), .right)
+    }
+
+    func testUnavailableTwoFingerActionLeavesTheEdgeAlone() {
+        var config = GestureConfig()
+        config.twoFingerActions = [.right: .externalBrightness]
+        config.unavailableKinds = [.externalBrightness]
+        XCTAssertNil(config.twoFingerZone(x: 0.95, y: 0.5))
+    }
 }

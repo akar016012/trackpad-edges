@@ -4,7 +4,7 @@ Status: the pointer freeze is confirmed working on the built-in trackpad. Click 
 
 ## Pointer freeze
 
-The pointer stays still during a slide and returns to exactly where it was. The freeze starts when the slide starts, which is at landing by default and at the physical click in click mode. The pointer stays frozen for about 0.2 seconds after a lift, because of the grace period. If a slide that changed a level is canceled, the pointer stays frozen until that finger lifts. `PointerFreeze` detaches the pointer from the mouse, which needs no permission. It also drops pointer and scroll events in an event tap, which needs the Accessibility permission. Events that the app posts itself carry a mark and pass the tap, so that the Scroll action works during a slide.
+The pointer stays still during a slide and returns to exactly where it was. The freeze starts when the slide starts, which is at landing by default and at the physical click in click mode. A two-finger slide always starts at landing. The pointer stays frozen for about 0.2 seconds after a lift, because of the grace period. If a slide that changed a level is canceled, the pointer stays frozen until that finger lifts, and a two-finger slide that ended also waits for any finger still down. `PointerFreeze` detaches the pointer from the mouse, which needs no permission. It also drops pointer and scroll events in an event tap, which needs the Accessibility permission. Events that the app posts itself carry a mark and pass the tap, so that the Scroll action works during a slide.
 
 ## Click handling
 
