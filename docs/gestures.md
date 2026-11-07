@@ -22,7 +22,7 @@ Zones are tested in this order: corners, top edge, bottom edge, left edge, then 
 
 By default, a slide starts as soon as one finger lands inside a strip. A finger that lands elsewhere and moves into a strip does nothing, which keeps ordinary trackpad use undisturbed. The trade-off is that the pointer does not move while a finger that landed in a strip stays there.
 
-The **Require a click to start** setting matches a similar app: the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
+With the **Require a click to start** setting, the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
 
 The pointer freezes at landing, but a touch counts as a slide only after the finger has been down for 0.08 seconds and has traveled 4% of the pad, mostly along the strip. Steps count from that point, so a tap does not change a level. A move of more than 12% of the pad between two frames is treated as a contact glitch and ignored, because the reported position can jump near the rim.
 
@@ -42,7 +42,7 @@ A contact counts as lifted if no touch data arrives for 0.25 seconds, because th
 
 ## Multiple trackpads
 
-Each trackpad has its own gesture state, because mixing devices would report doubled fingers. When two trackpads are connected, a trackpad with a gesture in progress owns the next click. Otherwise, a click goes to the first trackpad with a finger resting in a zone, because click events do not say which trackpad they came from. A click from a separate mouse can be captured the same way while a finger rests in a zone. Apple touch mouse devices also report touches, so the app skips them. Trackpads are rebuilt after one connects or disconnects and after the Mac wakes.
+Each trackpad has its own gesture state, because mixing devices would report doubled fingers. When two trackpads are connected, a trackpad with a gesture in progress owns the next click. Otherwise, a click goes to the first trackpad with a finger resting in a zone, because click events do not say which trackpad they came from. A click from a separate mouse can be captured the same way while a finger rests in a zone. Apple's touch mice also report touches, so the app skips them. Trackpads are rebuilt after one connects or disconnects and after the Mac wakes.
 
 ## Related docs
 

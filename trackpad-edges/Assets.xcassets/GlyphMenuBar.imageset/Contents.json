@@ -1,5 +1,24 @@
 {
-  "images": [{ "filename": "GlyphMenuBar.png", "idiom": "universal", "scale": "2x" }],
-  "info": { "author": "xcode", "version": 1 },
-  "properties": { "template-rendering-intent": "template" }
+  "images" : [
+    {
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "GlyphMenuBar.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "template-rendering-intent" : "template"
+  }
 }

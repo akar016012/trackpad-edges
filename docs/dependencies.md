@@ -18,18 +18,18 @@ Apple does not document these frameworks, so a macOS update could break them. Th
 
 The framework lives at `/System/Library/PrivateFrameworks/MultitouchSupport.framework`.
 
-| Symbol                             | Purpose                                           | Used in                        |
-| ---------------------------------- | ------------------------------------------------- | ------------------------------ |
-| `MTDeviceCreateList`               | This call lists the multitouch devices.           | `Input/MultitouchBridge.swift` |
-| `MTDeviceGetFamilyID`              | This call identifies Apple touch mouse devices to skip. | `Input/MultitouchBridge.swift` |
-| `MTRegisterContactFrameCallback`   | This call registers for touch frames.             | `Input/MultitouchBridge.swift` |
-| `MTUnregisterContactFrameCallback` | This call frees a callback slot on a rebuild.     | `Input/MultitouchBridge.swift` |
-| `MTDeviceStart`                    | This call starts a device.                        | `Input/MultitouchBridge.swift` |
-| `MTDeviceStop`                     | This call stops a device.                         | `Input/MultitouchBridge.swift` |
-| `MTDeviceGetMTActuator`            | This call gets a trackpad's haptic actuator.      | `Haptics/HapticEngine.swift`   |
-| `MTActuatorOpen`                   | This call opens the actuator for a slide.         | `Haptics/HapticEngine.swift`   |
-| `MTActuatorActuate`                | This call fires a haptic with a chosen strength.  | `Haptics/HapticEngine.swift`   |
-| `MTActuatorClose`                  | This call closes the actuator after a slide.      | `Haptics/HapticEngine.swift`   |
+| Symbol                             | Purpose                                          | Used in                        |
+| ---------------------------------- | ------------------------------------------------ | ------------------------------ |
+| `MTDeviceCreateList`               | This call lists the multitouch devices.          | `Input/MultitouchBridge.swift` |
+| `MTDeviceGetFamilyID`              | This call identifies Apple's touch mice to skip. | `Input/MultitouchBridge.swift` |
+| `MTRegisterContactFrameCallback`   | This call registers for touch frames.            | `Input/MultitouchBridge.swift` |
+| `MTUnregisterContactFrameCallback` | This call frees a callback slot on a rebuild.    | `Input/MultitouchBridge.swift` |
+| `MTDeviceStart`                    | This call starts a device.                       | `Input/MultitouchBridge.swift` |
+| `MTDeviceStop`                     | This call stops a device.                        | `Input/MultitouchBridge.swift` |
+| `MTDeviceGetMTActuator`            | This call gets a trackpad's haptic actuator.     | `Haptics/HapticEngine.swift`   |
+| `MTActuatorOpen`                   | This call opens the actuator for a slide.        | `Haptics/HapticEngine.swift`   |
+| `MTActuatorActuate`                | This call fires a haptic with a chosen strength. | `Haptics/HapticEngine.swift`   |
+| `MTActuatorClose`                  | This call closes the actuator after a slide.     | `Haptics/HapticEngine.swift`   |
 
 The app also reads the framework's touch record by byte offset, because the framework has no public header. The offsets were read from the macOS 27.2 binary, and they are listed in `TouchLayout` in `Input/MultitouchBridge.swift`.
 
@@ -114,6 +114,6 @@ The framework lives at `/System/Library/PrivateFrameworks/DisplayServices.framew
 - `MPNowPlayingInfoCenter` and `MPRemoteCommandCenter` are not used, because they only publish an app's own playback.
 - AppleScript is not used for seeking, because it reaches only Music and Spotify, and the adapter covers those too.
 
-## Generated assets
+## Assets
 
-The app icon, the glyphs in `Assets.xcassets`, and the render at `site/assets/feel.jpg` were generated with the image tool image tool. The icon and glyphs were then masked and converted to template images. `site/fonts/archivo.woff2` is the Archivo font under the SIL Open Font License, and its license is at `site/fonts/OFL.txt`. They are private project records, so do not mention the tool in public text.
+The app icon, the glyphs in `Assets.xcassets`, and the render at `site/assets/feel.jpg` were made for this project. `site/fonts/archivo.woff2` is the Archivo font under the SIL Open Font License, and its license is at `site/fonts/OFL.txt`.

@@ -1,0 +1,17 @@
+# Runs the logic tests for pull requests, and by hand. Touch hardware cannot run in CI.
+name: Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - run: swift test

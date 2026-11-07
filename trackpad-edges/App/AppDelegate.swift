@@ -123,6 +123,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(.separator())
         menu.addItem(pauseItem)
+        let about = NSMenuItem(
+            title: "About Trackpad Edges", action: #selector(showAbout), keyEquivalent: "")
+        about.target = self
+        menu.addItem(about)
         let tour = NSMenuItem(
             title: "Welcome Tour…", action: #selector(showWelcomeTour), keyEquivalent: "")
         tour.target = self
@@ -184,6 +188,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             mainWindow?.onClose = { [weak self] in self?.windowClosed() }
         }
         mainWindow?.show()
+    }
+
+    @objc private func showAbout() {
+        NSApp.activate()
+        NSApp.orderFrontStandardAboutPanel(nil)
     }
 
     @objc private func showWelcomeTour() {

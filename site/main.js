@@ -2,6 +2,7 @@
 const release = {
   url: "",
   version: "",
+  source: "",
 };
 
 const pad = document.getElementById("pad");
@@ -174,6 +175,11 @@ document.getElementById("previous").addEventListener("click", () => {
 document.getElementById("next").addEventListener("click", () => {
   report("Skipped to the next track.");
 });
+
+if (release.source) {
+  document.getElementById("source-link").href = release.source;
+  document.getElementById("source").hidden = false;
+}
 
 if (release.url) {
   const link = document.getElementById("download-link");

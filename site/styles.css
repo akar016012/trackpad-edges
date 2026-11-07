@@ -539,6 +539,14 @@ footer {
   font-size: 0.9375rem;
 }
 
+footer a {
+  color: #fff;
+}
+
+footer a:focus-visible {
+  outline-color: #fff;
+}
+
 @media (max-width: 860px) {
   .what {
     grid-template-columns: minmax(0, 1fr);

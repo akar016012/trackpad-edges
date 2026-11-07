@@ -8,13 +8,13 @@ Status: the page is built and tested locally at desktop and phone sizes, but it 
 
 ## Adding a build
 
-The download is a placeholder until a build exists. Set `url`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. Sharing a build needs notarization, as [installed-build.md](roadmap/installed-build.md) explains.
+The download is a placeholder until a build exists. Set `url`, `source`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, the footer links to the source code as the GPL requires, and the hero button keeps leading there, so that visitors see the requirements first. Sharing a build needs notarization, as [installed-build.md](roadmap/installed-build.md) explains.
 
 ## Deploying
 
-`.github/workflows/pages.yml` publishes only `site/`, and it runs by hand until GitHub Pages is turned on. Making this repository public would also publish these internal notes, so do that only after they are cleaned up for open source.
+`.github/workflows/pages.yml` publishes only `site/`, and it runs by hand until GitHub Pages is turned on.
 
-1. Choose where the page lives. Pages can run from this private repository on a plan that allows it, or from a separate public repository that holds only `site/`. The published page is public in both cases.
+1. Make sure that this repository's plan or visibility allows Pages.
 2. In the repository settings, set the Pages source to **GitHub Actions**.
 3. Set `og:image` in `site/index.html` to the full address of `assets/share.jpg`, because link previews need an absolute address. Add an `og:url` tag with the page's address.
 4. Run the **Deploy landing page** workflow.
@@ -31,4 +31,4 @@ Public text must describe what the app does for the user, and it must not name t
 
 ## Related docs
 
-- [dependencies.md](dependencies.md) records where the dark band render came from.
+- [dependencies.md](dependencies.md) lists the page's font and assets.

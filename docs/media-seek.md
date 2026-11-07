@@ -8,7 +8,7 @@ The bottom edge seeks through the media that is playing. You touch the strip, sl
 
 - Seeking is relative to the current position, so a slide starts from where the media already is.
 - A dead zone must be crossed before the preview appears. It is 2.5% of the pad width in click mode, and 4% and 0.08 seconds in touch mode.
-- Seeking moves in fixed steps, as volume does. One step takes 5% of the pad width at the default sensitivity, which is about 8 mm on this Mac's trackpad, and each step gives one haptic tick. The Sensitivity setting changes that travel, as it does for volume and brightness.
+- Seeking moves in fixed steps, as volume does. One step takes 5% of the pad width at the default sensitivity, which is about 8 mm on a 14-inch MacBook Pro, and each step gives one haptic tick. The Sensitivity setting changes that travel, as it does for volume and brightness.
 - Each step moves a chosen amount, which you set in the Media pane. It can be 0.5% to 10% of the track, or 1 to 60 seconds. The default is 1%, so a step moves 6 seconds of a 10-minute video.
 - Finger speed has no effect, so the same slide always moves the same amount.
 - The preview stops at the start and just before the end of the track, because some players skip to the next track at the very end. Travel past those limits is forgotten, so reversing responds within about a step or two of travel.

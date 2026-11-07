@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 import PackageDescription
 
 // This package exists only so that `swift test` can cover the gesture logic, which has no system

@@ -15,7 +15,7 @@ final class MultitouchBridge {
     private typealias GetFamilyID =
         @convention(c) (UnsafeRawPointer, UnsafeMutablePointer<Int32>) -> Int32
 
-    /// The family IDs of Apple touch mouse devices, which also report touches but are not trackpads.
+    /// The family IDs of Apple's touch mice, which also report touches but are not trackpads.
     private static let mouseFamilies: Set<Int32> = [112, 113]
 
     /// Receives the active touches of one device on the main thread.

@@ -2,7 +2,7 @@
 
 Status: haptics and their settings are built and confirmed working on the built-in trackpad.
 
-Haptics let you feel a level change without looking. a similar app offers only a light click on each step, so the controls described here go beyond it.
+Haptics let you feel a level change without looking.
 
 ## Settings
 
@@ -33,9 +33,9 @@ The app uses the private `MTActuator` API, because Apple's public `NSHapticFeedb
 
 ## Trackpad support
 
-| Trackpad                    | Expected support                                                                       |
-| --------------------------- | -------------------------------------------------------------------------------------- |
-| Built-in Force Touch        | Full control is expected, and this is the main test target.                            |
+| Trackpad                             | Expected support                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------- |
+| Built-in Force Touch                 | Full control is expected, and this is the main test target.                            |
 | Rechargeable external Apple trackpad | This is unverified, and some reports suggest haptics may be unreliable over Bluetooth. |
 | Original external Apple trackpad     | It has no haptic engine, so haptics are unavailable.                                   |
 

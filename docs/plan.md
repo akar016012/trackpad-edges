@@ -2,11 +2,11 @@
 
 ## Context
 
-This project is a desktop macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. It reproduces the functionality of a similar app and adds haptics that you can control in settings. It has its own name and design, and it reuses no a similar app branding, copy, or assets. License keys, activation, and update checks are left out because they serve no purpose for everyday use.
+This project is a macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. Haptics are controlled in the settings. The app has no license keys, activation, or update checks.
 
 ## Feature status
 
-Work stopped here on 2026-11-06, and the incomplete items below are left for later. **Done** means that it was tried and approved on this Mac. **Needs a check** means that it is in the code but has not been tried yet.
+This list was last updated on 2026-11-07. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
 
 ### Done
 
@@ -42,10 +42,8 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - [ ] [Click-to-start option](gestures.md)
 - [ ] [Launch at login](menu-bar-and-onboarding.md)
 - [ ] [Custom app and menu bar icons](dependencies.md)
-- [ ] external Apple trackpad support, because all testing used the built-in trackpad
+- [ ] External Apple trackpad support, because all testing used the built-in trackpad
 - [ ] Media seek in Safari, because only Chrome was tried
-
-### Incomplete
 
 ### Known limits
 
@@ -55,7 +53,7 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - A finger that is already down after a wake or an unpause can count as a landing.
 - A palm that first looks like a finger can cancel a slide before it is recognized.
 - Switch Spaces needs the system's Control-arrow shortcuts turned on.
-- macOS locks the keyboard backlight off in a bright room, so Keyboard Backlight shows a short notice there. The action is confirmed working on this Mac, and a Mac without a backlight gets no effect.
+- macOS locks the keyboard backlight off in a bright room, so Keyboard Backlight shows a short notice there. The action is confirmed working, and a Mac without a backlight gets no effect.
 - Monitor Brightness works only on monitors and ports that answer over DDC.
 - Media seek relies on undocumented behavior, so a macOS update could break it.
 - The adapter library sits in a folder that your account can write to, so the app checks it before every run.
@@ -66,9 +64,8 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - The interface uses AppKit rather than SwiftUI. This covers the menu bar item, the settings window, and the overlays.
 - Touch input uses the private `MultitouchSupport` framework. `NSTouch` cannot work because Apple's documentation says touches latch to the view under the cursor, so a background app never receives them.
 - Haptics use the private `MTActuator` API, because it is the only API with strength control. `NSHapticFeedbackManager` is the fallback when the private API is unavailable.
-- Testing focuses on the built-in MacBook trackpad. external Apple trackpad support stays in place, but it gets less testing.
+- Testing focuses on the built-in MacBook trackpad. Support for external Apple trackpads stays in place, but it gets less testing.
 - The app has a window and a menu bar icon, and each edge can be assigned to any of nine actions or to nothing.
-- Each batch of features is reviewed by a review, fixed, committed, and pushed.
 - Media seeking uses the third-party `mediaremote-adapter`, because no public API can reach other apps. It is confirmed working on macOS 27.2, so there is no AppleScript fallback.
 - All four corners are hot corners, and corners can control media playback.
 
@@ -111,7 +108,7 @@ All source lives under `trackpad-edges/`.
 
 ## What was done
 
-1. The `docs/` folder and the project conversion came first, and the riskiest techniques were then proven on this Mac: touch input in a background app, the private haptics API, and the pointer freeze.
+1. The `docs/` folder and the project conversion came first, and the riskiest techniques were then proven first: touch input in a background app, the private haptics API, and the pointer freeze.
 2. The gesture engine, click handling, volume, brightness, corners, and assignable edges were built with unit tests.
 3. The app window, the haptic settings, and the first-run steps were added.
 4. Media seek was added through the adapter. Full-pad mapping and speed-based acceleration both proved hard to control, so seeking now moves in fixed steps, as volume does.
@@ -119,11 +116,9 @@ All source lives under `trackpad-edges/`.
 6. Measurements from 752 contacts set the thresholds for lighter corner presses and palm detection. Resting fingers and taps peaked near a pressure of 50, and physical clicks started near 120.
 7. The shortcut recorder was rebuilt to accept any key combination, including the left or right modifier.
 
-Each batch was reviewed by a review, fixed, committed, and pushed.
-
 ## Roadmap
 
-Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Each feature has its own document in `docs/roadmap/`. To pick this up later, start with the **Needs a check** list, and then do a real install. Each phase should be reviewed, fixed, committed, and pushed before the next one starts.
+Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by a real install.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -159,5 +154,5 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 ## Verification
 
 - Unit tests cover the zone map and the gesture state machine.
-- The app is built and run on this Mac, and each edge and corner is tested by hand on the built-in trackpad, because touch hardware cannot be simulated.
+- The app is built and run on a MacBook, and each edge and corner is tested by hand on the built-in trackpad, because touch hardware cannot be simulated.
 - Clicks near the edges, palm contact, typing, and multi-finger gestures are checked to confirm that normal use is undisturbed.

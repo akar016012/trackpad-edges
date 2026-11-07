@@ -1,0 +1,48 @@
+name: Bug report
+description: Tell us about something that does not work.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Please report security problems privately, as SECURITY.md explains.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe what you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Set the right edge to Volume.
+        2. Slide up.
+        3. Nothing changes.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac model and trackpad
+      placeholder: MacBook Pro with its built-in trackpad
+    validations:
+      required: true
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else
+      description: List other apps that change input or displays, because they can affect this app.
