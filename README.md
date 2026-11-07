@@ -16,7 +16,11 @@
   <a href="CONTRIBUTING.md"><strong>Contribute</strong></a>
 </p>
 
-![A dark trackpad with orange light along its edges, and tick marks along the right edge.](site/assets/feel.jpg)
+<a href="https://trackpad.adiworks.dev/assets/launch.mp4">
+  <img src="docs/images/launch.gif" alt="The launch film shows a trackpad whose edges and corners act as controls, then the app's settings." width="100%" />
+</a>
+
+<p align="center"><a href="https://trackpad.adiworks.dev/assets/launch.mp4">Watch the film with sound</a></p>
 
 Slide along the side of your trackpad to change the volume, the brightness, or your place in a video, and feel a tick on each step. Press a corner to run whatever you choose. The middle of the trackpad keeps working as it always has. A finger that lands on an edge is treated as the start of a slide, so the pointer waits, and a click there arrives when you let go.
 

@@ -16,7 +16,7 @@ The download is a placeholder until a build exists. Set `url`, and optionally `v
 
 ## Updating it
 
-Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The screenshots in `site/assets/` and `docs/images/` were captured from a debug build with example settings, so a new install looks different. Update them when a tab changes.
+Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The README's preview at `docs/images/launch.gif` comes from the film at `site/assets/launch.mp4`, so remake it when the film changes. The screenshots in `site/assets/` and `docs/images/` were captured from a debug build with example settings, so a new install looks different. Update them when a tab changes.
 
 ## Related docs
 
