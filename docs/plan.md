@@ -2,11 +2,11 @@
 
 ## Context
 
-This project is a desktop macOS menu bar app that turns the edges and top corners of a trackpad into controls, while the middle of the trackpad keeps working normally. It reproduces the functionality of a similar app and adds haptics that you can control in settings. It has its own name and design, and it reuses no a similar app branding, copy, or assets. License keys, activation, and update checks are left out because they serve no purpose for everyday use.
+This project is a desktop macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. It reproduces the functionality of a similar app and adds haptics that you can control in settings. It has its own name and design, and it reuses no a similar app branding, copy, or assets. License keys, activation, and update checks are left out because they serve no purpose for everyday use.
 
 ## Status
 
-The project is now a macOS menu bar app with a private GitHub repository. Touch input, haptics, and the pointer freeze are confirmed working on the built-in trackpad. Touch-to-start slides are the default, because testing showed that a light touch at the edge produces no click. The right-edge volume slide is confirmed working. Brightness, corners, and assignable edges are built, but they have not been confirmed on hardware yet. The app window, the haptic settings, and the first-run steps are built. Media seeking is still to be built. The findings below come from a review of the website, Apple's documentation, the installed macOS binaries, and open source projects.
+The project is now a macOS menu bar app with a private GitHub repository. Touch input, haptics, and the pointer freeze are confirmed working on the built-in trackpad. Touch-to-start slides are the default, because testing showed that a light touch at the edge produces no click. The right-edge volume slide is confirmed working. Brightness, corners, and assignable edges are built, but they have not been confirmed on hardware yet. The app window, the haptic settings, and the first-run steps are built. Media seeking is built and confirmed working on the trackpad. The findings below come from a review of the website, Apple's documentation, the installed macOS binaries, and open source projects.
 
 ## Decisions
 
@@ -16,17 +16,18 @@ The project is now a macOS menu bar app with a private GitHub repository. Touch 
 - Testing focuses on the built-in MacBook trackpad. external Apple trackpad support stays in place, but it gets less testing.
 - The app has a window and a menu bar icon, and each edge can be assigned to volume, brightness, seek, or nothing.
 - Each batch of features is reviewed by a review, fixed, committed, and pushed.
-- Media seeking uses a Now Playing workaround so that it can reach most players. If that fails on macOS 27, seeking falls back to Music and Spotify through AppleScript.
+- Media seeking uses the third-party `mediaremote-adapter`, because no public API can reach other apps. It is confirmed working on macOS 27.2, so there is no AppleScript fallback.
+- All four corners are hot corners, and corners can control media playback.
 
 ## Feature scope
 
-| Zone                           | Input                      | Action                  | Doc                            |
-| ------------------------------ | -------------------------- | ----------------------- | ------------------------------ |
-| Right edge                     | Slide vertically           | System volume           | [volume.md](volume.md)         |
-| Left edge                      | Slide vertically           | Built-in brightness     | [brightness.md](brightness.md) |
-| Bottom edge                    | Slide sideways and release | Media seek              | [media-seek.md](media-seek.md) |
-| Top-left and top-right corners | 1 to 4 clicks              | Configurable action     | [corners.md](corners.md)       |
-| Middle                         | Anything                   | Passes through to macOS | [gestures.md](gestures.md)     |
+| Zone             | Input                      | Action                  | Doc                            |
+| ---------------- | -------------------------- | ----------------------- | ------------------------------ |
+| Right edge       | Slide vertically           | System volume           | [volume.md](volume.md)         |
+| Left edge        | Slide vertically           | Built-in brightness     | [brightness.md](brightness.md) |
+| Bottom edge      | Slide sideways and release | Media seek              | [media-seek.md](media-seek.md) |
+| All four corners | 1 to 4 clicks              | Configurable action     | [corners.md](corners.md)       |
+| Middle           | Anything                   | Passes through to macOS | [gestures.md](gestures.md)     |
 
 Every package, framework, and system method is listed in [dependencies.md](dependencies.md). The shared behavior is described in [gestures.md](gestures.md), [pointer-freeze.md](pointer-freeze.md), [haptics.md](haptics.md), [settings.md](settings.md), and [menu-bar-and-onboarding.md](menu-bar-and-onboarding.md).
 
@@ -51,7 +52,8 @@ All source lives under `trackpad-edges/`.
 - `Actions/` holds the volume, brightness, media seek, and corner actions.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
-- `UI/` holds the app window and the trackpad diagram, and it will hold the seek overlay.
+- `UI/` holds the app window, the trackpad diagram, and the seek overlay.
+- `Resources/` holds the bundled adapter, and `Vendor/` holds its source.
 
 ## Build order
 
@@ -68,12 +70,11 @@ All source lives under `trackpad-edges/`.
 
 ## Risks
 
-| Risk                                                                | Check on hardware                                          | If it fails                                                           |
-| ------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
-| The pointer freeze may not work from a background app.              | Freeze the pointer while another app is in front.          | Warp the pointer back when the slide ends.                            |
-| Opening the actuator may change how normal clicks feel.             | Compare clicks with the actuator open and closed.          | Open the actuator only during a gesture.                              |
-| The private haptics API may not behave as the disassembly suggests. | Fire each pattern at several strengths.                    | Fall back to `NSHapticFeedbackManager` and hide the strength control. |
-| The Now Playing workaround may not work on macOS 27.                | Read the position and seek a track in Music and a browser. | Fall back to Music and Spotify through AppleScript.                   |
+| Risk                                                                | Check on hardware                                 | If it fails                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| The pointer freeze may not work from a background app.              | Freeze the pointer while another app is in front. | Warp the pointer back when the slide ends.                            |
+| Opening the actuator may change how normal clicks feel.             | Compare clicks with the actuator open and closed. | Open the actuator only during a gesture.                              |
+| The private haptics API may not behave as the disassembly suggests. | Fire each pattern at several strengths.           | Fall back to `NSHapticFeedbackManager` and hide the strength control. |
 
 ## Verification
 

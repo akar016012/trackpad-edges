@@ -227,6 +227,53 @@ final class GestureEngineTests: XCTestCase {
         XCTAssertNil(config.zone(x: 0.5, y: 0.95))
     }
 
+    func testSeekSurvivesDriftAfterItHasStarted() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.5, 0.05), now: 0)
+        _ = engine.process(finger(0.56, 0.05), now: 0.1)
+        XCTAssertEqual(engine.process(finger(0.6, 0.3), now: 0.2).count, 1)
+        XCTAssertTrue(engine.isSliding)
+    }
+
+    func testDriftedSlideSurvivesBriefContactLoss() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.5, 0.05), now: 0)
+        _ = engine.process(finger(0.56, 0.05), now: 0.1)
+        _ = engine.process(finger(0.6, 0.15), now: 0.15)
+        _ = engine.process(finger(0.62, 0.25), now: 0.2)
+        _ = engine.process([], now: 0.25)
+        _ = engine.process(finger(0.63, 0.27, id: 2), now: 0.3)
+        XCTAssertTrue(engine.isSliding)
+    }
+
+    func testDriftBeforeASlideStartsStillCancels() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.5, 0.05), now: 0)
+        XCTAssertEqual(
+            engine.process(finger(0.5, 0.2), now: 0.1), [.slideCanceled(.seek), .pointerReleased])
+    }
+
+    func testBottomCornersTakePriorityOnlyWhenTheyHaveAnAction() {
+        var config = GestureConfig()
+        XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottom)
+        XCTAssertEqual(config.zone(x: 0.95, y: 0.12), .right)
+        config.bottomLeftClicks = 1
+        config.bottomRightClicks = 2
+        XCTAssertEqual(config.zone(x: 0.05, y: 0.05), .bottomLeft)
+        XCTAssertEqual(config.zone(x: 0.95, y: 0.12), .bottomRight)
+        XCTAssertEqual(config.zone(x: 0.5, y: 0.05), .bottom)
+        XCTAssertEqual(config.clicks(for: .bottomRight), 2)
+    }
+
+    func testBottomCornerFiresOnClickEvenInTouchMode() {
+        var engine = GestureEngine()
+        engine.config.requireClick = false
+        engine.config.bottomRightClicks = 1
+        XCTAssertEqual(engine.process(finger(0.95, 0.05)), [])
+        XCTAssertTrue(engine.mouseDown().swallow)
+        XCTAssertEqual(engine.mouseUp(now: 1).events, [.cornerFired(.bottomRight)])
+    }
+
     func testBottomQuarterOnlyLimitsTheSideEdges() {
         var config = GestureConfig()
         config.bottomQuarterOnly = true

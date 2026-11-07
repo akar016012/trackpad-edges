@@ -16,12 +16,12 @@ Haptics let you feel a level change without looking. a similar app offers only a
 
 ## Events
 
-| Event                          | Default |
-| ------------------------------ | ------- |
-| Each volume or brightness step | On      |
-| Reaching a limit               | On      |
-| Corner action                  | On      |
-| Seek preview appears           | On      |
+| Event                             | Default |
+| --------------------------------- | ------- |
+| Each level step                   | On      |
+| Reaching a limit                  | On      |
+| Corner action                     | On      |
+| A seek preview and each seek step | On      |
 
 ## Implementation notes
 

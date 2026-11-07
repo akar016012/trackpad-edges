@@ -2,7 +2,7 @@
 
 Status: the click counting, every action, and the Corners pane are built, but they have not been confirmed on hardware yet.
 
-The top-left and top-right corners respond to 1 to 4 clicks. A corner with no action stays a normal part of the trackpad, and so does a corner whose action is not finished, such as Press Keys with nothing recorded.
+All four corners respond to 1 to 4 clicks. A corner with no action stays a normal part of the trackpad, and so does a corner whose action is not finished, such as Press Keys with nothing recorded.
 
 ## Actions
 
@@ -22,7 +22,7 @@ Each corner has a click count from 1 to 4. Clicks must fall within 450 ms of eac
 
 ## Defaults
 
-The top-left corner mutes by default, and the top-right corner has no action until you choose one.
+The top-left corner mutes by default, and the other corners have no action until you choose one. A bottom corner with an action takes over that part of the bottom strip and the lowest part of the side strip beside it, and a bottom corner with no action leaves the strips as they were.
 
 ## Implementation notes
 

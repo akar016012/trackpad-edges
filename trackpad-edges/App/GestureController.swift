@@ -13,6 +13,7 @@ final class GestureController {
     private let volume = VolumeController()
     private let brightness = BrightnessController()
     private let corners = CornerActionRunner()
+    private let seek = SeekController()
     private let haptics = HapticEngine()
     private let monitor = DeviceMonitor()
 
@@ -74,13 +75,15 @@ final class GestureController {
     func applySettings() {
         let settings = SettingsStore.shared.settings
         haptics.settings = settings.haptics
+        seek.stepFraction = settings.seekStepPercent / 100
+        seek.sensitivity = settings.sensitivity
         let config = currentConfig()
         for device in engines.keys { engines[device]?.config = config }
     }
 
     private func currentConfig() -> GestureConfig {
         SettingsStore.shared.settings.gestureConfig(
-            brightnessAvailable: brightness.isAvailable, seekAvailable: false)
+            brightnessAvailable: brightness.isAvailable, seekAvailable: seek.isAvailable)
     }
 
     /// Fires one haptic with the current settings.
@@ -216,9 +219,15 @@ final class GestureController {
                 haptics.begin(device: device)
             case .stepped(let steps):
                 applySteps(steps)
-            case .seekMoved:
-                break
-            case .slideEnded, .slideCanceled:
+            case .seekMoved(let travel):
+                let tick = seek.preview(travel: travel)
+                if tick, SettingsStore.shared.settings.haptics.onSeek { haptics.fire() }
+            case .slideEnded(let kind):
+                if kind == .seek { seek.commit() }
+                activeSlide = nil
+                haptics.end()
+            case .slideCanceled(let kind):
+                if kind == .seek { seek.cancel() }
                 activeSlide = nil
                 haptics.end()
             case .pointerReleased:
@@ -260,7 +269,7 @@ final class GestureController {
             if settings.haptics.onCorner, MultitouchBridge.shared.devices.contains(device) {
                 self.haptics.pulse(device: device)
             }
-            self.corners.run(zone == .topLeft ? settings.topLeft.action : settings.topRight.action)
+            if let corner = settings.corner(for: zone) { self.corners.run(corner.action) }
         }
     }
 

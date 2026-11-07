@@ -78,6 +78,10 @@ struct AppSettings: Codable, Equatable {
     var bottomEdge: SlideKind? = .seek
     var topLeft = CornerSetting(action: .mute, clicks: 1)
     var topRight = CornerSetting(action: .none, clicks: 1)
+    /// These are optional in storage, so that settings saved before they existed still load.
+    private var storedBottomLeft: CornerSetting?
+    private var storedBottomRight: CornerSetting?
+    private var storedSeekStepPercent: Double?
     var bottomQuarterOnly = false
     /// Whether a slide needs a physical click. By default, touching a strip starts a slide.
     var requireClick = false
@@ -87,6 +91,32 @@ struct AppSettings: Codable, Equatable {
     /// A multiplier from 0.5 to 2.0, where higher values need less finger travel for each step.
     var sensitivity: Float = 1.0
     var haptics = HapticSettings()
+
+    var bottomLeft: CornerSetting {
+        get { storedBottomLeft ?? CornerSetting(action: .none, clicks: 1) }
+        set { storedBottomLeft = newValue }
+    }
+
+    var bottomRight: CornerSetting {
+        get { storedBottomRight ?? CornerSetting(action: .none, clicks: 1) }
+        set { storedBottomRight = newValue }
+    }
+
+    /// The percentage of the track that one seek step moves, from 0.5 to 10.
+    var seekStepPercent: Double {
+        get { storedSeekStepPercent ?? 1 }
+        set { storedSeekStepPercent = newValue }
+    }
+
+    func corner(for zone: Zone) -> CornerSetting? {
+        switch zone {
+        case .topLeft: return topLeft
+        case .topRight: return topRight
+        case .bottomLeft: return bottomLeft
+        case .bottomRight: return bottomRight
+        case .left, .right, .bottom: return nil
+        }
+    }
 
     func gestureConfig(brightnessAvailable: Bool, seekAvailable: Bool) -> GestureConfig {
         var config = GestureConfig()
@@ -101,6 +131,8 @@ struct AppSettings: Codable, Equatable {
         config.seekAvailable = seekAvailable
         config.topLeftClicks = topLeft.action.isConfigured ? topLeft.clicks : nil
         config.topRightClicks = topRight.action.isConfigured ? topRight.clicks : nil
+        config.bottomLeftClicks = bottomLeft.action.isConfigured ? bottomLeft.clicks : nil
+        config.bottomRightClicks = bottomRight.action.isConfigured ? bottomRight.clicks : nil
         return config
     }
 }

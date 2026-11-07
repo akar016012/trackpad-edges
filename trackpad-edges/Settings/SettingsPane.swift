@@ -20,8 +20,19 @@ private final class ClosureTarget: NSObject {
     }
 }
 
-/// The base class of the panes in the app window, with helpers for building simple forms.
+/// The base class of the panes in the app window.
+///
+/// Every pane uses the same layout: one margin on all sides, two equal columns, and one label
+/// width. That keeps controls in the same place from tab to tab. The window fits each pane, so
+/// a pane never has leftover space.
 class SettingsPane: NSViewController {
+    static let margin: CGFloat = 24
+    static let columnGap: CGFloat = 24
+    static let columnWidth: CGFloat = 294
+    static let labelWidth: CGFloat = 84
+    static let contentWidth = columnWidth * 2 + columnGap
+    static let paneWidth = contentWidth + margin * 2
+
     private var targets: [ClosureTarget] = []
     let actions: WindowActions
 
@@ -75,7 +86,6 @@ class SettingsPane: NSViewController {
             value: value, minValue: range.lowerBound, maxValue: range.upperBound, target: nil,
             action: nil)
         slider.isContinuous = true
-        slider.widthAnchor.constraint(greaterThanOrEqualToConstant: 220).isActive = true
         bind(slider) { [weak slider] in handler(slider?.doubleValue ?? value) }
         return slider
     }
@@ -86,21 +96,26 @@ class SettingsPane: NSViewController {
         return button
     }
 
+    func heading(_ text: String) -> NSTextField {
+        let label = NSTextField(labelWithString: text)
+        label.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
+        return label
+    }
+
     func note(_ text: String) -> NSTextField {
-        let label = paragraph(text)
+        let label = paragraph(text, width: Self.contentWidth)
         label.textColor = .secondaryLabelColor
         label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         return label
     }
 
-    func paragraph(_ text: String) -> NSTextField {
+    func paragraph(_ text: String, width: CGFloat = columnWidth) -> NSTextField {
         let label = NSTextField(wrappingLabelWithString: text)
-        label.alignment = .center
-        label.preferredMaxLayoutWidth = 460
+        label.preferredMaxLayoutWidth = width
         return label
     }
 
-    /// Lays out rows of a label and a control, with the labels aligned to the right.
+    /// Lays out rows of a label and a control that fill one column.
     func form(_ rows: [(String, NSView)]) -> NSGridView {
         let grid = NSGridView(
             views: rows.map { row in
@@ -109,27 +124,77 @@ class SettingsPane: NSViewController {
                 if !row.0.isEmpty { row.1.setAccessibilityTitleUIElement(label) }
                 return [label, row.1]
             })
-        grid.rowSpacing = 10
         grid.columnSpacing = 10
         grid.column(at: 0).xPlacement = .trailing
-        grid.rowAlignment = .firstBaseline
+        grid.column(at: 0).width = Self.labelWidth
+        grid.column(at: 1).xPlacement = .fill
+        useEvenRows(grid)
         return grid
     }
 
-    /// Centers views in a pane. Every pane has the same size, so the window never jumps.
-    func setContent(_ views: [NSView]) {
+    /// Gives every row the same height, so spacing stays even when a popup sits beside a checkbox.
+    private func useEvenRows(_ grid: NSGridView) {
+        grid.rowSpacing = 6
+        grid.rowAlignment = .none
+        grid.yPlacement = .center
+        for index in 0..<grid.numberOfRows { grid.row(at: index).height = 26 }
+    }
+
+    /// Lays out rows that hold a label and a control in each of the two columns.
+    func wideForm(_ rows: [[(String, NSView)]]) -> NSGridView {
+        let grid = NSGridView(
+            views: rows.map { row in
+                row.flatMap { cell -> [NSView] in
+                    let label = NSTextField(labelWithString: cell.0)
+                    if !cell.0.isEmpty { cell.1.setAccessibilityTitleUIElement(label) }
+                    return [label, cell.1]
+                }
+            })
+        let spacing: CGFloat = 10
+        grid.columnSpacing = spacing
+        useEvenRows(grid)
+        for index in [0, 2] {
+            grid.column(at: index).xPlacement = .trailing
+            grid.column(at: index).width = Self.labelWidth
+            grid.column(at: index + 1).xPlacement = .fill
+            grid.column(at: index + 1).width = Self.columnWidth - Self.labelWidth - spacing
+        }
+        grid.column(at: 2).leadingPadding = Self.columnGap - spacing
+        return grid
+    }
+
+    /// Stacks views along the leading edge of a column.
+    func column(_ views: [NSView], spacing: CGFloat = 8) -> NSStackView {
         let stack = NSStackView(views: views)
         stack.orientation = .vertical
-        stack.alignment = .centerX
-        stack.spacing = 16
+        stack.alignment = .leading
+        stack.spacing = spacing
+        return stack
+    }
+
+    /// Places two views in the pane's two columns.
+    func columns(_ left: NSView, _ right: NSView) -> NSStackView {
+        let stack = NSStackView(views: [left, right])
+        stack.orientation = .horizontal
+        stack.alignment = .top
+        stack.spacing = Self.columnGap
+        for view in [left, right] {
+            view.widthAnchor.constraint(equalToConstant: Self.columnWidth).isActive = true
+        }
+        return stack
+    }
+
+    /// Installs views with the same margin on every side.
+    func setContent(_ views: [NSView]) {
+        let stack = column(views, spacing: 16)
         stack.translatesAutoresizingMaskIntoConstraints = false
         let container = NSView()
         container.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-            container.widthAnchor.constraint(equalToConstant: 540),
-            container.heightAnchor.constraint(equalToConstant: 600),
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: Self.margin),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -Self.margin),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: Self.margin),
+            container.widthAnchor.constraint(equalToConstant: Self.paneWidth),
         ])
         view = container
     }

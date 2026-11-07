@@ -8,7 +8,7 @@ nonisolated struct TouchPoint: Sendable, Equatable {
 }
 
 nonisolated enum Zone: String, Sendable, Equatable {
-    case left, right, bottom, topLeft, topRight
+    case left, right, bottom, topLeft, topRight, bottomLeft, bottomRight
 }
 
 nonisolated enum SlideKind: String, Sendable, Equatable, Codable, CaseIterable {
@@ -22,6 +22,8 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var seekDeadZone: Float = 0.025
     /// How far a finger may stray past a strip before the slide cancels.
     var exitMargin: Float = 0.03
+    /// The extra stray allowed once a slide has changed something, because a real slide drifts.
+    var movedExitMargin: Float = 0.25
     var cornerWidth: Float = 0.20
     var cornerHeight: Float = 0.17
     var multiClickWindow: TimeInterval = 0.45
@@ -45,12 +47,19 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     /// The clicks needed to fire each corner, where nil means that the corner has no action.
     var topLeftClicks: Int? = 1
     var topRightClicks: Int?
+    var bottomLeftClicks: Int?
+    var bottomRightClicks: Int?
 
-    /// Returns the zone at a point, testing top corners, then bottom, left, and right.
+    /// Returns the zone at a point, testing corners, then bottom, left, and right. A corner with
+    /// no action does not count, so the edge beneath it still works.
     func zone(x: Float, y: Float) -> Zone? {
         if y >= 1 - cornerHeight {
             if x <= cornerWidth, topLeftClicks != nil { return .topLeft }
             if x >= 1 - cornerWidth, topRightClicks != nil { return .topRight }
+        }
+        if y <= cornerHeight {
+            if x <= cornerWidth, bottomLeftClicks != nil { return .bottomLeft }
+            if x >= 1 - cornerWidth, bottomRightClicks != nil { return .bottomRight }
         }
         if y <= edgeWidth, slideKind(for: .bottom) != nil { return .bottom }
         guard !bottomQuarterOnly || y <= 0.25 else { return nil }
@@ -65,7 +74,7 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         case .left: kind = leftAction
         case .right: kind = rightAction
         case .bottom: kind = bottomAction
-        case .topLeft, .topRight: kind = nil
+        case .topLeft, .topRight, .bottomLeft, .bottomRight: kind = nil
         }
         if kind == .brightness, !brightnessAvailable { return nil }
         if kind == .seek, !seekAvailable { return nil }
@@ -73,16 +82,22 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     }
 
     func clicks(for zone: Zone) -> Int {
-        (zone == .topLeft ? topLeftClicks : topRightClicks) ?? 1
+        switch zone {
+        case .topLeft: return topLeftClicks ?? 1
+        case .topRight: return topRightClicks ?? 1
+        case .bottomLeft: return bottomLeftClicks ?? 1
+        case .bottomRight: return bottomRightClicks ?? 1
+        case .left, .right, .bottom: return 1
+        }
     }
 
-    func isInside(strip zone: Zone, touch: TouchPoint) -> Bool {
-        let limit = edgeWidth + exitMargin
+    func isInside(strip zone: Zone, touch: TouchPoint, moved: Bool = false) -> Bool {
+        let limit = edgeWidth + exitMargin + (moved ? movedExitMargin : 0)
         switch zone {
         case .left: return touch.x <= limit
         case .right: return touch.x >= 1 - limit
         case .bottom: return touch.y <= limit
-        case .topLeft, .topRight: return true
+        case .topLeft, .topRight, .bottomLeft, .bottomRight: return true
         }
     }
 }
@@ -122,6 +137,9 @@ nonisolated struct GestureEngine {
         var lastPosition: Float
         /// The position across the slide's axis where the finger started.
         var crossAnchor: Float
+        /// The latest position across the slide's axis, which tells a returning finger from a
+        /// new one.
+        var lastCross: Float
         var startedAt: TimeInterval
         var emittedSteps = 0
         /// Whether a touch has passed the dead zone, so that it now counts as a slide.
@@ -137,6 +155,7 @@ nonisolated struct GestureEngine {
             anchor = Self.position(of: touch, in: zone)
             lastPosition = anchor
             crossAnchor = Self.crossPosition(of: touch, in: zone)
+            lastCross = crossAnchor
             startedAt = now
         }
 
@@ -146,6 +165,7 @@ nonisolated struct GestureEngine {
             anchor = Self.position(of: touch, in: zone)
             lastPosition = anchor
             crossAnchor = Self.crossPosition(of: touch, in: zone)
+            lastCross = crossAnchor
             startedAt = now
             liftedAt = nil
         }
@@ -299,8 +319,15 @@ nonisolated struct GestureEngine {
             return []
         }
         if current.liftedAt != nil {
+            // A drifted slide keeps its allowance only if the finger returns close to where it was.
+            let isNearby = touches.first.map {
+                abs(Slide.crossPosition(of: $0, in: current.zone) - current.lastCross)
+                    <= config.maxFrameJump
+            }
             guard touches.count == 1, let touch = touches.first,
-                config.isInside(strip: current.zone, touch: touch)
+                config.isInside(
+                    strip: current.zone, touch: touch,
+                    moved: current.moved && isNearby == true)
             else {
                 // This is a new gesture rather than the same finger, so the old slide ends here.
                 slide = nil
@@ -314,6 +341,7 @@ nonisolated struct GestureEngine {
                 let position = Slide.position(of: touch, in: current.zone)
                 current.anchor += position - current.lastPosition
                 current.lastPosition = position
+                current.lastCross = Slide.crossPosition(of: touch, in: current.zone)
                 current.id = touch.id
                 current.liftedAt = nil
             } else {
@@ -323,7 +351,7 @@ nonisolated struct GestureEngine {
             landing = nil
         }
         guard touches.count == 1, let touch = touches.first, touch.id == current.id,
-            config.isInside(strip: current.zone, touch: touch)
+            config.isInside(strip: current.zone, touch: touch, moved: current.moved)
         else {
             slide = nil
             guard current.moved else { return cancelUnmoved(current) }
@@ -335,6 +363,7 @@ nonisolated struct GestureEngine {
         let position = Slide.position(of: touch, in: current.zone)
         let jump = position - current.lastPosition
         current.lastPosition = position
+        current.lastCross = Slide.crossPosition(of: touch, in: current.zone)
         if abs(jump) > config.maxFrameJump {
             current.anchor += jump
             slide = current

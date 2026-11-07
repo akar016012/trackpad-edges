@@ -32,6 +32,7 @@
         "resources",
       ],
       "build-settings": {
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
         "CODE_SIGN_STYLE": "Automatic",
         "CURRENT_PROJECT_VERSION": "1",
         "DEVELOPMENT_TEAM": "3J6QGH6H9F",
@@ -39,7 +40,6 @@
         "GENERATE_INFOPLIST_FILE": "YES",
         "INFOPLIST_KEY_CFBundleDisplayName": "Trackpad Edges",
         "INFOPLIST_KEY_LSUIElement": "YES",
-        "INFOPLIST_KEY_NSAppleEventsUsageDescription": "Trackpad Edges controls Music and Spotify so that the bottom edge can seek.",
         "LD_RUNPATH_SEARCH_PATHS": "@executable_path/../Frameworks",
         "MARKETING_VERSION": "1.0",
         "PRODUCT_BUNDLE_IDENTIFIER": "com.adityakar.trackpad-edges",

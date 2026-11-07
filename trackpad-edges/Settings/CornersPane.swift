@@ -1,7 +1,7 @@
 import AppKit
 import UniformTypeIdentifiers
 
-/// Lets you choose an action and a click count for each top corner.
+/// Lets you choose an action and a click count for each corner.
 final class CornersPane: SettingsPane {
     private enum Choice: Int, CaseIterable {
         case none, mute, playPause, nextTrack, previousTrack, app, link, file, keys, shortcut
@@ -43,16 +43,13 @@ final class CornersPane: SettingsPane {
     private var detailStacks: [WritableKeyPath<AppSettings, CornerSetting>: NSStackView] = [:]
 
     override func loadView() {
-        // The sections share a leading edge, so they stay aligned when their widths differ.
-        let sections = NSStackView(views: [
-            section("Top-left corner", corner: \.topLeft),
-            section("Top-right corner", corner: \.topRight),
-        ])
-        sections.orientation = .vertical
-        sections.alignment = .leading
-        sections.spacing = 24
+        // The grid matches the trackpad, so each section sits where its corner is.
         setContent([
-            sections,
+            columns(
+                section("Top left", corner: \.topLeft), section("Top right", corner: \.topRight)),
+            columns(
+                section("Bottom left", corner: \.bottomLeft),
+                section("Bottom right", corner: \.bottomRight)),
             note("A corner with no action stays a normal part of the trackpad."),
         ])
     }
@@ -60,9 +57,6 @@ final class CornersPane: SettingsPane {
     private func section(
         _ title: String, corner: WritableKeyPath<AppSettings, CornerSetting>
     ) -> NSView {
-        let heading = NSTextField(labelWithString: title)
-        heading.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
-
         let current = settings[keyPath: corner]
         let action = popup(
             Choice.allCases.map(\.title), selected: Choice(current.action).rawValue
@@ -74,19 +68,20 @@ final class CornersPane: SettingsPane {
             self?.settings[keyPath: corner].clicks = index + 1
             self?.onChange?()
         }
-        action.setAccessibilityLabel("\(title) action")
-        clicks.setAccessibilityLabel("\(title) clicks")
+        action.setAccessibilityLabel("\(title) corner action")
+        clicks.setAccessibilityLabel("\(title) corner clicks")
+        // These two fill the column exactly, so all four sections share their edges.
+        action.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        clicks.widthAnchor.constraint(equalToConstant: 96).isActive = true
         let details = NSStackView()
         details.orientation = .horizontal
         detailStacks[corner] = details
         rebuildDetails(corner: corner)
 
-        let stack = NSStackView(views: [
-            heading, form([("Action:", action), ("Clicks:", clicks), ("", details)]),
-        ])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        return stack
+        let controls = NSStackView(views: [action, clicks])
+        controls.orientation = .horizontal
+        controls.spacing = 8
+        return column([heading(title), controls, details])
     }
 
     private func choose(_ choice: Choice, corner: WritableKeyPath<AppSettings, CornerSetting>) {
@@ -153,7 +148,7 @@ final class CornersPane: SettingsPane {
         // A long file name must not push the pane's content off the sides of the window.
         label.lineBreakMode = .byTruncatingMiddle
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        label.widthAnchor.constraint(lessThanOrEqualToConstant: 200).isActive = true
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: 150).isActive = true
         let choose = button(title) { [weak self, weak label] in
             let panel = NSOpenPanel()
             panel.canChooseDirectories = types == nil
@@ -191,6 +186,7 @@ final class CornersPane: SettingsPane {
             browser = index == 0 ? nil : browsers[index - 1].path
             save()
         }
+        picker.widthAnchor.constraint(equalToConstant: 116).isActive = true
         return [field, picker]
     }
 
@@ -213,7 +209,7 @@ final class CornersPane: SettingsPane {
     ) -> NSTextField {
         let field = NSTextField(string: value)
         field.placeholderString = placeholder
-        field.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        field.widthAnchor.constraint(equalToConstant: 150).isActive = true
         bind(field) { [weak field] in assign(field?.stringValue ?? "") }
         return field
     }

@@ -6,7 +6,7 @@ final class TrackpadDiagramView: NSView {
         didSet { needsDisplay = true }
     }
 
-    override var intrinsicContentSize: NSSize { NSSize(width: 360, height: 225) }
+    override var intrinsicContentSize: NSSize { NSSize(width: 294, height: 196) }
 
     override func isAccessibilityElement() -> Bool { true }
     override func accessibilityRole() -> NSAccessibility.Role? { .image }
@@ -46,17 +46,18 @@ final class TrackpadDiagramView: NSView {
             NSRect(x: pad.minX, y: pad.minY, width: pad.width, height: pad.height * width),
             title: Self.title(for: settings.bottomEdge), rotated: false)
         let cornerSize = NSSize(width: pad.width * 0.20, height: pad.height * 0.17)
-        let cornerY = pad.maxY - cornerSize.height
-        if settings.topLeft.action.isConfigured {
+        let leftX = pad.minX
+        let rightX = pad.maxX - cornerSize.width
+        let topY = pad.maxY - cornerSize.height
+        let corners = [
+            (settings.topLeft, NSPoint(x: leftX, y: topY)),
+            (settings.topRight, NSPoint(x: rightX, y: topY)),
+            (settings.bottomLeft, NSPoint(x: leftX, y: pad.minY)),
+            (settings.bottomRight, NSPoint(x: rightX, y: pad.minY)),
+        ]
+        for (corner, origin) in corners where corner.action.isConfigured {
             drawZone(
-                NSRect(origin: NSPoint(x: pad.minX, y: cornerY), size: cornerSize),
-                title: "\(settings.topLeft.clicks)×", rotated: false)
-        }
-        if settings.topRight.action.isConfigured {
-            drawZone(
-                NSRect(
-                    origin: NSPoint(x: pad.maxX - cornerSize.width, y: cornerY), size: cornerSize),
-                title: "\(settings.topRight.clicks)×", rotated: false)
+                NSRect(origin: origin, size: cornerSize), title: "\(corner.clicks)×", rotated: false)
         }
         NSGraphicsContext.restoreGraphicsState()
 

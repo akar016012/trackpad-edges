@@ -29,26 +29,32 @@ final class EdgesPane: SettingsPane {
                 }
             ),
             ("Require key:", modifierPopup(current.requiredModifier)),
-            (
-                "",
-                checkbox("Require a physical click to start a slide", isOn: current.requireClick) {
-                    [weak self] isOn in self?.settings.requireClick = isOn
-                }
-            ),
-            (
-                "",
-                checkbox("Limit side slides to the bottom quarter", isOn: current.bottomQuarterOnly)
-                { [weak self] isOn in
-                    self?.settings.bottomQuarterOnly = isOn
-                    self?.diagram.settingsChanged()
-                }
-            ),
+        ])
+        let options = wideForm([
+            [
+                (
+                    "Options:",
+                    checkbox("Require a click to start", isOn: current.requireClick) {
+                        [weak self] isOn in self?.settings.requireClick = isOn
+                    }
+                ),
+                (
+                    "",
+                    checkbox("Sides: bottom quarter only", isOn: current.bottomQuarterOnly) {
+                        [weak self] isOn in
+                        self?.settings.bottomQuarterOnly = isOn
+                        self?.diagram.settingsChanged()
+                    }
+                ),
+            ]
         ])
         setContent([
-            diagram,
-            form,
+            columns(diagram, form),
+            options,
             note("Touch a strip and slide. A click without a slide stays a normal click."),
         ])
+        // The diagram matches the controls beside it, so both columns end on the same line.
+        diagram.heightAnchor.constraint(equalTo: form.heightAnchor).isActive = true
     }
 
     /// Brings the pane back in step after the menu bar item changes an edge.

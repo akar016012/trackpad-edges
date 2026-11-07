@@ -16,7 +16,6 @@ The window opens on the General pane whenever the Accessibility permission is mi
 | -------------------------------- | ---------------------------------- |
 | Reading touches                  | None, but App Sandbox must be off. |
 | Event tap and synthesized events | Accessibility                      |
-| AppleScript seek fallback        | Automation, once per app           |
 
 ## Rebuilds
 

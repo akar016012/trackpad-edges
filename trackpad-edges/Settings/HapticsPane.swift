@@ -10,59 +10,73 @@ final class HapticsPane: SettingsPane {
     }
 
     override func loadView() {
-        let current = settings.haptics
-        let patterns = HapticPattern.allCases
-        let controls = form([
-            (
-                "",
-                checkbox("Enable haptics", isOn: current.enabled) { [weak self] isOn in
-                    self?.settings.haptics.enabled = isOn
-                }
-            ),
-            (
-                "Strength:",
-                slider(value: Double(current.strength), range: 0.4...2.0) { [weak self] value in
-                    self?.settings.haptics.strength = Float(value)
-                }
-            ),
-            (
-                "Pattern:",
-                popup(
-                    patterns.map(\.rawValue.capitalized),
-                    selected: patterns.firstIndex(of: current.pattern) ?? 0
-                ) { [weak self] index in
-                    self?.settings.haptics.pattern = patterns[index]
-                    self?.actions.testHaptic()
-                }
-            ),
-            ("", button("Test Haptic") { [weak self] in self?.actions.testHaptic() }),
-            (
-                "Fire on:",
-                checkbox("Each volume or brightness step", isOn: current.onStep) {
-                    [weak self] isOn in self?.settings.haptics.onStep = isOn
-                }
-            ),
-            (
-                "",
-                checkbox("Reaching a limit", isOn: current.onLimit) { [weak self] isOn in
-                    self?.settings.haptics.onLimit = isOn
-                }
-            ),
-            (
-                "",
-                checkbox("A corner action", isOn: current.onCorner) { [weak self] isOn in
-                    self?.settings.haptics.onCorner = isOn
-                }
-            ),
-            (
-                "",
-                checkbox("A seek preview appearing", isOn: current.onSeek) { [weak self] isOn in
-                    self?.settings.haptics.onSeek = isOn
-                }
-            ),
-        ])
         let status = note(actions.hapticStatus())
         statusLabel = status
-        setContent([controls, status])
+        setContent([controls(), status])
+    }
+
+    /// Both columns share one grid, so that each row lines up across the pane even though a
+    /// popup is taller than a checkbox.
+    private func controls() -> NSView {
+        let current = settings.haptics
+        let patterns = HapticPattern.allCases
+        let rows: [[(String, NSView)]] = [
+            [
+                (
+                    "Haptics:",
+                    checkbox("Enabled", isOn: current.enabled) { [weak self] isOn in
+                        self?.settings.haptics.enabled = isOn
+                    }
+                ),
+                (
+                    "Fire on:",
+                    checkbox("Each level step", isOn: current.onStep) { [weak self] isOn in
+                        self?.settings.haptics.onStep = isOn
+                    }
+                ),
+            ],
+            [
+                (
+                    "Strength:",
+                    slider(value: Double(current.strength), range: 0.4...2.0) { [weak self] value in
+                        self?.settings.haptics.strength = Float(value)
+                    }
+                ),
+                (
+                    "",
+                    checkbox("Reaching a limit", isOn: current.onLimit) { [weak self] isOn in
+                        self?.settings.haptics.onLimit = isOn
+                    }
+                ),
+            ],
+            [
+                (
+                    "Pattern:",
+                    popup(
+                        patterns.map(\.rawValue.capitalized),
+                        selected: patterns.firstIndex(of: current.pattern) ?? 0
+                    ) { [weak self] index in
+                        self?.settings.haptics.pattern = patterns[index]
+                        self?.actions.testHaptic()
+                    }
+                ),
+                (
+                    "",
+                    checkbox("A corner action", isOn: current.onCorner) { [weak self] isOn in
+                        self?.settings.haptics.onCorner = isOn
+                    }
+                ),
+            ],
+            [
+                ("", button("Test Haptic") { [weak self] in self?.actions.testHaptic() }),
+                (
+                    "",
+                    checkbox("A seek preview", isOn: current.onSeek) { [weak self] isOn in
+                        self?.settings.haptics.onSeek = isOn
+                    }
+                ),
+            ],
+        ]
+        return wideForm(rows)
     }
 }

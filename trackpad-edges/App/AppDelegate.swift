@@ -74,8 +74,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func setUpStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(
-            systemSymbolName: "rectangle.dashed", accessibilityDescription: "Trackpad Edges")
+        let glyph = NSImage(named: "GlyphMenuBar")
+        glyph?.size = NSSize(width: 18, height: 18)
+        glyph?.isTemplate = true
+        glyph?.accessibilityDescription = "Trackpad Edges"
+        item.button?.image = glyph
 
         let menu = NSMenu()
         menu.delegate = self

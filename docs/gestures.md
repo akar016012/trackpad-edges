@@ -13,14 +13,15 @@ The trackpad is divided into zones using normalized coordinates, where the origi
 | Bottom edge      | 10% of the pad height               |
 | Top-left corner  | 20% of the width, 17% of the height |
 | Top-right corner | 20% of the width, 17% of the height |
+| Bottom corners   | 20% of the width, 17% of the height |
 
-Zones are tested in this order: top corners, bottom edge, left edge, then right edge. The bottom strip therefore spans the full width of the pad, and there is no top edge strip.
+Zones are tested in this order: corners, bottom edge, left edge, then right edge. A corner counts only if it has an action, so the bottom strip otherwise spans the full width of the pad. There is no top edge strip.
 
 ## Starting a slide
 
 By default, a slide starts as soon as one finger lands inside a strip. A finger that lands elsewhere and moves into a strip does nothing, which keeps ordinary trackpad use undisturbed. The trade-off is that the pointer does not move while a finger that landed in a strip stays there.
 
-The **Require a physical click to start a slide** setting matches a similar app: the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
+The **Require a click to start** setting matches a similar app: the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
 
 The pointer freezes at landing, but a touch counts as a slide only after the finger has been down for 0.08 seconds and has traveled 4% of the pad, mostly along the strip. Steps count from that point, so a tap does not change a level. A move of more than 12% of the pad between two frames is treated as a contact glitch and ignored, because the reported position can jump near the rim.
 
@@ -28,7 +29,7 @@ The pointer freezes at landing, but a touch counts as a slide only after the fin
 
 - Lifting the finger ends the slide, so easing off the click during a slide does not stop it.
 - Contact can drop out near the rim of the pad, which was seen about every 0.2 seconds in testing. A slide therefore survives a gap of up to 0.18 seconds, and wherever the contact returns in the strip produces no steps. A contact that returns outside the strip, or with a second finger, ends the slide and starts fresh.
-- Leaving the strip by more than 3% of the pad cancels the slide. A second finger cancels it too.
+- Leaving the strip by more than 3% of the pad cancels a slide that has not changed anything yet. Once a slide has changed something, it can stray a further 25% of the pad, because a real slide drifts. A second finger cancels a slide at any time.
 - Volume and brightness steps that were already applied stay applied after a cancel.
 - A click with no slide passes through to macOS as a normal click when you release it.
 
