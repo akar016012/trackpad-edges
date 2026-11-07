@@ -4,7 +4,7 @@ Status: the menu bar item and the first-run steps are built. Their layout has be
 
 ## Menu bar
 
-The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, reopens the welcome tour, opens the window, and quits the app.
+The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu also holds **Check for Updates…**. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, reopens the welcome tour, opens the window, and quits the app.
 
 ## First-run guide
 

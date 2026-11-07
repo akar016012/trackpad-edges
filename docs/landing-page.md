@@ -12,7 +12,7 @@ The download shows a coming soon button until a release exists. Each deploy read
 
 ## Deploying
 
-`.github/workflows/pages.yml` publishes only `site/`. It runs on every push to `main` that changes `site/`, after each release, and by hand. The custom domain is set in the repository's Pages settings.
+`.github/workflows/pages.yml` publishes only `site/`. It also adds `appcast.xml`, the update feed, from the newest release, so that file is not in the repository. It runs on every push to `main` that changes `site/`, after each release, and by hand. The custom domain is set in the repository's Pages settings.
 
 ## Updating it
 

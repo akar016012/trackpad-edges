@@ -4,7 +4,8 @@
 #
 # Usage: scripts/build-release.sh <output folder>
 #
-# The app is written to <output folder>/Trackpad Edges.app. The script signs with the project's
+# The app is written to <output folder>/Trackpad Edges.app, and the update tools that match its
+# updater are written to <output folder>/sparkle-bin. The script signs with the project's
 # Developer ID identity when it exists, and otherwise with an Apple Development identity. Set
 # SIGN_KEYCHAIN to sign from a specific keychain. Both install.sh and the release workflow use it.
 
@@ -42,7 +43,10 @@ trap 'rm -rf "$work"' EXIT
 
 echo "Building the Release configuration..."
 xcodebuild -project "$root/trackpad-edges.xcodeproj" -scheme trackpad-edges \
-  -configuration Release -derivedDataPath "$work/build" CODE_SIGNING_ALLOWED=NO \
+  -configuration Release -derivedDataPath "$work/build" \
+  -clonedSourcePackagesDirPath "$work/build/SourcePackages" \
+  -packageCachePath "$work/package-cache" -onlyUsePackageVersionsFromResolvedFile \
+  CODE_SIGNING_ALLOWED=NO \
   build >"$work/build.log" 2>&1 || {
   tail -n 30 "$work/build.log" >&2
   exit 1
@@ -77,7 +81,14 @@ ln -s A "$framework/Versions/Current"
 ln -s Versions/Current/MediaRemoteAdapter "$framework/MediaRemoteAdapter"
 ln -s Versions/Current/Resources "$framework/Resources"
 
-# Inner code is signed first, because the app's signature records the signatures inside it.
+# Inner code is signed first, because the app's signature records the signatures inside it. The
+# updater's helpers are signed one at a time, because each must carry the hardened runtime.
+sparkle="$app/Contents/Frameworks/Sparkle.framework"
+"${sign[@]}" "$sparkle/Versions/B/XPCServices/Installer.xpc"
+"${sign[@]}" --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
+"${sign[@]}" "$sparkle/Versions/B/Autoupdate"
+"${sign[@]}" "$sparkle/Versions/B/Updater.app"
+"${sign[@]}" "$sparkle"
 "${sign[@]}" "$framework"
 "${sign[@]}" "$app"
 codesign --verify --strict --deep "$app"
@@ -85,4 +96,6 @@ codesign --verify --strict --deep "$app"
 rm -rf "${output:?}/$app_name.app"
 ditto "$app" "$output/$app_name.app"
 codesign --verify --strict --deep "$output/$app_name.app"
+rm -rf "${output:?}/sparkle-bin"
+ditto "$work/build/SourcePackages/artifacts/sparkle/Sparkle/bin" "$output/sparkle-bin"
 echo "Built: $output/$app_name.app"

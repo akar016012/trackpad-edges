@@ -8,6 +8,11 @@ struct WindowActions {
     var previewSeekOverlay: () -> Void
     var unavailableKinds: () -> Set<SlideKind>
     var showWelcomeTour: () -> Void
+    var checkForUpdates: () -> Void
+    var updatesAreAvailable: () -> Bool
+    var canCheckForUpdates: () -> Bool
+    var checksForUpdatesAutomatically: () -> Bool
+    var setChecksForUpdatesAutomatically: (Bool) -> Void
 }
 
 /// Forwards a control's action to a closure.
@@ -122,9 +127,11 @@ class SettingsPane: NSViewController {
     func form(_ rows: [(String, NSView)]) -> NSGridView {
         let grid = NSGridView(
             views: rows.map { row in
+                // An empty cell holds nothing, so that VoiceOver has nothing to stop on.
+                guard !row.0.isEmpty else { return [NSGridCell.emptyContentView, row.1] }
                 let label = NSTextField(labelWithString: row.0)
                 // VoiceOver reads the label with its control.
-                if !row.0.isEmpty { row.1.setAccessibilityTitleUIElement(label) }
+                row.1.setAccessibilityTitleUIElement(label)
                 return [label, row.1]
             })
         grid.columnSpacing = 10

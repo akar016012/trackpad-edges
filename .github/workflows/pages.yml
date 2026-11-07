@@ -42,6 +42,15 @@ jobs:
           url="https://github.com/$GITHUB_REPOSITORY/releases/latest/download/TrackpadEdges.dmg"
           sed -i -E "s|^  url: \".*\",|  url: \"$url\",|; s|^  version: \".*\",|  version: \"${tag#v}\",|" site/main.js
           grep -qF "$url" site/main.js || { echo "::error::site/main.js did not take the link"; exit 1; }
+          # Installed copies read this feed. Version 1.0 has none, because it has no updater.
+          # Without it, this deploy would remove the live feed, so a missing feed stops the deploy.
+          assets="$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          if grep -qx appcast.xml <<<"$assets"; then
+            gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern appcast.xml --dir site --clobber
+          elif [ "$tag" != "v1.0" ]; then
+            echo "::error::$tag has no update feed"
+            exit 1
+          fi
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:

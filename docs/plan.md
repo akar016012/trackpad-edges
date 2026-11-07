@@ -35,6 +35,7 @@ This list was last updated on 2026-11-07. **Done** means that it was tried on a 
 
 ### Needs a check
 
+- Automatic updates are built, and their signing is tested, but no installed copy has updated itself yet. The first real test comes with the version after the first one that includes the updater.
 - [ ] [Monitor Brightness](roadmap/more-edge-actions.md), because the one monitor tried refused it
 - [ ] [Palm detection](roadmap/palm-detection.md)
 - [ ] [Installed build](roadmap/installed-build.md)

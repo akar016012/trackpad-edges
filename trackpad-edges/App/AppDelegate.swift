@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     ]
 
     private let controller = GestureController()
+    private let updater = Updater()
     private var mainWindow: MainWindowController?
     private var welcomeWindow: WelcomeWindowController?
     private var statusItem: NSStatusItem?
@@ -21,6 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         title: "", action: #selector(requestAccessibility), keyEquivalent: "")
     private let pauseItem = NSMenuItem(
         title: "Pause Gestures", action: #selector(togglePause), keyEquivalent: "")
+    private let updatesItem = NSMenuItem(
+        title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
 
     static func main() {
         let app = NSApplication.shared
@@ -32,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.make()
+        updater.onSessionEnded = { [weak self] in self?.windowClosed() }
         SettingsStore.shared.onChange = { [weak self] in
             self?.controller.applySettings()
             self?.mainWindow?.settingsChanged()
@@ -80,6 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accessibilityItem.title = trusted ? "Accessibility Is On" : "Grant Accessibility…"
         accessibilityItem.isEnabled = !trusted
         pauseItem.state = controller.paused ? .on : .off
+        updatesItem.isEnabled = updater.canCheckForUpdates
         let settings = SettingsStore.shared.settings
         let unavailable = controller.unavailableKinds
         for (edgeMenu, path) in edgeMenus {
@@ -113,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         profileItem.isEnabled = false
         accessibilityItem.target = self
         pauseItem.target = self
+        updatesItem.target = self
         menu.addItem(trackpadsItem)
         menu.addItem(profileItem)
         menu.addItem(accessibilityItem)
@@ -127,6 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             title: "About Trackpad Edges", action: #selector(showAbout), keyEquivalent: "")
         about.target = self
         menu.addItem(about)
+        menu.addItem(updatesItem)
         let tour = NSMenuItem(
             title: "Welcome Tour…", action: #selector(showWelcomeTour), keyEquivalent: "")
         tour.target = self
@@ -174,7 +181,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             requestAccessibility: { [weak self] in self?.requestAccessibility() },
             previewSeekOverlay: { [weak self] in self?.controller.previewSeekOverlay() },
             unavailableKinds: { [weak self] in self?.controller.unavailableKinds ?? [] },
-            showWelcomeTour: { [weak self] in self?.showWelcomeTour() })
+            showWelcomeTour: { [weak self] in self?.showWelcomeTour() },
+            checkForUpdates: { [weak self] in self?.checkForUpdates() },
+            updatesAreAvailable: { [weak self] in self?.updater.isAvailable ?? false },
+            canCheckForUpdates: { [weak self] in self?.updater.canCheckForUpdates ?? false },
+            checksForUpdatesAutomatically: { [weak self] in
+                self?.updater.checksAutomatically ?? false
+            },
+            setChecksForUpdatesAutomatically: { [weak self] in
+                self?.updater.checksAutomatically = $0
+            })
     }
 
     @objc private func openWindow() {
@@ -216,15 +232,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         window.show(page: page)
     }
 
-    /// The app appears in the Dock only while one of its windows is open.
+    /// The app appears in the Dock only while one of its windows or an update is open.
     private func windowClosed() {
         // The closing window still counts as open while its delegate runs.
         DispatchQueue.main.async { [weak self] in
-            guard let self, self.welcomeWindow == nil, self.mainWindow?.isOpen != true else {
-                return
-            }
+            guard let self, self.welcomeWindow == nil, self.mainWindow?.isOpen != true,
+                !self.updater.isInSession
+            else { return }
             NSApp.setActivationPolicy(.accessory)
         }
+    }
+
+    @objc private func checkForUpdates() {
+        updater.checkForUpdates()
     }
 
     @objc private func togglePause() {

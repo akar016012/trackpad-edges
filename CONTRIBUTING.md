@@ -28,6 +28,8 @@ You need a Mac with Apple silicon, a Force Touch trackpad, and Xcode 27.2 or lat
 2. Choose your own team under **Signing & Capabilities**, and leave that change out of your pull request.
 3. Run the `trackpad-edges` scheme, and grant the Accessibility permission when the app asks.
 
+Only a copy signed with this project's Developer ID checks for updates, so a copy that you build yourself cannot replace itself with the official app.
+
 Quit the app before you change its Accessibility permission. A running copy can hold up clicks for the whole Mac while that permission changes, and a copy paused in the debugger holds them until you resume or stop it.
 
 To sign an installed build with your own identity, change `team` in `scripts/build-release.sh` and `signingRequirement` in `trackpad-edges/Actions/NowPlayingAdapter.swift`.

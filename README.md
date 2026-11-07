@@ -66,7 +66,7 @@ A new install opens a short tour that sets up the permission, your first slide, 
 
 ## Install
 
-[Download Trackpad Edges for Mac](https://github.com/akar016012/trackpad-edges/releases/latest/download/TrackpadEdges.dmg), open the DMG, and drag the app to the Applications folder. The app is signed and notarized, so macOS only asks you to confirm the first time you open it. The app does not update itself, so new versions appear on the [Releases page](https://github.com/akar016012/trackpad-edges/releases).
+[Download Trackpad Edges for Mac](https://github.com/akar016012/trackpad-edges/releases/latest/download/TrackpadEdges.dmg), open the DMG, and drag the app to the Applications folder. The app is signed and notarized, so macOS only asks you to confirm the first time you open it. Versions after 1.0 check for updates every 24 hours and can install them for you, and you can turn that off in the General pane. Every version is also on the [Releases page](https://github.com/akar016012/trackpad-edges/releases).
 
 You can also build the app from source with Xcode 27.2 or later. This command builds a signed Release copy and installs it in the Applications folder:
 

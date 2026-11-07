@@ -53,4 +53,4 @@ The app is named Trackpad Edges, and it is in the Utilities category. Its name, 
 
 This pane can reopen the welcome tour.
 
-The pane holds the first-run steps, the Accessibility status, and launch at login.
+The pane holds the first-run steps, the Accessibility status, launch at login, and updates. **Check daily** is on by default, and **Check Now** checks right away. Both are unavailable in a copy that is not signed with this project's Developer ID.

@@ -12,6 +12,7 @@
 #   NOTARY_API_KEY              an App Store Connect API key's .p8 file, as text
 #   NOTARY_API_KEY_ID           that key's ID
 #   NOTARY_API_ISSUER_ID        that key's issuer ID
+#   SPARKLE_PRIVATE_KEY         the update signing key, from generate_keys -x
 name: Mac app
 
 on:
@@ -20,6 +21,7 @@ on:
       - "trackpad-edges/**"
       - "trackpad-edges.xcodeproj/**"
       - "Tests/**"
+      - "Config/**"
       - "scripts/**"
       - ".github/dmg/**"
       - ".github/workflows/mac.yml"
@@ -50,7 +52,8 @@ jobs:
       - run: swift test
       - run: >
           xcodebuild build -project trackpad-edges.xcodeproj -scheme trackpad-edges
-          -configuration Release -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO
+          -configuration Release -derivedDataPath "$PWD/build/DerivedData"
+          -onlyUsePackageVersionsFromResolvedFile CODE_SIGNING_ALLOWED=NO
       # This job holds no secrets, so an update to the DMG tool is tried here first.
       - run: npm ci --prefix .github/dmg
       - run: .github/dmg/node_modules/.bin/create-dmg --version
@@ -73,7 +76,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # The lockfile fixes every package, and this runs first, so nothing new runs with the key open.
+      # The lockfile fixes every package, and this runs first, so no new tool runs with the key open.
       - run: npm ci --prefix .github/dmg
 
       # A throwaway keychain holds the certificate and notary credentials until the job ends.
@@ -111,10 +114,24 @@ jobs:
 
       - name: Check the version matches the tag
         if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "build/export/Trackpad Edges.app/Contents/Info.plist")"
           [ "$TAG" = "v$version" ] ||
             { echo "::error::tag $TAG does not match MARKETING_VERSION $version"; exit 1; }
+          # Installed copies compare build numbers, so a build that is not higher is never offered.
+          # This reads the newest release, and a failed lookup stops here. Version 1.0 has no feed,
+          # and its build number is 1.
+          build="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "build/export/Trackpad Edges.app/Contents/Info.plist")"
+          assets="$(gh release view --json assets --jq '.assets[].name')"
+          live=1
+          if grep -qx appcast.xml <<<"$assets"; then
+            gh release download --pattern appcast.xml --dir "$RUNNER_TEMP"
+            live="$(sed -n 's|.*<sparkle:version>\([0-9]*\)</sparkle:version>.*|\1|p' "$RUNNER_TEMP/appcast.xml")"
+          fi
+          [ -n "$live" ] && [ "$build" -gt "$live" ] ||
+            { echo "::error::CURRENT_PROJECT_VERSION $build is not higher than the live build $live"; exit 1; }
 
       - name: Notarize the app
         run: |
@@ -134,12 +151,37 @@ jobs:
           xcrun notarytool submit "build/$DMG_NAME" --keychain-profile release-notary --keychain "$KEYCHAIN" --wait
           xcrun stapler staple "build/$DMG_NAME"
 
+      # Only this step holds the key, and it reaches the tool on standard input.
+      - name: Sign the update
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          signed="$(printf '%s' "$SPARKLE_PRIVATE_KEY" | build/export/sparkle-bin/sign_update --ed-key-file - "build/$DMG_NAME")"
+          signature="$(sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p' <<<"$signed")"
+          [ -n "$signature" ] || { echo "::error::the update has no signature"; exit 1; }
+          echo "UPDATE_SIGNATURE=$signature" >> "$GITHUB_ENV"
+
+      # This uses the public key inside the built app, so a secret that does not match it stops here.
+      - name: Check the signature and write the feed
+        run: |
+          info="build/export/Trackpad Edges.app/Contents/Info.plist"
+          read_key() { /usr/libexec/PlistBuddy -c "Print :$1" "$info"; }
+          version="$(read_key CFBundleShortVersionString)"
+          swift scripts/verify-update.swift "build/$DMG_NAME" "$UPDATE_SIGNATURE" "$(read_key SUPublicEDKey)"
+          python3 scripts/make-appcast.py "$version" "$(read_key CFBundleVersion)" \
+            "$(read_key LSMinimumSystemVersion)" \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/v$version/$DMG_NAME" \
+            "$(stat -f %z "build/$DMG_NAME")" "$UPDATE_SIGNATURE" "release-notes/v$version.md" build/appcast.xml
+          xmllint --noout build/appcast.xml
+
       - name: Keep the DMG (dry run)
         if: env.DRY_RUN == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: trackpad-edges-dmg
-          path: build/${{ env.DMG_NAME }}
+          path: |
+            build/${{ env.DMG_NAME }}
+            build/appcast.xml
           retention-days: 3
 
       - name: Publish the release
@@ -149,7 +191,7 @@ jobs:
         run: |
           # This creates the tag too, so a release that fails earlier leaves no tag behind. It fails
           # if the release exists, so that a published DMG is never replaced.
-          gh release create "$TAG" "build/$DMG_NAME" --target "$GITHUB_SHA" \
+          gh release create "$TAG" "build/$DMG_NAME" build/appcast.xml --target "$GITHUB_SHA" \
             --title "Trackpad Edges ${TAG#v}" --notes-file "release-notes/$TAG.md"
 
       # A release made with this workflow's token starts no workflow, so the deploy is started here.
