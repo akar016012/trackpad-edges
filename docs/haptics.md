@@ -1,6 +1,6 @@
 # Haptics
 
-Status: haptics are built for steps, limits, and corners, and a tick on each volume step is confirmed working on the built-in trackpad. The Haptics pane is built, but its controls have not been confirmed on hardware yet.
+Status: haptics and their settings are built and confirmed working on the built-in trackpad.
 
 Haptics let you feel a level change without looking. a similar app offers only a light click on each step, so the controls described here go beyond it.
 

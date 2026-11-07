@@ -37,6 +37,10 @@ swift test
 
 Media seeking uses `mediaremote-adapter` under the BSD 3-Clause license. Its source is in `Vendor/mediaremote-adapter`.
 
+## Status
+
+The list of what is done and what is incomplete is in [docs/plan.md](docs/plan.md).
+
 ## Documentation
 
 The plan and one document for each feature live in [docs/](docs/plan.md).

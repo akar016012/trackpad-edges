@@ -22,7 +22,14 @@ final class CornerActionRunner {
         case .openFile(let path):
             NSWorkspace.shared.open(URL(fileURLWithPath: path))
         case .keyCombination(let keyCode, let modifiers, _):
-            if let keyCode { press(keyCode: keyCode, modifiers: modifiers) }
+            let flags = CGEventFlags(rawValue: modifiers)
+            let modifier = KeyModifier.allCases.first { flags.contains($0.eventFlag) }
+            if let keyCode {
+                press(keyCode: keyCode, modifiers: modifiers, releaseFlags: modifiers)
+            } else if let modifier {
+                // The release clears the flags, or the modifier would look stuck down.
+                press(keyCode: modifier.keyCode(in: modifiers), modifiers: modifiers, releaseFlags: 0)
+            }
         case .shortcut(let name):
             runShortcut(named: name)
         }
@@ -53,12 +60,12 @@ final class CornerActionRunner {
             configuration: NSWorkspace.OpenConfiguration())
     }
 
-    private func press(keyCode: UInt16, modifiers: UInt64) {
+    private func press(keyCode: UInt16, modifiers: UInt64, releaseFlags: UInt64) {
         let source = CGEventSource(stateID: .hidSystemState)
         for isDown in [true, false] {
             let event = CGEvent(
                 keyboardEventSource: source, virtualKey: keyCode, keyDown: isDown)
-            event?.flags = CGEventFlags(rawValue: modifiers)
+            event?.flags = CGEventFlags(rawValue: isDown ? modifiers : releaseFlags)
             event?.setIntegerValueField(.eventSourceUserData, value: ClickTap.ownEventMarker)
             event?.post(tap: .cghidEventTap)
         }

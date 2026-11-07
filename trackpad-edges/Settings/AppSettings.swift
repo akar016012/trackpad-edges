@@ -10,7 +10,8 @@ enum CornerAction: Codable, Equatable {
     case openApp(path: String)
     case openLink(url: String, browserPath: String?)
     case openFile(path: String)
-    /// A nil key code means that nothing has been recorded yet. The label is for display.
+    /// A nil key code with modifiers presses those modifiers alone. A nil key code with no
+    /// modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
     case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
     case shortcut(name: String)
 
@@ -23,7 +24,7 @@ enum CornerAction: Codable, Equatable {
         case .openApp(let path), .openFile(let path): return !path.isEmpty
         case .openLink(let url, _):
             return ["http", "https"].contains(URL(string: url)?.scheme?.lowercased())
-        case .keyCombination(let keyCode, _, _): return keyCode != nil
+        case .keyCombination(let keyCode, let modifiers, _): return keyCode != nil || modifiers != 0
         case .shortcut(let name): return !name.isEmpty && !name.hasPrefix("-")
         }
     }
@@ -103,6 +104,7 @@ struct AppSettings: Codable, Equatable {
     private var storedBottomLeft: CornerSetting?
     private var storedBottomRight: CornerSetting?
     private var storedSeekStepPercent: Double?
+    private var storedPressThreshold: Float?
     private var storedOverlayStyle: OverlayStyle?
     private var storedOverlayPlacement: OverlayPlacement?
     var bottomQuarterOnly = false
@@ -129,6 +131,12 @@ struct AppSettings: Codable, Equatable {
     var seekStepPercent: Double {
         get { storedSeekStepPercent ?? 1 }
         set { storedSeekStepPercent = newValue }
+    }
+
+    /// The pressure that fires a corner. Lower values need a lighter press.
+    var pressThreshold: Float {
+        get { storedPressThreshold ?? 90 }
+        set { storedPressThreshold = newValue }
     }
 
     var overlayStyle: OverlayStyle {
@@ -166,6 +174,7 @@ struct AppSettings: Codable, Equatable {
         config.topRightClicks = topRight.action.isConfigured ? topRight.clicks : nil
         config.bottomLeftClicks = bottomLeft.action.isConfigured ? bottomLeft.clicks : nil
         config.bottomRightClicks = bottomRight.action.isConfigured ? bottomRight.clicks : nil
+        config.pressThreshold = pressThreshold
         return config
     }
 }

@@ -41,6 +41,7 @@ final class CornersPane: SettingsPane {
     var onChange: (() -> Void)?
 
     private var detailStacks: [WritableKeyPath<AppSettings, CornerSetting>: NSStackView] = [:]
+    private let strengthLabel = NSTextField(labelWithString: "")
 
     override func loadView() {
         // The grid matches the trackpad, so each section sits where its corner is.
@@ -50,8 +51,25 @@ final class CornersPane: SettingsPane {
             columns(
                 section("Bottom left", corner: \.bottomLeft),
                 section("Bottom right", corner: \.bottomRight)),
-            note("A corner with no action stays a normal part of the trackpad."),
+            pressControls(),
+            note("Press a corner lightly to fire it. A corner with no action stays normal."),
         ])
+    }
+
+    private func pressControls() -> NSView {
+        strengthLabel.stringValue = Self.strengthName(settings.pressThreshold)
+        let strength = slider(value: Double(settings.pressThreshold), range: 70...115) {
+            [weak self] value in
+            self?.settings.pressThreshold = Float(value.rounded())
+            self?.strengthLabel.stringValue = Self.strengthName(Float(value.rounded()))
+        }
+        strength.setAccessibilityLabel("Corner press strength")
+        return wideForm([[("Press:", strength), ("Needs:", strengthLabel)]])
+    }
+
+    private static func strengthName(_ threshold: Float) -> String {
+        if threshold < 85 { return "A light press" }
+        return threshold < 100 ? "A medium press" : "A firm press"
     }
 
     private func section(
@@ -130,7 +148,7 @@ final class CornersPane: SettingsPane {
         case .openLink(let url, let browserPath):
             return linkViews(url: url, browserPath: browserPath, corner: corner)
         case .keyCombination(_, _, let label):
-            return [recorder(label: label, corner: corner)]
+            return keyViews(label: label, corner: corner)
         case .shortcut(let name):
             return [
                 textField(value: name, placeholder: "Shortcut name") { [weak self] text in
@@ -190,18 +208,20 @@ final class CornersPane: SettingsPane {
         return [field, picker]
     }
 
-    private func recorder(
+    private func keyViews(
         label: String, corner: WritableKeyPath<AppSettings, CornerSetting>
-    ) -> NSView {
+    ) -> [NSView] {
         let recorder = KeyRecorderButton(title: "", target: nil, action: nil)
         recorder.show(label: label)
+        // This width fills the column, so the row lines up with the popups above it.
+        recorder.widthAnchor.constraint(equalToConstant: Self.columnWidth).isActive = true
         recorder.onRecord = { [weak self] code, flags, name in
             self?.settings[keyPath: corner].action = .keyCombination(
                 keyCode: code, modifiers: flags, label: name)
             self?.onChange?()
         }
         bind(recorder) { [weak recorder] in recorder?.startRecording() }
-        return recorder
+        return [recorder]
     }
 
     private func textField(

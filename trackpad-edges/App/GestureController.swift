@@ -26,23 +26,7 @@ final class GestureController {
     private var reachedLimit = false
     private var locked = false
     private var healthTimer: Timer?
-
-    #if DEBUG
-        /// The peak values of the current contact, for the phase 0 test session. This goes away
-        /// once phase 1 has its thresholds.
-        private struct Probe {
-            var start: TimeInterval?
-            var pressure: Float = 0
-            var rawPressure: Int32 = 0
-            var size: Float = 0
-            var axis: Float = 0
-            var clicked = false
-            var fingers = 0
-            var x: Float = 0
-            var y: Float = 0
-        }
-        private var probe = Probe()
-    #endif
+    private var tickScheduled = false
 
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
@@ -149,36 +133,8 @@ final class GestureController {
 
     // MARK: Input
 
-    /// Records the peak values of each contact for the phase 0 test session.
-    private func recordProbe(_ touches: [TouchPoint]) {
-        #if DEBUG
-        if touches.isEmpty {
-            guard let start = probe.start else { return }
-            log.notice(
-                "Probe: pressure \(self.probe.pressure, format: .fixed(precision: 3)), raw \(self.probe.rawPressure), size \(self.probe.size, format: .fixed(precision: 3)), axis \(self.probe.axis, format: .fixed(precision: 2)), seconds \(self.now - start, format: .fixed(precision: 2)), clicked \(self.probe.clicked), fingers \(self.probe.fingers), x \(self.probe.x, format: .fixed(precision: 2)), y \(self.probe.y, format: .fixed(precision: 2))"
-            )
-            probe = Probe()
-            return
-        }
-        if probe.start == nil {
-            probe.start = now
-            probe.x = touches[0].x
-            probe.y = touches[0].y
-        }
-        probe.fingers = max(probe.fingers, touches.count)
-        for touch in touches {
-            probe.pressure = max(probe.pressure, touch.pressure)
-            // Open source headers disagree on whether this field is a float or an integer.
-            probe.rawPressure = max(probe.rawPressure, Int32(bitPattern: touch.pressure.bitPattern))
-            probe.size = max(probe.size, touch.size)
-            probe.axis = max(probe.axis, touch.majorAxis)
-        }
-        #endif
-    }
-
     private func handle(device: UnsafeRawPointer, touches: [TouchPoint]) {
         onTouches?(touches)
-        recordProbe(touches)
         // A frame that was queued before a rebuild can name a device that no longer exists.
         // Without the click tap there is no permission to press keys, so a slide would do nothing.
         guard !paused, !locked, ClickTap.shared.isInstalled,
@@ -191,12 +147,17 @@ final class GestureController {
             touches, now: now, modifierSatisfied: NSEvent.modifierFlags.contains(required))
         engines[device] = engine
         dispatch(events, device: device)
-        if touches.isEmpty, engine.isSliding { scheduleTick(device: device, grace: engine.config.liftGrace) }
+        // This asks the engine, because a palm keeps frames arriving after the finger has lifted.
+        if engine.isSliding, !engine.hasTouches, !tickScheduled {
+            scheduleTick(device: device, grace: engine.config.liftGrace)
+        }
     }
 
     /// Checks back after the grace period, because no more frames arrive once a finger lifts.
     private func scheduleTick(device: UnsafeRawPointer, grace: TimeInterval) {
+        tickScheduled = true
         DispatchQueue.main.asyncAfter(deadline: .now() + grace + 0.02) { [weak self] in
+            self?.tickScheduled = false
             guard let self, var engine = self.engines[device] else { return }
             let events = engine.tick(now: self.now)
             self.engines[device] = engine
@@ -205,10 +166,6 @@ final class GestureController {
     }
 
     private func mouseDown(_ event: CGEvent) -> Bool {
-        #if DEBUG
-            // A click with no open contact belongs to nothing, such as one from an external mouse.
-            if probe.start != nil { probe.clicked = true }
-        #endif
         discardNextUp = false
         guard !paused, !locked else { return false }
         if let device = clickDevice { recoverLostMouseUp(device: device) }
@@ -302,6 +259,8 @@ final class GestureController {
                 PointerFreeze.shared.end()
             case .passthroughClick:
                 deliverHeldClick()
+            case .cornerCounted:
+                if SettingsStore.shared.settings.haptics.onCorner { haptics.pulse(device: device) }
             case .cornerFired(let zone):
                 fireCorner(zone, device: device)
             }
@@ -359,7 +318,7 @@ final class GestureController {
             discardNextUp = true
         }
         for device in Array(engines.keys) {
-            guard engines[device]?.hasTouches == true,
+            guard let engine = engines[device], engine.hasTouches || engine.isSliding,
                 now - (lastFrames[device] ?? 0) > Self.lostFingerInterval
             else { continue }
             handle(device: device, touches: [])

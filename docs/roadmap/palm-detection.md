@@ -1,6 +1,8 @@
 # Palm detection
 
-Status: this feature is planned for phase 1. This feature waits on contact size measurements from the phase 0 test session.
+Status: this feature is built, using measurements from the phase 0 test session, but it has not been confirmed on the trackpad yet.
+
+A contact counts as a palm at a size of 1.6 or more, or at a long axis of 13 or more with a size of 1.2 or more. A firm click flattens a finger to about 1.3 in size, and three-finger gestures have long axes with small sizes, so neither of those counts.
 
 ## Goal
 
@@ -14,7 +16,7 @@ A resting palm should never start a slide or freeze the pointer. Today a palm al
 
 ## Settings
 
-No setting is planned. If the measurements cannot separate a flat finger from a palm cleanly, a **Palm sensitivity** slider goes on the Edges pane.
+No setting is needed, because the measurements separate a flat finger from a palm cleanly.
 
 ## Implementation plan
 

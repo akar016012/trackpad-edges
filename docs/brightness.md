@@ -1,6 +1,6 @@
 # Brightness
 
-Status: this feature is built, but it has not been confirmed on hardware yet.
+Status: this feature is built and confirmed working on the built-in trackpad.
 
 The left edge controls the brightness of the built-in display by default. It uses the same slide motion as [volume](volume.md).
 

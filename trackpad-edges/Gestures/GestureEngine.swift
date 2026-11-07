@@ -55,6 +55,17 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var topRightClicks: Int?
     var bottomLeftClicks: Int?
     var bottomRightClicks: Int?
+    /// The pressure that counts as a corner press, or nil to need a physical click. Measured on
+    /// the built-in trackpad, resting fingers and taps peak near 50, and clicks start near 120.
+    var pressThreshold: Float?
+    /// The pressure that a finger must fall below before it can press again.
+    var pressRelease: Float = 50
+    /// A contact this long and this large is a palm. Fingers measured up to 12.5 long, and a firm
+    /// click flattens a finger to about 1.3 in size, so both are needed for the first check.
+    var palmAxis: Float = 13
+    var palmAxisSize: Float = 1.2
+    /// A contact this large is a palm whatever its shape.
+    var palmSize: Float = 1.6
 
     /// Returns the zone at a point, testing corners, then bottom, left, and right. A corner with
     /// no action does not count, so the edge beneath it still works.
@@ -72,6 +83,10 @@ nonisolated struct GestureConfig: Sendable, Equatable {
         if x <= edgeWidth, slideKind(for: .left) != nil { return .left }
         if x >= 1 - edgeWidth, slideKind(for: .right) != nil { return .right }
         return nil
+    }
+
+    func isPalm(_ touch: TouchPoint) -> Bool {
+        touch.size >= palmSize || (touch.majorAxis >= palmAxis && touch.size >= palmAxisSize)
     }
 
     func slideKind(for zone: Zone) -> SlideKind? {
@@ -111,9 +126,10 @@ nonisolated struct GestureConfig: Sendable, Equatable {
 /// Turns touch frames and physical clicks from one trackpad into gesture events.
 ///
 /// This type has no system dependencies, so unit tests can drive it with plain values. A gesture
-/// needs a single finger that landed in a zone, and corners and click mode also need a physical
-/// click. A click that stays swallowed loses both halves, and a click that turns out to be
-/// ordinary is replayed. The controller handles the rare cases where macOS loses a mouse-up.
+/// needs a single finger that landed in a zone. A slide starts on landing, or on a physical click
+/// in click mode, and a corner fires on a press or a physical click. A click that stays swallowed
+/// loses both halves, and a click that turns out to be ordinary is replayed. The controller
+/// handles the rare cases where macOS loses a mouse-up.
 nonisolated struct GestureEngine {
     enum Event: Sendable, Equatable {
         case slideBegan(SlideKind)
@@ -126,6 +142,8 @@ nonisolated struct GestureEngine {
         case pointerReleased
         /// The swallowed mouse-down must be delivered now, and the real mouse-up will follow it.
         case passthroughClick
+        /// A corner press counted, but more clicks are still needed.
+        case cornerCounted
         case cornerFired(Zone)
     }
 
@@ -202,6 +220,11 @@ nonisolated struct GestureEngine {
     private var swallowedDown = false
     /// The finger of a canceled slide. The pointer stays frozen until this finger lifts.
     private var drainingFinger: Int32?
+    /// Contacts judged to be palms, which stay palms until they lift.
+    private var palms: Set<Int32> = []
+    private var pressHeld = false
+    /// True when a pressure press already counted, so the physical click that follows does not.
+    private var pressCounted = false
 
     private var draining: Bool { drainingFinger != nil }
     var isSliding: Bool { slide != nil }
@@ -212,10 +235,15 @@ nonisolated struct GestureEngine {
     var hasLanding: Bool { landing != nil }
 
     mutating func process(
-        _ newTouches: [TouchPoint], now: TimeInterval = 0, modifierSatisfied: Bool = true
+        _ rawTouches: [TouchPoint], now: TimeInterval = 0, modifierSatisfied: Bool = true
     ) -> [Event] {
+        palms.formIntersection(rawTouches.map(\.id))
+        palms.formUnion(rawTouches.filter(config.isPalm).map(\.id))
+        let newTouches = rawTouches.filter { !palms.contains($0.id) }
         let wasEmpty = touches.isEmpty
         touches = newTouches
+        // A new contact starts fresh, unless its click from the last contact is still open.
+        if wasEmpty, !newTouches.isEmpty, !swallowedDown { pressCounted = false }
         if newTouches.count != 1 {
             landing = nil
         } else if wasEmpty, let touch = newTouches.first,
@@ -224,12 +252,35 @@ nonisolated struct GestureEngine {
             landing = (touch.id, zone)
         }
         if let finger = drainingFinger {
-            guard !newTouches.contains(where: { $0.id == finger }) else { return [] }
+            // This reads the raw touches, because a finger that becomes a palm is still down.
+            guard !rawTouches.contains(where: { $0.id == finger }) else { return [] }
             drainingFinger = nil
             return [.pointerReleased]
         }
         if slide != nil { return updateSlide(now: now, modifierSatisfied: modifierSatisfied) }
-        return startTouchSlide(now: now, modifierSatisfied: modifierSatisfied)
+        return updateCornerPress(now: now)
+            + startTouchSlide(now: now, modifierSatisfied: modifierSatisfied)
+    }
+
+    /// Counts a corner press from pressure alone, so a corner needs no physical click. Separate
+    /// press and release levels stop a wobbling finger from counting twice.
+    private mutating func updateCornerPress(now: TimeInterval) -> [Event] {
+        guard touches.count == 1, let touch = touches.first, let threshold = config.pressThreshold,
+            let landing, touch.id == landing.id, config.slideKind(for: landing.zone) == nil,
+            config.zone(x: touch.x, y: touch.y) == landing.zone
+        else {
+            if touches.isEmpty { pressHeld = false }
+            return []
+        }
+        if pressHeld {
+            if touch.pressure < config.pressRelease { pressHeld = false }
+            return []
+        }
+        guard touch.pressure >= threshold else { return [] }
+        pressHeld = true
+        pressCounted = true
+        let events = countCornerClick(landing.zone, now: now)
+        return events.isEmpty ? [.cornerCounted] : events
     }
 
     /// Ends a slide whose finger stayed away for longer than the grace period.
@@ -282,6 +333,10 @@ nonisolated struct GestureEngine {
 
         if let zone = pressedCorner {
             pressedCorner = nil
+            if pressCounted {
+                pressCounted = false
+                return ClickResult(swallow: true, events: [])
+            }
             return ClickResult(swallow: true, events: countCornerClick(zone, now: now))
         }
         if let current = slide, !current.moved {
@@ -298,6 +353,7 @@ nonisolated struct GestureEngine {
     mutating func mouseUpLost() -> [Event] {
         swallowedDown = false
         pressedCorner = nil
+        pressCounted = false
         guard let current = slide, !current.moved else { return [] }
         slide = nil
         return [.slideCanceled(current.kind), .pointerReleased]

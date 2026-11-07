@@ -1,6 +1,6 @@
 # Gestures
 
-Status: touch slides on the right and bottom edges are confirmed working on the built-in trackpad. The left edge, the corners, and click mode are built and unit tested, but they have not been confirmed on hardware yet.
+Status: touch slides on all three edges and the corners are confirmed working on the built-in trackpad. Click mode and palm detection are built and unit tested, but they have not been confirmed on hardware yet.
 
 ## Zones
 
@@ -35,7 +35,7 @@ The pointer freezes at landing, but a touch counts as a slide only after the fin
 
 ## What is ignored
 
-Multi-finger gestures and ordinary pointer movement never start a slide, and a finger that moves into a strip does not count. Dedicated palm detection is not built, so a resting palm counts as a second finger, and a palm alone in a strip counts as a finger. Tap-to-click generates clicks that cannot yet be told apart from physical presses, so a tap in a corner can count as a click.
+Multi-finger gestures and ordinary pointer movement never start a slide, and a finger that moves into a strip does not count. A palm is recognized from its size and shape, and it does not start a gesture. A palm that is already full size does not cancel one either, although a palm that first looks like a finger can cancel a slide before it is recognized. Corners fire on pressure, so a tap does not normally reach them, although a tap with tap-to-click can still count as a click.
 
 A contact counts as lifted if no touch data arrives for 0.25 seconds, because the framework can drop the final frame. Gestures stop while the screen is locked.
 
