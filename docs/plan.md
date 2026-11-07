@@ -35,6 +35,7 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - [ ] [Two-finger edge slides](roadmap/two-finger-slides.md)
 - [ ] [Installed build](roadmap/installed-build.md)
 - [ ] [Per-app profiles](roadmap/per-app-profiles.md)
+- [ ] [Welcome tour](welcome-tour.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Assignable edges from the window and the menu bar](settings.md)
@@ -54,7 +55,7 @@ Work stopped here on 2026-11-06, and the incomplete items below are left for lat
 - A finger that is already down after a wake or an unpause can count as a landing.
 - A palm that first looks like a finger can cancel a slide before it is recognized.
 - Switch Spaces needs the system's Control-arrow shortcuts turned on.
-- Keyboard Backlight relies on keys that some Macs no longer have, so it may do nothing.
+- macOS locks the keyboard backlight off in a bright room, so Keyboard Backlight shows a short notice there. The action is confirmed working on this Mac, and a Mac without a backlight gets no effect.
 - Monitor Brightness works only on monitors and ports that answer over DDC.
 - Media seek relies on undocumented behavior, so a macOS update could break it.
 - The adapter library sits in a folder that your account can write to, so the app checks it before every run.
@@ -98,12 +99,12 @@ Any edge can use any action, and the full list is in [more edge actions](roadmap
 All source lives under `trackpad-edges/`.
 
 - `App/` holds the app delegate, the gesture controller, and the main menu.
-- `Input/` holds the `MultitouchSupport` bridge, device hot-plug and sleep handling, and the event tap.
+- `Input/` holds the `MultitouchSupport` bridge, device hot-plug and sleep handling, the event taps, and the watchdog that protects clicks.
 - `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it.
 - `Actions/` holds the edge actions, including volume, brightness, media seek, and external displays, and the corner actions.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
-- `UI/` holds the app window, the trackpad diagram, and the seek overlay.
+- `UI/` holds the app window, the welcome tour, the trackpad diagram, and the seek overlay.
 - `scripts/` holds the install script.
 - `Resources/` holds the bundled adapter, its license, and the About box text, and `Vendor/` holds the adapter source.
 

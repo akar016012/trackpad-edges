@@ -17,6 +17,8 @@ This command builds a signed Release copy and installs it in the Applications fo
 scripts/install.sh
 ```
 
+A new install opens a short welcome tour that sets up the permission, your edges, your corners, and haptics.
+
 ## Configure
 
 The app window and the menu bar icon both let you choose what each edge does. The window also sets the corners, profiles for individual apps, the haptic strength and pattern, and launch at login.

@@ -39,6 +39,20 @@ final class SeekController {
         overlay.apply(style: style, placement: placement)
     }
 
+    /// Shows a notice in the overlay, using the style and position from the settings.
+    func showNotice(title: String, detail: String, for duration: TimeInterval) {
+        // VoiceOver hears this even when a seek owns the overlay, because the panel takes no focus.
+        NSAccessibility.post(
+            element: NSApp as Any, notification: .announcementRequested,
+            userInfo: [
+                .announcement: "\(title). \(detail)",
+                .priority: NSAccessibilityPriorityLevel.high.rawValue,
+            ])
+        guard scrubber == nil else { return }
+        overlay.show(title: title, detail: detail)
+        overlay.hide(after: duration)
+    }
+
     /// Shows the overlay with made-up values, so that a style can be judged in the settings.
     func showSample() {
         guard scrubber == nil else { return }

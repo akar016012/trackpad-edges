@@ -7,6 +7,7 @@ struct WindowActions {
     var requestAccessibility: () -> Void
     var previewSeekOverlay: () -> Void
     var unavailableKinds: () -> Set<SlideKind>
+    var showWelcomeTour: () -> Void
 }
 
 /// Forwards a control's action to a closure.

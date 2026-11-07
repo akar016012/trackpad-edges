@@ -1,5 +1,16 @@
 import AppKit
 
+extension NSWindow {
+    /// Puts the window in the exact center of the screen under the pointer. The system's own
+    /// `center()` deliberately sits above the middle.
+    func centerOnPointerScreen() {
+        let pointer = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
+        guard let area = screen?.visibleFrame else { return }
+        setFrameOrigin(NSPoint(x: area.midX - frame.width / 2, y: area.midY - frame.height / 2))
+    }
+}
+
 /// Reports tab changes, so that the window can fit the newly selected pane.
 private final class PaneTabViewController: NSTabViewController {
     var onSelect: (() -> Void)?
@@ -10,7 +21,7 @@ private final class PaneTabViewController: NSTabViewController {
     }
 }
 
-/// Owns the app window. The app appears in the Dock only while this window is open.
+/// Owns the app window. The app appears in the Dock only while it has a window open.
 final class MainWindowController: NSWindowController, NSWindowDelegate {
     /// The tabs in window order.
     enum Tab: Int {
@@ -21,6 +32,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private let corners: CornersPane
     private let profiles: ProfilesPane
     private let tabs = PaneTabViewController()
+    /// Called when the window closes.
+    var onClose: (() -> Void)?
 
     init(actions: WindowActions) {
         edges = EdgesPane(title: "Edges", actions: actions)
@@ -75,7 +88,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         fatalError("The window is created in code.")
     }
 
-    var isOpen: Bool { window?.isVisible == true }
+    var isOpen: Bool { window?.isVisible == true || window?.isMiniaturized == true }
 
     /// Sizes the window to the selected pane around its current center, so that every pane has
     /// the same margins and the window stays where it is.
@@ -93,18 +106,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.setFrame(window.constrainFrameRect(frame, to: window.screen), display: true)
     }
 
-    /// Puts the window in the exact center of the screen under the pointer. The system's own
-    /// `center()` deliberately sits above the middle.
-    private func centerOnScreen() {
-        guard let window else { return }
-        let pointer = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
-        guard let area = screen?.visibleFrame else { return }
-        window.setFrameOrigin(
-            NSPoint(
-                x: area.midX - window.frame.width / 2, y: area.midY - window.frame.height / 2))
-    }
-
     func show() {
         let wasOpen = isOpen
         // The General pane explains the permission, and gestures do nothing without it.
@@ -120,7 +121,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         showWindow(nil)
         // The window only reaches its final size once it is on screen with its toolbar.
         fitPane()
-        if !wasOpen { centerOnScreen() }
+        if !wasOpen { window?.centerOnPointerScreen() }
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
     }
@@ -148,6 +149,6 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         // The frame for the finger lifting never arrives while the window is closed.
         edges.diagram.touches = []
-        NSApp.setActivationPolicy(.accessory)
+        onClose?()
     }
 }

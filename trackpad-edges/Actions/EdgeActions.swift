@@ -9,6 +9,7 @@ final class EdgeActions {
 
     private let volume = VolumeController()
     private let brightness = BrightnessController()
+    private let keyboardBacklight = KeyboardBacklightController()
     private let monitors = ExternalDisplayController()
     /// The apps that a slide moves through, and where it has reached. The list is fixed for one
     /// slide, because the front app takes a moment to change after each step.
@@ -38,6 +39,9 @@ final class EdgeActions {
         }
     }
 
+    /// Whether macOS is holding the keyboard backlight off because the room is bright.
+    var keyboardBacklightIsLocked: Bool { keyboardBacklight.isLocked }
+
     func refreshDisplays() {
         monitors.refresh()
     }
@@ -65,8 +69,7 @@ final class EdgeActions {
         case .brightness:
             return brightness.step(up: up, fine: fine)
         case .keyboardBacklight:
-            MediaKeys.press(up ? MediaKeys.illuminationUp : MediaKeys.illuminationDown, fine: fine)
-            return true
+            return keyboardBacklight.step(up: up, fine: fine)
         case .externalBrightness:
             return monitors.step(up: up)
         case .scroll:

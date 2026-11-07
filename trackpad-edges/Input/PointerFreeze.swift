@@ -9,6 +9,7 @@ final class PointerFreeze {
     static let shared = PointerFreeze()
 
     private var tap: CFMachPort?
+    var port: CFMachPort? { tap }
     private var source: CFRunLoopSource?
     private var frozenPoint: CGPoint?
 

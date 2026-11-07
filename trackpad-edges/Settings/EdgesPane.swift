@@ -2,7 +2,7 @@ import AppKit
 
 /// Lets you choose what each edge does, and shows the result on a live trackpad diagram.
 final class EdgesPane: ProfilePane {
-    private static let choices: [(title: String, kind: SlideKind?)] =
+    static let choices: [(title: String, kind: SlideKind?)] =
         SlideKind.allCases.map { ($0.title, $0) } + [("Off", nil)]
 
     let diagram = TrackpadDiagramView()

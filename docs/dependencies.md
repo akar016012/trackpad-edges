@@ -37,6 +37,17 @@ The app also reads the framework's touch record by byte offset, because the fram
 
 `scripts/install.sh` uses `xcodebuild`, `codesign`, `security find-identity`, `base64`, `ditto`, `pgrep`, and `lsof`, which all ship with macOS or Xcode.
 
+### CoreBrightness private client
+
+`Actions/KeyboardBacklightController.swift` only reads from `KeyboardBrightnessClient`, and the keyboard keys still work if the client is missing.
+
+| Symbol                                | Purpose                                                               |
+| ------------------------------------- | --------------------------------------------------------------------- |
+| `copyKeyboardBacklightIDs`            | This call finds the keyboard.                                         |
+| `brightnessForKeyboard:`              | This call reads the backlight level.                                  |
+| `isBacklightSaturatedOnKeyboard:`     | This call reports whether a bright room has locked the backlight off. |
+| `isAutoBrightnessEnabledForKeyboard:` | This call reports whether automatic keyboard brightness is on.        |
+
 ### IOKit private functions
 
 These functions are used only for external monitor brightness, in `Actions/ExternalDisplayController.swift`.

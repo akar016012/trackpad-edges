@@ -19,6 +19,30 @@ final class BrightnessLimitTests: XCTestCase {
         XCTAssertFalse(BrightnessLimit.isReached(level: 0, up: false, pointerOnBuiltIn: false))
     }
 
+    func testBrightRoomStopsTheKeyboardInBothDirections() {
+        XCTAssertTrue(BrightnessLimit.isKeyboardStopped(level: 0, isLocked: true, up: true))
+        XCTAssertTrue(BrightnessLimit.isKeyboardStopped(level: 0.5, isLocked: true, up: false))
+    }
+
+    func testKeyboardStopsAtItsLimits() {
+        XCTAssertTrue(BrightnessLimit.isKeyboardStopped(level: 1, isLocked: false, up: true))
+        XCTAssertTrue(BrightnessLimit.isKeyboardStopped(level: 0, isLocked: false, up: false))
+    }
+
+    func testKeyboardMovesAwayFromALimit() {
+        XCTAssertFalse(BrightnessLimit.isKeyboardStopped(level: 0, isLocked: false, up: true))
+        XCTAssertFalse(BrightnessLimit.isKeyboardStopped(level: 1, isLocked: false, up: false))
+    }
+
+    func testUnknownKeyboardLevelIsNotALimit() {
+        XCTAssertFalse(BrightnessLimit.isKeyboardStopped(level: nil, isLocked: false, up: true))
+        XCTAssertFalse(BrightnessLimit.isKeyboardStopped(level: nil, isLocked: false, up: false))
+    }
+
+    func testBrightRoomStopsTheKeyboardWithAnUnknownLevel() {
+        XCTAssertTrue(BrightnessLimit.isKeyboardStopped(level: nil, isLocked: true, up: true))
+    }
+
     func testUnknownLevelIsNotALimit() {
         XCTAssertFalse(BrightnessLimit.isReached(level: nil, up: true, pointerOnBuiltIn: true))
     }

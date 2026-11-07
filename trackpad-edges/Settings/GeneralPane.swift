@@ -1,5 +1,4 @@
 import AppKit
-import ServiceManagement
 
 /// Holds the first-run steps, the Accessibility permission, and launch at login.
 final class GeneralPane: SettingsPane {
@@ -13,8 +12,9 @@ final class GeneralPane: SettingsPane {
     var onLayoutChange: (() -> Void)?
 
     override func loadView() {
-        let login = checkbox("Launch at login", isOn: SMAppService.mainApp.status == .enabled) {
-            [weak self] isOn in self?.setLaunchAtLogin(isOn)
+        let login = checkbox("Launch at login", isOn: LoginItem.isEnabled) { [weak self] isOn in
+            LoginItem.set(isOn)
+            self?.updateLogin()
         }
         loginCheckbox = login
         let grant = button("Grant Accessibility…") { [weak self] in
@@ -32,6 +32,9 @@ final class GeneralPane: SettingsPane {
                     paragraph(
                         "Touch the right edge and slide up or down. The Edges pane shows your finger live."
                     ),
+                    button("Show Welcome Tour…") { [weak self] in
+                        self?.actions.showWelcomeTour()
+                    },
                 ]),
                 status),
             note(
@@ -66,21 +69,8 @@ final class GeneralPane: SettingsPane {
         onLayoutChange?()
     }
 
-    private func setLaunchAtLogin(_ isOn: Bool) {
-        do {
-            if isOn {
-                try SMAppService.mainApp.register()
-            } else {
-                try SMAppService.mainApp.unregister()
-            }
-        } catch {
-            NSAlert(error: error).runModal()
-        }
-        updateLogin()
-    }
-
     /// The system owns this setting, so the checkbox always shows what the system reports.
     private func updateLogin() {
-        loginCheckbox?.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        loginCheckbox?.state = LoginItem.isEnabled ? .on : .off
     }
 }

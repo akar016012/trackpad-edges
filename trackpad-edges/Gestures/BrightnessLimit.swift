@@ -9,4 +9,11 @@ nonisolated enum BrightnessLimit {
         guard pointerOnBuiltIn, let level else { return false }
         return up ? level >= 1 : level <= 0
     }
+
+    /// macOS holds the keyboard backlight off in a bright room, and no key can move it then.
+    static func isKeyboardStopped(level: Float?, isLocked: Bool, up: Bool) -> Bool {
+        if isLocked { return true }
+        guard let level else { return false }
+        return up ? level >= 1 : level <= 0
+    }
 }

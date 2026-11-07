@@ -33,7 +33,8 @@ private final class SolidBackgroundView: NSView {
     }
 }
 
-/// A small floating preview of a seek. It never takes focus or receives clicks.
+/// A small floating panel that previews a seek or shows a short notice. It never takes focus or
+/// receives clicks.
 final class SeekOverlayPanel: NSPanel {
     private static let size = NSSize(width: 320, height: 92)
     private static let cornerRadius: CGFloat = 22
@@ -98,6 +99,15 @@ final class SeekOverlayPanel: NSPanel {
         timeLabel.stringValue = message
         progress.isHidden = true
         hintLabel.isHidden = true
+        present()
+    }
+
+    /// Shows a short notice, which has a title and one line that explains it.
+    func show(title: String, detail: String) {
+        timeLabel.stringValue = title
+        hintLabel.stringValue = detail
+        progress.isHidden = true
+        hintLabel.isHidden = false
         present()
     }
 

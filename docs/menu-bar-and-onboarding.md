@@ -4,11 +4,11 @@ Status: the menu bar item and the first-run steps are built. Their layout has be
 
 ## Menu bar
 
-The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, opens the window, and quits the app.
+The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, reopens the welcome tour, opens the window, and quits the app.
 
 ## First-run guide
 
-The window opens on the General pane whenever the Accessibility permission is missing. That pane explains the permission and how to try a gesture. The app tries to skip the window when it starts at login, but that has not been confirmed with a real login.
+A new install opens the [welcome tour](welcome-tour.md). After that, the window opens on the General pane whenever the Accessibility permission is missing. That pane explains the permission and how to try a gesture, and it can reopen the tour. The app tries to skip the window when it starts at login, but that has not been confirmed with a real login.
 
 ## Permissions
 
@@ -19,7 +19,7 @@ The window opens on the General pane whenever the Accessibility permission is mi
 
 ## Rebuilds
 
-macOS can drop the Accessibility grant when an app's signature changes. The app uses a fixed bundle identifier and a stable signing identity to avoid that. If the switch looks on but access is denied, you should remove the app from the Accessibility list and add it again.
+macOS can drop the Accessibility grant when an app's signature changes. The app uses a fixed bundle identifier and a stable signing identity to avoid that. If the switch looks on but access is denied, you should remove the app from the Accessibility list and add it again. Quit the app before you remove it from the list.
 
 ## Related docs
 

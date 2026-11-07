@@ -19,8 +19,11 @@ Suppression is best effort, because touch frames and pointer events arrive indep
 ## Reliability
 
 - The app re-enables the tap when macOS disables it for a timeout or for user input.
-- A health check runs four times a second. It repairs a disabled tap, and it removes both taps if the Accessibility permission is revoked, because a tap can stall input after that.
-- Both taps run on the main thread, so a long stall on that thread would delay clicks.
+- A health check runs four times a second. It repairs a disabled tap, and it removes both taps if the Accessibility permission is revoked, because a tap can stop clicks for the whole Mac after that. This was seen when the app was removed from the permission list while it was running.
+- Once a second, the health check also asks the system directly, with `CGPreflightPostEventAccess` and by creating a tap that does no work. A process with no permission is refused both ways, which was tested. Removing the permission from an app that is already running has not been tested against this check.
+- If the main thread stalls for 0.75 seconds, a background watchdog turns the taps off so that clicks go straight to other apps, and it reattaches the pointer. After the main thread recovers, the health check ends any gesture and turns the click tap back on. The app also holds a latency-critical activity, so that the system does not delay these timers. Stalls and recoveries are written to the system log.
+- The watchdog cannot help while a debugger has paused the app, because that stops every thread. A paused copy in Xcode can therefore hold clicks until you resume or stop it.
+- Both taps run on the main thread, so a stall on that thread delays clicks until the watchdog acts.
 - An always-active tap on pointer movement can slow the cursor, so that part of the tap is enabled only during a gesture.
 
 ## Related docs

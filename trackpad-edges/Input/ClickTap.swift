@@ -18,6 +18,24 @@ final class ClickTap {
     private var source: CFRunLoopSource?
 
     var isInstalled: Bool { tap != nil }
+    var port: CFMachPort? { tap }
+
+    /// Asks the system whether a tap is still allowed, by creating one that does no work, as well
+    /// as through the documented check. A tap whose permission was removed can stop clicks for the
+    /// whole Mac, so this does not rely on any one answer.
+    static var isAllowed: Bool {
+        guard CGPreflightPostEventAccess() else { return false }
+        let mask = CGEventMask(1) << CGEventMask(CGEventType.tabletProximity.rawValue)
+        guard
+            let probe = CGEvent.tapCreate(
+                tap: .cgSessionEventTap, place: .tailAppendEventTap, options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: { _, _, event, _ in Unmanaged.passUnretained(event) }, userInfo: nil)
+        else { return false }
+        CGEvent.tapEnable(tap: probe, enable: false)
+        CFMachPortInvalidate(probe)
+        return true
+    }
 
     /// Installs the tap if possible and repairs it if macOS turned it off.
     func refresh() {

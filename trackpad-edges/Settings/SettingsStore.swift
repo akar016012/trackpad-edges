@@ -20,6 +20,9 @@ final class SettingsStore {
 
     var onChange: (() -> Void)?
 
+    /// Whether this Mac has used the app before.
+    static var hasSavedSettings: Bool { UserDefaults.standard.data(forKey: key) != nil }
+
     var settings: AppSettings {
         didSet {
             guard settings != oldValue else { return }

@@ -8,6 +8,9 @@ final class GestureController {
     /// A contact with no frames for this long counts as lifted, which starts the slide's grace period.
     private static let lostFingerInterval: TimeInterval = 0.25
     private static let healthCheckInterval: TimeInterval = 0.25
+    private static let noticeDuration: TimeInterval = 3
+    /// How many health checks pass between asking the system directly about the permission.
+    private static let permissionProbeEvery = 4
 
     private let log = Logger(subsystem: "com.adityakar.trackpad-edges", category: "gestures")
     private let edgeActions = EdgeActions()
@@ -15,6 +18,7 @@ final class GestureController {
     private let seek = SeekController()
     private let haptics = HapticEngine()
     private let monitor = DeviceMonitor()
+    private let watchdog = TapWatchdog()
 
     private var engines: [UnsafeRawPointer: GestureEngine] = [:]
     private var lastFrames: [UnsafeRawPointer: TimeInterval] = [:]
@@ -25,11 +29,16 @@ final class GestureController {
     private var reachedLimit = false
     private var locked = false
     private var healthTimer: Timer?
+    private var healthChecks = 0
+    /// Keeps the system from delaying the timers that protect clicks while the app has no window.
+    private var latencyActivity: NSObjectProtocol?
     private var tickScheduled = false
 
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
     var onTouches: (([TouchPoint]) -> Void)?
+    /// Runs on each step of a slide, which is how the tour knows that you made one.
+    var onSlideStep: (() -> Void)?
     /// Runs when an edge action becomes available or stops being available.
     var onAvailabilityChanged: (() -> Void)?
     /// The app in front, which decides the profile.
@@ -75,10 +84,16 @@ final class GestureController {
         }
         RunLoop.main.add(timer, forMode: .common)
         healthTimer = timer
+        latencyActivity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            reason: "Trackpad gestures must answer every click at once.")
+        watchdog.start()
         checkHealth()
         #if DEBUG
             // Launching with `-debugOverlay frosted -debugDark YES` shows that style for inspection.
             let defaults = UserDefaults.standard
+            // Launching with `-debugNotice YES` shows the bright room notice for inspection.
+            if defaults.bool(forKey: "debugNotice") { showBrightRoomNotice(for: 30) }
             if let name = defaults.string(forKey: "debugOverlay"),
                 let style = OverlayStyle(rawValue: name)
             {
@@ -92,6 +107,7 @@ final class GestureController {
     }
 
     func stop() {
+        watchdog.stop()
         abortAll()
         ClickTap.shared.uninstall()
         PointerFreeze.shared.uninstall()
@@ -285,7 +301,9 @@ final class GestureController {
                 haptics.begin(device: device)
             case .stepped(let steps):
                 applySteps(steps)
+                onSlideStep?()
             case .seekMoved(let travel):
+                onSlideStep?()
                 let tick = seek.preview(travel: travel)
                 if tick, SettingsStore.shared.settings.haptics.onSeek { haptics.fire() }
             case .slideEnded(let kind):
@@ -323,8 +341,18 @@ final class GestureController {
             } else if !reachedLimit {
                 reachedLimit = true
                 if settings.onLimit { haptics.fire() }
+                if kind == .keyboardBacklight, edgeActions.keyboardBacklightIsLocked {
+                    showBrightRoomNotice(for: Self.noticeDuration)
+                }
             }
         }
+    }
+
+    /// Explains a slider that will not move, which would otherwise look like a fault in this app.
+    private func showBrightRoomNotice(for duration: TimeInterval) {
+        seek.showNotice(
+            title: "Keyboard Light Is Off", detail: "macOS turns it off when the room is bright.",
+            for: duration)
     }
 
     /// Runs after the tap callback returns, because an action can take long enough to stall input.
@@ -347,13 +375,24 @@ final class GestureController {
 
     /// Keeps the taps in step with the permission, and clears state that lost its finger or click.
     private func checkHealth() {
-        if AXIsProcessTrusted() {
+        let ports = [ClickTap.shared.port, PointerFreeze.shared.port].compactMap { $0 }
+        if watchdog.beat(ports: ports) {
+            // Clicks bypassed the taps during the stall, so nothing held from before is valid.
+            abortAll()
+            discardNextUp = false
+        }
+        healthChecks += 1
+        let shouldProbe =
+            ClickTap.shared.isInstalled && healthChecks % Self.permissionProbeEvery == 0
+        // The second look stops one failed probe from ending a gesture for nothing.
+        if AXIsProcessTrusted(), !shouldProbe || ClickTap.isAllowed || ClickTap.isAllowed {
             ClickTap.shared.refresh()
         } else if ClickTap.shared.isInstalled {
             abortAll()
             discardNextUp = false
             ClickTap.shared.uninstall()
             PointerFreeze.shared.uninstall()
+            watchdog.beat(ports: [])
         }
         if let device = clickDevice, !CGEventSource.buttonState(.hidSystemState, button: .left) {
             recoverLostMouseUp(device: device)

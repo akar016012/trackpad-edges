@@ -2,7 +2,7 @@
 
 Status: the app window is built and connected. Its layout has been inspected, but changing each option has not been confirmed on hardware yet.
 
-The window is built with AppKit, and it opens at launch, from the Dock, and from the menu bar item. It opens in the center of the screen under the pointer. Every pane uses one layout: a 24-point margin on all sides, two equal columns, one label width, and rows of one height. The window fits each pane exactly, so controls stay in the same place from tab to tab and no pane has leftover space. The tabs are Edges, Corners, Media, Haptics, Profiles, and General. It opens on the General pane while the Accessibility permission is missing. The Dock icon appears only while the window is open. No website documents a similar app's real settings layout, so the layout and ranges here are this project's own design.
+The window is built with AppKit, and it opens at launch, from the Dock, and from the menu bar item. A new install opens the [welcome tour](welcome-tour.md) first. It opens in the center of the screen under the pointer. Every pane uses one layout: a 24-point margin on all sides, two equal columns, one label width, and rows of one height. The window fits each pane exactly, so controls stay in the same place from tab to tab and no pane has leftover space. The tabs are Edges, Corners, Media, Haptics, Profiles, and General. It opens on the General pane while the Accessibility permission is missing. The Dock icon appears only while the window or the tour is open. No website documents a similar app's real settings layout, so the layout and ranges here are this project's own design.
 
 ## Edges
 
@@ -48,5 +48,7 @@ The haptic controls are described in [haptics.md](haptics.md).
 The app is named Trackpad Edges, and it is in the Utilities category. Its name, version, copyright, and category are build settings in the project, and its About box text is in `Resources/Credits.rtf`.
 
 ## General
+
+This pane can reopen the welcome tour.
 
 The pane holds the first-run steps, the Accessibility status, and launch at login.
