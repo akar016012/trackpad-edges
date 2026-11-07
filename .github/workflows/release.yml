@@ -1,0 +1,54 @@
+# Ships a release when a new version lands on main, with nothing to run by hand. When
+# MARKETING_VERSION in the project names a version with no tag yet, this runs the release job in
+# mac.yml, which creates the tag only when it publishes. A failed release therefore leaves no tag,
+# and merging the fix or running this workflow by hand tries the version again.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "trackpad-edges.xcodeproj/project.xcproj"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One release at a time, and a running one is left to finish.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    # A release must come from main, because it publishes that commit.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      mac: ${{ steps.tag.outputs.mac }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: tag
+        run: |
+          version="$(sed -n 's/.*"MARKETING_VERSION": "\(.*\)",.*/\1/p' trackpad-edges.xcodeproj/project.xcproj | sort -u)"
+          [ -n "$version" ] && [ "$(wc -l <<<"$version")" -eq 1 ] ||
+            { echo "::error::MARKETING_VERSION must have one value: $version"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "v$version already exists, so this does not release it again."
+            echo "mac=" >> "$GITHUB_OUTPUT"
+          else
+            [ -f "release-notes/v$version.md" ] ||
+              { echo "::error::release-notes/v$version.md is missing"; exit 1; }
+            echo "mac=v$version" >> "$GITHUB_OUTPUT"
+          fi
+
+  mac:
+    needs: tag
+    if: needs.tag.outputs.mac != ''
+    uses: ./.github/workflows/mac.yml
+    with:
+      tag: ${{ needs.tag.outputs.mac }}
+    secrets: inherit
+    permissions:
+      contents: write
+      actions: write

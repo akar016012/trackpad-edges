@@ -8,7 +8,7 @@ The app should run from the Applications folder as a signed Release build, rathe
 
 ## Behavior
 
-- `scripts/install.sh` builds a Release copy, signs it, and installs it in the Applications folder.
+- `scripts/install.sh` uses `scripts/build-release.sh` to build and sign a Release copy, and it installs that copy in the Applications folder.
 - The Accessibility permission should survive later installs, because the signing identity stays the same.
 - Launch at login should be turned on from the installed copy, because a registration from an older copy can point somewhere else.
 
@@ -26,7 +26,7 @@ The app should run from the Applications folder as a signed Release build, rathe
 
 Perl does not validate what it loads, and the installed app is still in a folder that your account can write to. The signature therefore protects the library only because the app checks it. Before each adapter run, the app validates its whole bundle against the project's signing requirement with `SecStaticCodeCheckValidity`. That covers the library and the Perl script, and a failed check stops media seek. A short gap remains between the check and the load, as there was with the byte check it replaces.
 
-The script does not notarize the app, because a copy that you build and install on your own Mac is not quarantined. Sharing the app with someone else would need notarization.
+The script does not notarize the app, because a copy that you build and install on your own Mac is not quarantined. The [release workflow](../releasing.md) notarizes the copies that people download.
 
 ## Risks
 

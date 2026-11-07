@@ -100,6 +100,7 @@ Touch hardware cannot be simulated, so changes to how gestures feel also need a 
 - [docs/gestures.md](docs/gestures.md) explains zones and how a slide starts.
 - [docs/settings.md](docs/settings.md) describes every setting.
 - [docs/dependencies.md](docs/dependencies.md) lists every framework and private API.
+- [docs/releasing.md](docs/releasing.md) explains how releases are built.
 
 ## Contributing
 

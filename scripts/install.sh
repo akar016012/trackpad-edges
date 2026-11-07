@@ -4,15 +4,13 @@
 #
 # Usage: scripts/install.sh [destination folder]
 #
-# The destination defaults to the Applications folder. The script signs with the project's
-# Developer ID identity when it exists, and otherwise with an Apple Development identity. The
-# adapter library goes inside the app before signing, so that the app's signature covers it.
+# The destination defaults to the Applications folder. scripts/build-release.sh does the build
+# and signing, and this script swaps the new copy in.
 
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 app_name="Trackpad Edges"
-team="3J6QGH6H9F"
 
 mkdir -p "${1:-/Applications}"
 destination="$(cd "${1:-/Applications}" && pwd -P)"
@@ -24,67 +22,10 @@ if [[ ! -w "$destination" ]]; then
   exit 1
 fi
 
-# Signing by hash stays unambiguous when a renewed certificate shares its name with an old one.
-identities="$(security find-identity -v -p codesigning)"
-identity="$(sed -n "s/.*) \([0-9A-F]\{40\}\) \"Developer ID Application: .*($team)\".*/\1/p" \
-  <<<"$identities" | head -n 1)"
-timestamp=(--timestamp)
-if [[ -z "$identity" ]]; then
-  identity="$(sed -n 's/.*) \([0-9A-F]\{40\}\) "Apple Development: .*/\1/p' \
-    <<<"$identities" | head -n 1)"
-  timestamp=(--timestamp=none)
-  echo "No Developer ID identity was found, so this copy uses Apple Development." >&2
-  echo "Macs treat that as a different app, so it needs its own Accessibility permission." >&2
-fi
-if [[ -z "$identity" ]]; then
-  echo "No signing identity was found. Sign in to your developer account in Xcode first." >&2
-  exit 1
-fi
-
 work="$(mktemp -d)"
 trap 'rm -rf "$work" "$staged"' EXIT
-
-echo "Building the Release configuration..."
-xcodebuild -project "$root/trackpad-edges.xcodeproj" -scheme trackpad-edges \
-  -configuration Release -derivedDataPath "$work/build" CODE_SIGNING_ALLOWED=NO \
-  build >"$work/build.log" 2>&1 || {
-  tail -n 30 "$work/build.log" >&2
-  exit 1
-}
-app="$work/build/Build/Products/Release/$app_name.app"
-
-# Xcode leaves compiled binaries out of an app's resources, so the library ships as text and
-# becomes a real framework here. The text copy is then no longer needed.
-resources="$app/Contents/Resources"
-framework="$app/Contents/Frameworks/MediaRemoteAdapter.framework"
-mkdir -p "$framework/Versions/A/Resources"
-base64 --decode -i "$resources/MediaRemoteAdapter.base64" \
-  -o "$framework/Versions/A/MediaRemoteAdapter"
-rm "$resources/MediaRemoteAdapter.base64"
-cat >"$framework/Versions/A/Resources/Info.plist" <<'PLIST'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleExecutable</key>
-  <string>MediaRemoteAdapter</string>
-  <key>CFBundleIdentifier</key>
-  <string>com.adityakar.trackpad-edges.adapter</string>
-  <key>CFBundleName</key>
-  <string>MediaRemoteAdapter</string>
-  <key>CFBundlePackageType</key>
-  <string>FMWK</string>
-</dict>
-</plist>
-PLIST
-ln -s A "$framework/Versions/Current"
-ln -s Versions/Current/MediaRemoteAdapter "$framework/MediaRemoteAdapter"
-ln -s Versions/Current/Resources "$framework/Resources"
-
-# Inner code is signed first, because the app's signature records the signatures inside it.
-codesign --force --options runtime "${timestamp[@]}" --sign "$identity" "$framework"
-codesign --force --options runtime "${timestamp[@]}" --sign "$identity" "$app"
-codesign --verify --strict --deep "$app"
+"$root/scripts/build-release.sh" "$work/app"
+app="$work/app/$app_name.app"
 
 # The new copy is complete and checked before anything that already exists changes.
 rm -rf "$staged" "$previous"

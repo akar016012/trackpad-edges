@@ -8,7 +8,7 @@ Status: the page is built and tested at desktop and phone sizes. It publishes to
 
 ## Adding a build
 
-The download is a placeholder until a build exists. Set `url`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. Sharing a build needs notarization, as [installed-build.md](roadmap/installed-build.md) explains.
+The download is a placeholder until a build exists. Set `url`, and optionally `version`, in the `release` object at the top of `site/main.js`. The download section then links to the file, and the hero button keeps leading there, so that visitors see the requirements first. The [release workflow](releasing.md) does this by itself.
 
 ## Deploying
 
