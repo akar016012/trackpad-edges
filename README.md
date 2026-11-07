@@ -60,7 +60,7 @@ A new install opens a short tour that sets up the permission, your first slide, 
 ## Requirements
 
 - You need a Mac with Apple silicon and a Force Touch trackpad.
-- The app needs macOS 27.2 or later.
+- The app needs macOS 13 or later. All testing so far has used macOS 27.2, so please report any problem on an earlier version.
 - Gestures need the Accessibility permission, and the welcome tour helps you grant it. Quit the app before you remove it from that list.
 - The app relies on private Apple frameworks, because no public API can read a trackpad from the background or control haptic strength. A macOS update could break it, and [docs/dependencies.md](docs/dependencies.md) lists every framework that it uses.
 
