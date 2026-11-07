@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [1.0]
+## 1.0 - 2026-11-07
 
 The first public version turns the edges and corners of a Mac trackpad into controls.
 

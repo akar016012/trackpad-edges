@@ -1,6 +1,6 @@
 # Releasing
 
-Status: the secrets exist, but no release has run yet. A dry run from the Actions tab must pass before the first release.
+Status: version 1.0 is published. It was released by running the **Release** workflow by hand, so the automatic release that follows a merged version change has not run yet.
 
 Releases are automatic. Merging a change that bumps the version to `main` tags the commit, builds and signs the app, notarizes it, publishes a DMG on this repository's Releases page, and points the landing page at the download.
 
@@ -32,10 +32,10 @@ Run the **Mac app** workflow from the Actions tab. It builds, signs, and notariz
 
 1. Set `MARKETING_VERSION` in `trackpad-edges.xcodeproj/project.xcproj` to the new version, and raise `CURRENT_PROJECT_VERSION` by one.
 2. Add `release-notes/v<version>.md`, with a few lines for people who use the app. A release fails without this file.
-3. Update `CHANGELOG.md`. For the first release, also change the Install section of the README to link the download.
+3. Update `CHANGELOG.md`.
 4. Merge to `main`. The **Release** workflow does the rest.
 
-A version that already has a tag is not released again. To ship the current version for the first time, run the **Release** workflow from the Actions tab. A release that fails before it publishes leaves no tag, so merge the fix to `main` or run the workflow again. If only the landing page's deploy fails afterward, run **Deploy landing page** from the Actions tab, because running **Release** again changes nothing. A published DMG is never replaced, so a fix after publishing needs a new version. Releases run only from `main`.
+A version that already has a tag is not released again. To release a version that has no tag yet, run the **Release** workflow from the Actions tab. A release that fails before it publishes leaves no tag, so merge the fix to `main` or run the workflow again. If only the landing page's deploy fails afterward, run **Deploy landing page** from the Actions tab, because running **Release** again changes nothing. A published DMG is never replaced, so a fix after publishing needs a new version. Releases run only from `main`.
 
 ## What a release does
 

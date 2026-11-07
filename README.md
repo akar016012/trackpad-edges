@@ -66,15 +66,15 @@ A new install opens a short tour that sets up the permission, your first slide, 
 
 ## Install
 
-A macOS download is coming soon. Until then, you can build the app from source with Xcode 27.2 or later.
+[Download Trackpad Edges for Mac](https://github.com/akar016012/trackpad-edges/releases/latest/download/TrackpadEdges.dmg), open the DMG, and drag the app to the Applications folder. The app is signed and notarized, so macOS only asks you to confirm the first time you open it. The app does not update itself, so new versions appear on the [Releases page](https://github.com/akar016012/trackpad-edges/releases).
 
-This command builds a signed Release copy and installs it in the Applications folder:
+You can also build the app from source with Xcode 27.2 or later. This command builds a signed Release copy and installs it in the Applications folder:
 
 ```bash
 scripts/install.sh
 ```
 
-The script looks for the project's Developer ID, and it falls back to your own Apple Development identity. Follow the signing step in [CONTRIBUTING.md](CONTRIBUTING.md) first, because media seek refuses a build signed by a team that it does not expect. The script does not notarize the app, so a build made this way is for your own Mac. An install into the Applications folder has not been fully confirmed yet.
+The script looks for the project's Developer ID, and it falls back to your own Apple Development identity. Follow the signing step in [CONTRIBUTING.md](CONTRIBUTING.md) first, because media seek refuses a build signed by a team that it does not expect. The script does not notarize the app, so a build made this way is for your own Mac. An install by this script into the Applications folder has not been fully confirmed yet.
 
 ## Build and run
 
