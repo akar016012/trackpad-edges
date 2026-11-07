@@ -21,15 +21,32 @@ private final class SteppedBarView: NSView {
     }
 }
 
+/// A rounded fill. It draws its color each time, so that it follows light and dark mode, which a
+/// color stored on a layer would not.
+private final class SolidBackgroundView: NSView {
+    var cornerRadius: CGFloat = 0
+    var color = NSColor.windowBackgroundColor
+
+    override func draw(_ dirtyRect: NSRect) {
+        color.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+    }
+}
+
 /// A small floating preview of a seek. It never takes focus or receives clicks.
 final class SeekOverlayPanel: NSPanel {
     private static let size = NSSize(width: 320, height: 92)
-    private static let distanceFromBottom: CGFloat = 120
+    private static let cornerRadius: CGFloat = 22
+    private static let screenInset: CGFloat = 120
 
     private let timeLabel = NSTextField(labelWithString: "")
     private let hintLabel = NSTextField(labelWithString: "Release to apply")
     private let progress = SteppedBarView()
+    private let content = NSView()
     private var pendingHide: DispatchWorkItem?
+    private var placement = OverlayPlacement.bottom
+    /// The appearance for styles that follow the system. Nil means the system's own.
+    var baseAppearance: NSAppearance?
 
     init() {
         super.init(
@@ -41,9 +58,29 @@ final class SeekOverlayPanel: NSPanel {
         ignoresMouseEvents = true
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
         isReleasedWhenClosed = false
         buildContent()
+        apply(style: .glass, placement: .bottom)
+    }
+
+    /// Rebuilds the background, because each style is a different kind of view.
+    func apply(style: OverlayStyle, placement: OverlayPlacement) {
+        self.placement = placement
+        // Clear glass and the frosted material show whatever is behind them, so they always use a
+        // dimmed tint with light text, which stays readable over bright and dark content.
+        let alwaysDark = style == .clearGlass || style == .frosted
+        appearance = alwaysDark ? NSAppearance(named: .darkAqua) : baseAppearance
+        content.removeFromSuperview()
+        let background = makeBackground(for: style)
+        background.frame = NSRect(origin: .zero, size: Self.size)
+        background.autoresizingMask = [.width, .height]
+
+        let root = NSView(frame: NSRect(origin: .zero, size: Self.size))
+        root.addSubview(background)
+        contentView = root
+        hasShadow = style != .clearGlass
+        invalidateShadow()
+        if isVisible { moveIntoPlace() }
     }
 
     /// Shows the target time. The change is the share of the track that it moves, from -1 to 1.
@@ -75,43 +112,100 @@ final class SeekOverlayPanel: NSPanel {
         pendingHide?.cancel()
         pendingHide = nil
         guard !isVisible else { return }
-        let pointer = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
-        if let area = screen?.visibleFrame {
-            setFrameOrigin(
-                NSPoint(
-                    x: area.midX - Self.size.width / 2, y: area.minY + Self.distanceFromBottom))
-        }
+        moveIntoPlace()
         orderFrontRegardless()
     }
 
-    private func buildContent() {
-        let background = NSVisualEffectView()
-        background.material = .hudWindow
-        background.blendingMode = .behindWindow
-        background.state = .active
-        background.wantsLayer = true
-        background.layer?.cornerRadius = 14
-        background.layer?.masksToBounds = true
+    private func moveIntoPlace() {
+        let pointer = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
+        guard let area = screen?.visibleFrame else { return }
+        let y: CGFloat
+        switch placement {
+        case .bottom: y = area.minY + Self.screenInset
+        case .center: y = area.midY - Self.size.height / 2
+        case .top: y = area.maxY - Self.screenInset - Self.size.height
+        }
+        setFrameOrigin(NSPoint(x: area.midX - Self.size.width / 2, y: y))
+    }
 
+    private func makeBackground(for style: OverlayStyle) -> NSView {
+        switch style {
+        case .glass, .clearGlass:
+            let glass = NSGlassEffectView()
+            glass.style = style == .glass ? .regular : .clear
+            glass.tintColor = style == .glass ? nil : NSColor.black.withAlphaComponent(0.45)
+            glass.cornerRadius = Self.cornerRadius
+            glass.contentView = content
+            return glass
+        case .frosted:
+            let frosted = NSVisualEffectView()
+            frosted.material = .hudWindow
+            frosted.blendingMode = .behindWindow
+            frosted.state = .active
+            // A mask image is what rounds this view. A layer's corner radius has no effect on
+            // a material that draws behind the window.
+            frosted.maskImage = Self.roundedMask()
+            let dimmer = SolidBackgroundView()
+            dimmer.cornerRadius = Self.cornerRadius
+            dimmer.color = NSColor.black.withAlphaComponent(0.35)
+            install(dimmer, in: frosted)
+            install(content, in: dimmer)
+            return frosted
+        case .solid:
+            let solid = SolidBackgroundView()
+            solid.cornerRadius = Self.cornerRadius
+            install(content, in: solid)
+            return solid
+        }
+    }
+
+    /// Pins the content with constraints, because a glass view that held it earlier leaves it
+    /// without any size of its own.
+    private func install(_ view: NSView, in parent: NSView) {
+        view.translatesAutoresizingMaskIntoConstraints = false
+        parent.addSubview(view)
+        NSLayoutConstraint.activate([
+            view.topAnchor.constraint(equalTo: parent.topAnchor),
+            view.bottomAnchor.constraint(equalTo: parent.bottomAnchor),
+            view.leadingAnchor.constraint(equalTo: parent.leadingAnchor),
+            view.trailingAnchor.constraint(equalTo: parent.trailingAnchor),
+        ])
+    }
+
+    private static func roundedMask() -> NSImage {
+        let side = cornerRadius * 2 + 1
+        let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            NSColor.black.setFill()
+            NSBezierPath(roundedRect: rect, xRadius: cornerRadius, yRadius: cornerRadius).fill()
+            return true
+        }
+        image.capInsets = NSEdgeInsets(
+            top: cornerRadius, left: cornerRadius, bottom: cornerRadius, right: cornerRadius)
+        image.resizingMode = .stretch
+        return image
+    }
+
+    private func buildContent() {
         timeLabel.font = .monospacedDigitSystemFont(ofSize: 20, weight: .semibold)
         timeLabel.alignment = .center
         hintLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        hintLabel.textColor = .secondaryLabelColor
+        // Secondary label color is too faint over glass. An alpha variant would stop following
+        // light and dark mode, so this stays a plain system color.
+        hintLabel.textColor = .labelColor
 
         let stack = NSStackView(views: [timeLabel, progress, hintLabel])
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
-        background.addSubview(stack)
+        content.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.centerXAnchor.constraint(equalTo: background.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: background.centerYAnchor),
+            stack.centerXAnchor.constraint(equalTo: content.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor),
             progress.widthAnchor.constraint(equalToConstant: Self.size.width - 48),
             progress.heightAnchor.constraint(equalToConstant: 6),
         ])
-        contentView = background
     }
 
     private static func format(_ seconds: Double) -> String {

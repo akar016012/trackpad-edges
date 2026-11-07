@@ -4,9 +4,47 @@
 
 This project is a desktop macOS menu bar app that turns the edges and corners of a trackpad into controls, while the middle of the trackpad keeps working normally. It reproduces the functionality of a similar app and adds haptics that you can control in settings. It has its own name and design, and it reuses no a similar app branding, copy, or assets. License keys, activation, and update checks are left out because they serve no purpose for everyday use.
 
-## Status
+## Feature status
 
-The project is now a macOS menu bar app with a private GitHub repository. Touch input, haptics, and the pointer freeze are confirmed working on the built-in trackpad. Touch-to-start slides are the default, because testing showed that a light touch at the edge produces no click. The right-edge volume slide is confirmed working. Brightness, corners, and assignable edges are built, but they have not been confirmed on hardware yet. The app window, the haptic settings, and the first-run steps are built. Media seeking is built and confirmed working on the trackpad. The findings below come from a review of the website, Apple's documentation, the installed macOS binaries, and open source projects.
+This table shows what is added and what is pending. **Confirmed** means that it was tried and approved on this Mac. **Built** means that it is in the code but has not been tried yet.
+
+### Added
+
+| Feature                                       | State     | Doc                                                      |
+| --------------------------------------------- | --------- | -------------------------------------------------------- |
+| Touch input from a background app             | Confirmed | [gestures.md](gestures.md)                               |
+| Volume on an edge                             | Confirmed | [volume.md](volume.md)                                   |
+| Pointer freeze during a slide                 | Confirmed | [pointer-freeze.md](pointer-freeze.md)                   |
+| Haptic tick on each step                      | Confirmed | [haptics.md](haptics.md)                                 |
+| Tap protection                                | Confirmed | [gestures.md](gestures.md)                               |
+| Media seek in fixed steps                     | Confirmed | [media-seek.md](media-seek.md)                           |
+| Ticking seek bar                              | Confirmed | [media-seek.md](media-seek.md)                           |
+| App window with aligned panes                 | Confirmed | [settings.md](settings.md)                               |
+| Custom icons in the window                    | Confirmed | [dependencies.md](dependencies.md)                       |
+| Custom app and menu bar icons                 | Built     | [dependencies.md](dependencies.md)                       |
+| Seek overlay styles and positions             | Built     | [settings.md](settings.md)                               |
+| Brightness on an edge                         | Built     | [brightness.md](brightness.md)                           |
+| Four hot corners with their actions           | Built     | [corners.md](corners.md)                                 |
+| Corner media controls                         | Built     | [corners.md](corners.md)                                 |
+| Assignable edges from the window and menu bar | Built     | [settings.md](settings.md)                               |
+| Haptic strength, pattern, and event settings  | Built     | [haptics.md](haptics.md)                                 |
+| Click-to-start option                         | Built     | [gestures.md](gestures.md)                               |
+| Launch at login                               | Built     | [menu-bar-and-onboarding.md](menu-bar-and-onboarding.md) |
+
+### Pending
+
+| Feature                     | Phase | Doc                                                            |
+| --------------------------- | ----- | -------------------------------------------------------------- |
+| Hardware test session       | 0     | This plan                                                      |
+| Lighter corner presses      | 1     | [lighter-corner-presses.md](roadmap/lighter-corner-presses.md) |
+| Palm detection              | 1     | [palm-detection.md](roadmap/palm-detection.md)                 |
+| Seconds per step            | 2     | [seconds-per-step.md](roadmap/seconds-per-step.md)             |
+| Multiple actions per corner | 2     | [multi-action-corners.md](roadmap/multi-action-corners.md)     |
+| More edge actions           | 3     | [more-edge-actions.md](roadmap/more-edge-actions.md)           |
+| Top edge                    | 3     | [top-edge.md](roadmap/top-edge.md)                             |
+| Two-finger edge slides      | 4     | [two-finger-slides.md](roadmap/two-finger-slides.md)           |
+| Installed build             | 5     | [installed-build.md](roadmap/installed-build.md)               |
+| Per-app profiles            | 6     | [per-app-profiles.md](roadmap/per-app-profiles.md)             |
 
 ## Decisions
 
@@ -75,6 +113,55 @@ All source lives under `trackpad-edges/`.
 | The pointer freeze may not work from a background app.              | Freeze the pointer while another app is in front. | Warp the pointer back when the slide ends.                            |
 | Opening the actuator may change how normal clicks feel.             | Compare clicks with the actuator open and closed. | Open the actuator only during a gesture.                              |
 | The private haptics API may not behave as the disassembly suggests. | Fire each pattern at several strengths.           | Fall back to `NSHapticFeedbackManager` and hide the strength control. |
+
+## Roadmap
+
+All of these features are approved, and none of them is built yet. Each one has its own document in `docs/roadmap/`. Each phase is reviewed, fixed, committed, and pushed before the next one starts.
+
+### Phase 0: Hardware test session
+
+This phase confirms brightness, the corners, and the Haptics pane, which have not been tried on the trackpad. It also records pressure and contact size for light presses, firm clicks, taps, and resting palms, because phase 1 needs those numbers.
+
+### Phase 1: Reliability
+
+- **[Lighter corner presses](roadmap/lighter-corner-presses.md):** A corner fires on a light press, detected from the pressure in the touch data, rather than on a firm click. This also stops taps from counting as clicks.
+- **[Palm detection](roadmap/palm-detection.md):** A large contact is ignored, so a resting palm does not start a slide or freeze the pointer.
+
+### Phase 2: Small additions
+
+- **[Seconds per step](roadmap/seconds-per-step.md):** The Media pane offers fixed seconds per step as an alternative to a percentage, so steps stay small on long videos.
+- **[Multiple actions per corner](roadmap/multi-action-corners.md):** Each corner can hold a different action for each click count, such as one click to play or pause and two clicks to skip.
+
+### Phase 3: More controls
+
+- **[More edge actions](roadmap/more-edge-actions.md):** An edge can scroll, zoom, switch apps or Spaces, change the keyboard backlight, or change external monitor brightness.
+- **[Top edge](roadmap/top-edge.md):** The top edge becomes a fourth assignable strip between the top corners.
+
+### Phase 4: Two-finger edge slides
+
+See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a second action for a two-finger slide, such as one finger for volume and two for brightness.
+
+### Phase 5: Installed build
+
+See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it lets the adapter library move inside the signed app, away from a user-writable folder.
+
+### Phase 6: Per-app profiles
+
+See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. This comes last because it changes how every setting is stored.
+
+### Roadmap risks
+
+| Risk                                                                             | Plan                                                                                           |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Pressure may not separate a light press from a resting finger.                   | Phase 0 measures this. If it fails, corners keep the firm click.                               |
+| Contact size may not separate a palm from a flat finger.                         | Phase 0 measures this. If it fails, a size threshold becomes a setting.                        |
+| Two-finger slides can collide with scrolling and system gestures.                | The slide must start with both fingers in the strip. If that is unreliable, it becomes opt-in. |
+| Keyboard backlight has no public API.                                            | Use its media key first, and leave the action out if that does not work on this Mac.           |
+| External brightness over DDC varies by monitor and port.                         | Show the action only when a monitor responds.                                                  |
+| Switching Spaces depends on system shortcuts being turned on.                    | Tell the user in the settings when the shortcut is off.                                        |
+| A top strip shrinks the room for ordinary pointer starts.                        | It stays off by default.                                                                       |
+| Moving the library inside the app needs a build phase in the new project format. | Test it in phase 5, and keep the current unpacking if that fails.                              |
+| Per-app profiles change how settings are stored.                                 | Keep the current settings as the default profile, so nothing is lost.                          |
 
 ## Verification
 

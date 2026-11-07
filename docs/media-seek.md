@@ -27,7 +27,7 @@ Apple has blocked third-party apps from using `MediaRemote` directly since macOS
 - The child process very likely inherits the app's Accessibility permission, and the unpacked library sits in a folder that anything running as you can write to. So the app gives Perl a clean environment, and it checks the library's bytes against the bundled copy before each call. A signed build that keeps the library inside the app would be stronger.
 - `SeekController` reads the position only after a slide starts moving, so an ordinary touch on the strip never starts a process.
 - `SeekScrubber` turns finger travel into whole steps, and unit tests cover it.
-- `SeekOverlayPanel` shows the preview, and it never takes focus or receives clicks. Its bar is a custom view with no animation, so it snaps to each step in time with the haptic tick.
+- `SeekOverlayPanel` shows the preview, and it never takes focus or receives clicks. It uses `NSGlassEffectView` for the two glass styles, and `NSVisualEffectView` with a mask image for the frosted style, because a layer's corner radius does not round a material that draws behind the window. Its bar is a custom view with no animation, so it snaps to each step in time with the haptic tick.
 
 ### Updating the adapter
 

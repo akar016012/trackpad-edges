@@ -3,6 +3,7 @@ import AppKit
 /// Shows a preview during a seek slide, and applies it to the player only on release.
 final class SeekController {
     private static let lingerAfterRelease: TimeInterval = 0.7
+    private static let sampleDuration: TimeInterval = 2
     /// Some players skip to the next track when they seek to the very end.
     private static let endMargin: Double = 1
     /// The finger travel for one step at normal sensitivity, as a fraction of the pad width.
@@ -12,6 +13,11 @@ final class SeekController {
     private let queue = DispatchQueue(label: "seek", qos: .userInitiated)
     private let overlay = SeekOverlayPanel()
 
+    #if DEBUG
+        private var debugBackdrop: DebugBackdrop?
+    #endif
+    private var overlayStyle = OverlayStyle.glass
+    private var overlayPlacement = OverlayPlacement.bottom
     private var generation = 0
     private var origin: NowPlayingAdapter.Playback?
     private var finishedLoading = false
@@ -25,6 +31,33 @@ final class SeekController {
     var sensitivity: Float = 1
 
     var isAvailable: Bool { adapter != nil }
+
+    func applyOverlay(style: OverlayStyle, placement: OverlayPlacement) {
+        guard style != overlayStyle || placement != overlayPlacement else { return }
+        overlayStyle = style
+        overlayPlacement = placement
+        overlay.apply(style: style, placement: placement)
+    }
+
+    /// Shows the overlay with made-up values, so that a style can be judged in the settings.
+    func showSample() {
+        guard scrubber == nil else { return }
+        overlay.show(position: 150, duration: 600, change: 0.05)
+        overlay.hide(after: Self.sampleDuration)
+    }
+
+    #if DEBUG
+        /// Shows one style after switching through the others, as a person would in the settings.
+        func debugShow(style: OverlayStyle, appearance: NSAppearance.Name?, backdrop: String?) {
+            if let appearance { overlay.baseAppearance = NSAppearance(named: appearance) }
+            if let backdrop { debugBackdrop = DebugBackdrop(kind: backdrop) }
+            for other in OverlayStyle.allCases {
+                overlay.apply(style: other, placement: .center)
+            }
+            overlay.apply(style: style, placement: .center)
+            overlay.show(position: 150, duration: 600, change: 0.05)
+        }
+    #endif
 
     /// Reads the position. This waits for real movement, so that an ordinary touch on the bottom
     /// strip never starts a process.
@@ -59,11 +92,8 @@ final class SeekController {
     }
 
     func commit() {
-        guard !commitWhenLoaded else { return }
-        guard scrubber != nil else {
-            overlay.hide(after: 0)
-            return
-        }
+        // Without a scrubber, this slide never showed a preview, so the overlay is not its own.
+        guard !commitWhenLoaded, scrubber != nil else { return }
         if !finishedLoading {
             commitWhenLoaded = true
             return
@@ -73,7 +103,7 @@ final class SeekController {
 
     func cancel() {
         // A cancel at this point belongs to a later slide, so the released seek still happens.
-        guard !commitWhenLoaded else { return }
+        guard !commitWhenLoaded, scrubber != nil else { return }
         generation += 1
         scrubber = nil
         overlay.hide(after: 0)

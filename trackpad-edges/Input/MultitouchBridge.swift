@@ -82,6 +82,9 @@ private nonisolated enum TouchLayout {
     static let state = 20
     static let normalizedX = 32
     static let normalizedY = 36
+    static let size = 48
+    static let pressure = 52
+    static let majorAxis = 60
     static let makeTouch: Int32 = 3
     static let touching: Int32 = 4
 }
@@ -107,7 +110,15 @@ private nonisolated func contactFrameCallback(
             guard (-0.5...1.5).contains(x), (-0.5...1.5).contains(y) else { continue }
             let id = touches.loadUnaligned(
                 fromByteOffset: base + TouchLayout.identifier, as: Int32.self)
-            points.append(TouchPoint(id: id, x: x, y: y))
+            points.append(
+                TouchPoint(
+                    id: id, x: x, y: y,
+                    pressure: touches.loadUnaligned(
+                        fromByteOffset: base + TouchLayout.pressure, as: Float.self),
+                    size: touches.loadUnaligned(
+                        fromByteOffset: base + TouchLayout.size, as: Float.self),
+                    majorAxis: touches.loadUnaligned(
+                        fromByteOffset: base + TouchLayout.majorAxis, as: Float.self)))
         }
     }
     let deviceAddress = UInt(bitPattern: device)

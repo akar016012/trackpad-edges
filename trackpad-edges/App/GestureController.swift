@@ -27,6 +27,23 @@ final class GestureController {
     private var locked = false
     private var healthTimer: Timer?
 
+    #if DEBUG
+        /// The peak values of the current contact, for the phase 0 test session. This goes away
+        /// once phase 1 has its thresholds.
+        private struct Probe {
+            var start: TimeInterval?
+            var pressure: Float = 0
+            var rawPressure: Int32 = 0
+            var size: Float = 0
+            var axis: Float = 0
+            var clicked = false
+            var fingers = 0
+            var x: Float = 0
+            var y: Float = 0
+        }
+        private var probe = Probe()
+    #endif
+
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
     var onTouches: (([TouchPoint]) -> Void)?
@@ -63,6 +80,19 @@ final class GestureController {
         RunLoop.main.add(timer, forMode: .common)
         healthTimer = timer
         checkHealth()
+        #if DEBUG
+            // Launching with `-debugOverlay frosted -debugDark YES` shows that style for inspection.
+            let defaults = UserDefaults.standard
+            if let name = defaults.string(forKey: "debugOverlay"),
+                let style = OverlayStyle(rawValue: name)
+            {
+                let dark = defaults.object(forKey: "debugDark") != nil
+                seek.debugShow(
+                    style: style,
+                    appearance: dark && defaults.bool(forKey: "debugDark") ? .darkAqua : .aqua,
+                    backdrop: defaults.string(forKey: "debugBackdrop"))
+            }
+        #endif
     }
 
     func stop() {
@@ -77,6 +107,7 @@ final class GestureController {
         haptics.settings = settings.haptics
         seek.stepFraction = settings.seekStepPercent / 100
         seek.sensitivity = settings.sensitivity
+        seek.applyOverlay(style: settings.overlayStyle, placement: settings.overlayPlacement)
         let config = currentConfig()
         for device in engines.keys { engines[device]?.config = config }
     }
@@ -84,6 +115,11 @@ final class GestureController {
     private func currentConfig() -> GestureConfig {
         SettingsStore.shared.settings.gestureConfig(
             brightnessAvailable: brightness.isAvailable, seekAvailable: seek.isAvailable)
+    }
+
+    /// Shows a sample of the seek preview, so that a style can be judged as it is chosen.
+    func previewSeekOverlay() {
+        seek.showSample()
     }
 
     /// Fires one haptic with the current settings.
@@ -113,8 +149,36 @@ final class GestureController {
 
     // MARK: Input
 
+    /// Records the peak values of each contact for the phase 0 test session.
+    private func recordProbe(_ touches: [TouchPoint]) {
+        #if DEBUG
+        if touches.isEmpty {
+            guard let start = probe.start else { return }
+            log.notice(
+                "Probe: pressure \(self.probe.pressure, format: .fixed(precision: 3)), raw \(self.probe.rawPressure), size \(self.probe.size, format: .fixed(precision: 3)), axis \(self.probe.axis, format: .fixed(precision: 2)), seconds \(self.now - start, format: .fixed(precision: 2)), clicked \(self.probe.clicked), fingers \(self.probe.fingers), x \(self.probe.x, format: .fixed(precision: 2)), y \(self.probe.y, format: .fixed(precision: 2))"
+            )
+            probe = Probe()
+            return
+        }
+        if probe.start == nil {
+            probe.start = now
+            probe.x = touches[0].x
+            probe.y = touches[0].y
+        }
+        probe.fingers = max(probe.fingers, touches.count)
+        for touch in touches {
+            probe.pressure = max(probe.pressure, touch.pressure)
+            // Open source headers disagree on whether this field is a float or an integer.
+            probe.rawPressure = max(probe.rawPressure, Int32(bitPattern: touch.pressure.bitPattern))
+            probe.size = max(probe.size, touch.size)
+            probe.axis = max(probe.axis, touch.majorAxis)
+        }
+        #endif
+    }
+
     private func handle(device: UnsafeRawPointer, touches: [TouchPoint]) {
         onTouches?(touches)
+        recordProbe(touches)
         // A frame that was queued before a rebuild can name a device that no longer exists.
         // Without the click tap there is no permission to press keys, so a slide would do nothing.
         guard !paused, !locked, ClickTap.shared.isInstalled,
@@ -141,6 +205,10 @@ final class GestureController {
     }
 
     private func mouseDown(_ event: CGEvent) -> Bool {
+        #if DEBUG
+            // A click with no open contact belongs to nothing, such as one from an external mouse.
+            if probe.start != nil { probe.clicked = true }
+        #endif
         discardNextUp = false
         guard !paused, !locked else { return false }
         if let device = clickDevice { recoverLostMouseUp(device: device) }

@@ -29,6 +29,8 @@ All four corners have an action and a click count, and the pane arranges them li
 | --------- | ----------------------------------------------------------------------------------- |
 | Each step | This slider sets the percentage of the track that one step moves, from 0.5% to 10%. |
 
+The **Style** popup sets how the seek preview looks: Glass, Clear Glass, Frosted, or Solid. Glass and Solid follow light and dark mode. Clear Glass and Frosted always use a dimmed tint with light text, so they stay readable over any content. The **Position** popup places it at the bottom, center, or top of the screen. Changing either one shows a sample for two seconds.
+
 See [media-seek.md](media-seek.md).
 
 ## Haptics

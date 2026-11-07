@@ -5,6 +5,7 @@ struct WindowActions {
     var testHaptic: () -> Void
     var hapticStatus: () -> String
     var requestAccessibility: () -> Void
+    var previewSeekOverlay: () -> Void
 }
 
 /// Forwards a control's action to a closure.

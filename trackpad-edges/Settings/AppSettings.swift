@@ -49,6 +49,27 @@ enum RequiredModifier: String, Codable, CaseIterable {
     }
 }
 
+/// How the seek preview looks.
+enum OverlayStyle: String, Codable, CaseIterable {
+    case glass, clearGlass, frosted, solid
+
+    var title: String {
+        switch self {
+        case .glass: return "Glass"
+        case .clearGlass: return "Clear Glass"
+        case .frosted: return "Frosted"
+        case .solid: return "Solid"
+        }
+    }
+}
+
+/// Where the seek preview appears on the screen.
+enum OverlayPlacement: String, Codable, CaseIterable {
+    case bottom, center, top
+
+    var title: String { rawValue.capitalized }
+}
+
 enum HapticPattern: String, Codable, CaseIterable {
     case soft, medium, firm
 
@@ -82,6 +103,8 @@ struct AppSettings: Codable, Equatable {
     private var storedBottomLeft: CornerSetting?
     private var storedBottomRight: CornerSetting?
     private var storedSeekStepPercent: Double?
+    private var storedOverlayStyle: OverlayStyle?
+    private var storedOverlayPlacement: OverlayPlacement?
     var bottomQuarterOnly = false
     /// Whether a slide needs a physical click. By default, touching a strip starts a slide.
     var requireClick = false
@@ -106,6 +129,16 @@ struct AppSettings: Codable, Equatable {
     var seekStepPercent: Double {
         get { storedSeekStepPercent ?? 1 }
         set { storedSeekStepPercent = newValue }
+    }
+
+    var overlayStyle: OverlayStyle {
+        get { storedOverlayStyle ?? .glass }
+        set { storedOverlayStyle = newValue }
+    }
+
+    var overlayPlacement: OverlayPlacement {
+        get { storedOverlayPlacement ?? .bottom }
+        set { storedOverlayPlacement = newValue }
     }
 
     func corner(for zone: Zone) -> CornerSetting? {

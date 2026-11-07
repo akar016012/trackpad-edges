@@ -135,7 +135,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 actions: WindowActions(
                     testHaptic: { [weak self] in self?.controller.testHaptic() },
                     hapticStatus: { [weak self] in self?.controller.hapticStatus ?? "" },
-                    requestAccessibility: { [weak self] in self?.requestAccessibility() }))
+                    requestAccessibility: { [weak self] in self?.requestAccessibility() },
+                    previewSeekOverlay: { [weak self] in self?.controller.previewSeekOverlay() }))
         }
         mainWindow?.show()
     }

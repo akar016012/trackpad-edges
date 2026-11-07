@@ -1,6 +1,6 @@
 # Gestures
 
-Status: the right-edge touch slide is confirmed working on the built-in trackpad. The other zones and click mode are built and unit tested, but they have not been confirmed on hardware yet.
+Status: touch slides on the right and bottom edges are confirmed working on the built-in trackpad. The left edge, the corners, and click mode are built and unit tested, but they have not been confirmed on hardware yet.
 
 ## Zones
 

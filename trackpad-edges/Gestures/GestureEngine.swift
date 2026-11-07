@@ -5,6 +5,12 @@ nonisolated struct TouchPoint: Sendable, Equatable {
     let id: Int32
     let x: Float
     let y: Float
+    /// How hard the finger presses, in the framework's own units.
+    var pressure: Float = 0
+    /// How much of the sensor the contact covers, in the framework's own units.
+    var size: Float = 0
+    /// The length of the contact's long axis, which is large for a palm.
+    var majorAxis: Float = 0
 }
 
 nonisolated enum Zone: String, Sendable, Equatable {

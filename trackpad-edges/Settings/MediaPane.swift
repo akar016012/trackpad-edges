@@ -1,6 +1,6 @@
 import AppKit
 
-/// Lets you choose how far each step of a seek slide moves the media.
+/// Lets you choose how far each seek step moves the media, and how the seek preview looks.
 final class MediaPane: SettingsPane {
     private let amountLabel = NSTextField(labelWithString: "")
     private let summary = NSTextField(wrappingLabelWithString: "")
@@ -18,8 +18,27 @@ final class MediaPane: SettingsPane {
         summary.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         summary.preferredMaxLayoutWidth = Self.contentWidth
 
+        let styles = OverlayStyle.allCases
+        let style = popup(
+            styles.map(\.title), selected: styles.firstIndex(of: settings.overlayStyle) ?? 0
+        ) { [weak self] index in
+            self?.settings.overlayStyle = styles[index]
+            self?.actions.previewSeekOverlay()
+        }
+        let placements = OverlayPlacement.allCases
+        let placement = popup(
+            placements.map(\.title),
+            selected: placements.firstIndex(of: settings.overlayPlacement) ?? 0
+        ) { [weak self] index in
+            self?.settings.overlayPlacement = placements[index]
+            self?.actions.previewSeekOverlay()
+        }
+
         setContent([
-            wideForm([[("Each step:", amount), ("Moves:", amountLabel)]]),
+            wideForm([
+                [("Each step:", amount), ("Moves:", amountLabel)],
+                [("Style:", style), ("Position:", placement)],
+            ]),
             summary,
         ])
         updateLabels()
