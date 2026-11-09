@@ -40,7 +40,7 @@ The edge popups on the Edges pane and in the menu bar item list the new actions.
 - macOS locks the keyboard backlight off while the room reads as bright, and the system slider then does not move. Covering the light sensor beside the camera unlocked it in testing, and the level moved from 0 to 100%. While it is locked, the app gives the limit haptic if that setting is on, and it shows a short notice in the overlay style from the Media pane, which says that macOS turns the light off when the room is bright. VoiceOver announces the same notice. The app counts the backlight as locked only while automatic brightness is on. Turning off **Adjust keyboard brightness in low light** in System Settings may allow manual control, but that has not been tried.
 - Other Apple options were tested and do not help. A CoreHID virtual device is refused, the real backlight device has an undocumented vendor protocol, and setting the level through CoreBrightness has no effect while it is locked.
 - DDC varies by monitor and port, and it fails on some HDMI ports and on most TVs. The action is dimmed until a monitor answers.
-- Switch Spaces is dimmed when the system's shortcuts for moving between Spaces are off, and the dimmed item's tooltip says why.
+- Switch Spaces is dimmed when the system's shortcuts for moving between Spaces are off, and the dimmed item's tooltip says why. The system sends no notice when those shortcuts change, so the app looks again each time another app comes to the front, which includes the moment you leave System Settings.
 
 ## Verification
 

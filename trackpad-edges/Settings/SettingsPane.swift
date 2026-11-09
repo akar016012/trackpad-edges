@@ -87,6 +87,11 @@ class SettingsPane: NSViewController {
         return button
     }
 
+    /// A slider works in doubles, and the settings hold some of their ranges as floats.
+    static func sliderRange(_ range: ClosedRange<Float>) -> ClosedRange<Double> {
+        Double(range.lowerBound)...Double(range.upperBound)
+    }
+
     func slider(
         value: Double, range: ClosedRange<Double>, _ handler: @escaping (Double) -> Void
     ) -> NSSlider {

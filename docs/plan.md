@@ -6,7 +6,7 @@ This project is a macOS menu bar app that turns the edges and corners of a track
 
 ## Feature status
 
-This list was last updated on 2026-11-07. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
+This list was last updated on 2026-11-09. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
 
 ### Done
 
@@ -46,11 +46,24 @@ This list was last updated on 2026-11-07. **Done** means that it was tried on a 
 - [ ] [Custom app and menu bar icons](dependencies.md)
 - [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
 - [ ] Media seek in Safari still needs a check, because only Chrome was tried.
+- [ ] Four fixes from 2026-11-09 have not been tried on a trackpad yet: steps that hold steady on a line, a slide that ends on time after contact drops out, the second look before a mouse-up counts as lost, and the recheck of Switch Spaces when another app comes to the front. Unit tests cover the step logic and the grace period's arithmetic, but the timers and the system's answers need a real run.
+
+### Planned
+
+None of these is built yet, and each document describes the plan.
+
+- [ ] [Release a resting finger](roadmap/resting-finger-release.md)
+- [ ] [Diagnostics report](roadmap/diagnostics-report.md)
+- [ ] [Press Keys on an edge](roadmap/key-step-edges.md)
+- [ ] [Hold a corner](roadmap/corner-hold.md)
+- [ ] [Level overlay](roadmap/level-overlay.md)
+- [ ] [Settings export and import](roadmap/settings-backup.md)
+- [ ] [Shortcuts actions](roadmap/shortcuts-actions.md)
 
 ### Known limits
 
 - The app supports macOS 13 or later, but it has been tried only on macOS 27.2. The private frameworks that read touches could behave differently on earlier systems.
-- A finger that lands in a strip freezes the pointer until it leaves, because slides start on touch.
+- A finger that lands in a strip freezes the pointer until it leaves, because slides start on touch. [Release a resting finger](roadmap/resting-finger-release.md) plans a fix.
 - A tap with tap-to-click can still count as a click in a corner.
 - A click from a second pointing device can be captured while a finger rests in a zone.
 - A finger that is already down after a wake or an unpause can count as a landing.
@@ -121,7 +134,7 @@ All source lives under `trackpad-edges/`.
 
 ## Roadmap
 
-Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by a real install.
+Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Phases 7 to 9 are planned, and none of their features is built yet. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by a real install and then phase 7.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -153,6 +166,22 @@ See [installed-build.md](roadmap/installed-build.md). A signed copy in the Appli
 ### Phase 6: Per-app profiles (complete)
 
 See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. The saved settings stay as the default profile, so nothing needed converting. This is confirmed working.
+
+### Phase 7: Reliability and reports (planned)
+
+- **[Release a resting finger](roadmap/resting-finger-release.md):** A finger that lands in a strip and stays still gives the pointer back after 0.6 seconds, which removes one of the known limits.
+- **[Diagnostics report](roadmap/diagnostics-report.md):** The app copies a report for bug reports and can record a few seconds of touches, which helps with external trackpads and earlier systems that have not been tried.
+
+### Phase 8: More controls (planned)
+
+- **[Press Keys on an edge](roadmap/key-step-edges.md):** An edge presses one recorded key combination for each step up and another for each step down, such as switching browser tabs.
+- **[Hold a corner](roadmap/corner-hold.md):** Each corner can hold one more action for a press that is held for half a second.
+- **[Level overlay](roadmap/level-overlay.md):** Monitor Brightness and Switch Apps show their level or the next app, because macOS shows no indicator for them.
+
+### Phase 9: Backup and automation (planned)
+
+- **[Settings export and import](roadmap/settings-backup.md):** Settings, including profiles, can be saved to a file and loaded on another Mac, with a summary to confirm first.
+- **[Shortcuts actions](roadmap/shortcuts-actions.md):** The Shortcuts app can pause and resume gestures and set an edge, which also allows a global pause key.
 
 ## Verification
 

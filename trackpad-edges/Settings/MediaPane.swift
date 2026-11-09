@@ -6,8 +6,10 @@ final class MediaPane: SettingsPane {
     private var amount: NSSlider?
 
     override func loadView() {
-        let slider = slider(value: settings.seekStepValue, range: Self.range(settings.seekStepType)) {
-            [weak self] value in
+        let slider = slider(
+            value: settings.seekStepValue,
+            range: AppSettings.seekStepRange(for: settings.seekStepType)
+        ) { [weak self] value in
             guard let self else { return }
             self.settings.seekStepValue = Self.rounded(value, for: self.settings.seekStepType)
             self.updateSummary()
@@ -51,17 +53,13 @@ final class MediaPane: SettingsPane {
         updateSummary()
     }
 
-    private static func range(_ type: SeekStepType) -> ClosedRange<Double> {
-        type == .percent ? 0.5...10 : 1...60
-    }
-
     /// Half-percent stops and whole seconds keep the amount easy to read and to repeat.
     private static func rounded(_ value: Double, for type: SeekStepType) -> Double {
         type == .percent ? (value * 2).rounded() / 2 : value.rounded()
     }
 
     private func updateSlider() {
-        let range = Self.range(settings.seekStepType)
+        let range = AppSettings.seekStepRange(for: settings.seekStepType)
         amount?.minValue = range.lowerBound
         amount?.maxValue = range.upperBound
         amount?.doubleValue = settings.seekStepValue

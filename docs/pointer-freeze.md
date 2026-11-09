@@ -8,7 +8,7 @@ The pointer stays still during a slide and returns to exactly where it was. The 
 
 ## Click handling
 
-A physical click cannot be stopped at the hardware. Corner clicks are held back the same way. `ClickTap` stops it reaching other apps by holding back the mouse-down event. If the click turns out to have no slide, the app replays a copy of that mouse-down just ahead of the real mouse-up, so other apps see a normal click that arrives when you release. If a slide is canceled before it moves, the app delivers the mouse-down right away, so a drag that follows stays coherent. If macOS loses a mouse-up, or if the screen locks during a click, the app clears its state and discards any mouse-up that no longer has a mouse-down.
+A physical click cannot be stopped at the hardware. Corner clicks are held back the same way. `ClickTap` stops it reaching other apps by holding back the mouse-down event. If the click turns out to have no slide, the app replays a copy of that mouse-down just ahead of the real mouse-up, so other apps see a normal click that arrives when you release. If a slide is canceled before it moves, the app delivers the mouse-down right away, so a drag that follows stays coherent. If macOS loses a mouse-up, or if the screen locks during a click, the app clears its state and discards any mouse-up that no longer has a mouse-down. The health check counts a mouse-up as lost only after it has seen the button up on two checks in a row, because the button reads as up a moment before an ordinary mouse-up reaches the app.
 
 Clicks that do not land in a zone pass through with no delay. Without the Accessibility permission, every click passes through and no gesture starts, including touch slides.
 

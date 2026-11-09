@@ -199,6 +199,8 @@ nonisolated struct GestureEngine {
         var lastCross: Float
         var startedAt: TimeInterval
         var emittedSteps = 0
+        /// The sign of the last step, which a step that turns back must overcome by a margin.
+        var stepDirection = 0
         /// Whether a touch has passed the dead zone, so that it now counts as a slide.
         var engaged = false
         /// Whether the slide has changed a level or shown a preview, so it is more than a click.
@@ -275,6 +277,14 @@ nonisolated struct GestureEngine {
     /// Whether a slide's fingers have left, so that it ends if they stay away.
     var isAwaitingLift: Bool { slide?.liftedAt != nil }
     var hasTouches: Bool { !touches.isEmpty }
+
+    /// How long until a slide whose fingers have left ends, or nil if no slide is waiting. A
+    /// finger can return and leave again, which starts the wait over.
+    func liftGraceRemaining(now: TimeInterval) -> TimeInterval? {
+        guard let liftedAt = slide?.liftedAt else { return nil }
+        return max(liftedAt + config.liftGrace - now, 0)
+    }
+
     /// Whether this trackpad has a gesture in progress, so that it owns the next click.
     var isBusy: Bool { slide != nil || draining || swallowedDown }
     var touchCount: Int { touches.count }
@@ -628,13 +638,17 @@ nonisolated struct GestureEngine {
             return [.seekMoved(travel)]
         }
 
-        let steps = Int(travel / config.stepSize(for: current.kind))
+        // A finger that rests on the line between two steps must not flip the level back and forth.
+        let steps = StepCount.count(
+            at: travel / config.stepSize(for: current.kind), from: current.emittedSteps,
+            direction: current.stepDirection)
         guard steps != current.emittedSteps else {
             self.slide = current
             return []
         }
         let change = steps - current.emittedSteps
         current.emittedSteps = steps
+        current.stepDirection = change.signum()
         current.moved = true
         self.slide = current
         return [.stepped(change)]

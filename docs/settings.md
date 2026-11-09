@@ -45,6 +45,15 @@ See [media-seek.md](media-seek.md).
 
 The haptic controls are described in [haptics.md](haptics.md).
 
+## Saved settings
+
+The settings are saved as one block in the app's preferences, and each value in it is read on its own when the app starts.
+
+- A value that this version cannot read, such as an action that a newer version added, falls back by itself. An edge turns Off, a corner click gets no action, a profile slot follows All Apps, and any other value takes its default.
+- Numbers are held to the ranges that the window offers, so a value changed by hand cannot break a slide or a seek.
+- A version that could not read a value drops it the next time it saves a change.
+- If the block cannot be read at all, the app starts with its defaults and keeps the old block under a separate key, so that it can be recovered.
+
 ## App details
 
 The app is named Trackpad Edges, and it is in the Utilities category. Its name, version, copyright, and category are build settings in the project, and its About box text is in `Resources/Credits.rtf`.

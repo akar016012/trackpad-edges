@@ -77,8 +77,10 @@ final class CornersPane: ProfilePane {
 
     private func pressControls() -> NSView {
         strengthLabel.stringValue = Self.strengthName(settings.pressThreshold)
-        let strength = slider(value: Double(settings.pressThreshold), range: 70...115) {
-            [weak self] value in
+        let strength = slider(
+            value: Double(settings.pressThreshold),
+            range: Self.sliderRange(AppSettings.pressThresholdRange)
+        ) { [weak self] value in
             self?.settings.pressThreshold = Float(value.rounded())
             self?.strengthLabel.stringValue = Self.strengthName(Float(value.rounded()))
         }

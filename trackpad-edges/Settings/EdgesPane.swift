@@ -17,14 +17,20 @@ final class EdgesPane: ProfilePane {
             ("Bottom edge:", edgePopup(\.bottomEdge)),
             (
                 "Edge width:",
-                slider(value: Double(current.edgeWidth), range: 0.05...0.20) { [weak self] value in
+                slider(
+                    value: Double(current.edgeWidth),
+                    range: Self.sliderRange(AppSettings.edgeWidthRange)
+                ) { [weak self] value in
                     self?.settings.edgeWidth = Float(value)
                     self?.diagram.settingsChanged()
                 }
             ),
             (
                 "Sensitivity:",
-                slider(value: Double(current.sensitivity), range: 0.5...2.0) { [weak self] value in
+                slider(
+                    value: Double(current.sensitivity),
+                    range: Self.sliderRange(AppSettings.sensitivityRange)
+                ) { [weak self] value in
                     self?.settings.sensitivity = Float(value)
                 }
             ),

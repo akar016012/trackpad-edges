@@ -1071,4 +1071,46 @@ final class GestureEngineTests: XCTestCase {
         config.unavailableKinds = [.externalBrightness]
         XCTAssertNil(config.twoFingerZone(x: 0.95, y: 0.5))
     }
+
+    func testWobbleOnAStepLineCountsOnce() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.95, 0.3), now: 0)
+        _ = engine.process(finger(0.95, 0.36), now: 0.2)
+        var events: [GestureEngine.Event] = []
+        // The finger rests on the line of the first step and wobbles across it.
+        for frame in 0..<10 {
+            let y: Float = 0.36 + 0.035 + (frame % 2 == 0 ? 0.0005 : -0.0005)
+            events += engine.process(finger(0.95, y), now: 0.3 + Double(frame) * 0.01)
+        }
+        XCTAssertEqual(events, [.stepped(1)])
+    }
+
+    func testTurningBackStepsOncePastTheMargin() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.95, 0.3), now: 0)
+        _ = engine.process(finger(0.95, 0.36), now: 0.2)
+        XCTAssertEqual(engine.process(finger(0.95, 0.40), now: 0.3), [.stepped(1)])
+        // The line is at 0.395. A fifth of a step under it is inside the margin of a quarter
+        // step, and a third of a step under it is past the margin.
+        XCTAssertEqual(engine.process(finger(0.95, 0.388), now: 0.4), [])
+        XCTAssertEqual(engine.process(finger(0.95, 0.384), now: 0.5), [.stepped(-1)])
+        // The same direction needs no margin, so the next line counts as soon as it is crossed.
+        XCTAssertEqual(engine.process(finger(0.95, 0.324), now: 0.6), [.stepped(-1)])
+    }
+
+    func testGraceRemainingStartsOverWhenTheFingerLeavesAgain() {
+        var engine = touchMode()
+        _ = engine.process(finger(0.95, 0.5), now: 0)
+        XCTAssertNil(engine.liftGraceRemaining(now: 0))
+        _ = engine.process([], now: 1)
+        XCTAssertEqual(engine.liftGraceRemaining(now: 1.1) ?? 0, 0.08, accuracy: 0.001)
+        _ = engine.process(finger(0.95, 0.5), now: 1.1)
+        XCTAssertNil(engine.liftGraceRemaining(now: 1.1))
+        _ = engine.process([], now: 1.15)
+        // A check set up for the first lift comes too early for the second one.
+        XCTAssertEqual(engine.tick(now: 1.2), [])
+        XCTAssertEqual(engine.liftGraceRemaining(now: 1.2) ?? 0, 0.13, accuracy: 0.001)
+        XCTAssertEqual(engine.tick(now: 1.34), [.slideCanceled(.volume), .pointerReleased])
+        XCTAssertNil(engine.liftGraceRemaining(now: 1.34))
+    }
 }

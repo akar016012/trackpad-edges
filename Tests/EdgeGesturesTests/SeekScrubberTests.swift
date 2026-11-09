@@ -54,13 +54,57 @@ final class SeekScrubberTests: XCTestCase {
         XCTAssertEqual(scrubber.steps, 0)
     }
 
-    func testOvershootPastALimitIsForgottenSoReversingRespondsAtOnce() {
+    func testOvershootPastALimitIsForgottenSoReversingRespondsSoon() {
         var scrubber = SeekScrubber()
         _ = scrubber.update(travel: 0, limits: -2...100)
         _ = scrubber.update(travel: -0.5, limits: -2...100)
         XCTAssertEqual(scrubber.steps, -2)
-        XCTAssertTrue(scrubber.update(travel: -0.49, limits: -2...100))
+        XCTAssertTrue(scrubber.update(travel: -0.48, limits: -2...100))
         XCTAssertEqual(scrubber.steps, -1)
+    }
+
+    func testWobbleWhilePinnedAtALimitDoesNotFlicker() {
+        var scrubber = SeekScrubber()
+        _ = scrubber.update(travel: 0, limits: -2...100)
+        _ = scrubber.update(travel: -0.5, limits: -2...100)
+        for frame in 0..<10 {
+            let travel: Float = frame % 2 == 0 ? -0.499 : -0.5
+            XCTAssertFalse(scrubber.update(travel: travel, limits: -2...100))
+        }
+        XCTAssertEqual(scrubber.steps, -2)
+    }
+
+    func testWobbleOnAStepLineCountsOnce() {
+        var scrubber = SeekScrubber()
+        _ = scrubber.update(travel: 0)
+        var changes = 0
+        for frame in 0..<10 {
+            let travel: Float = 0.05 + (frame % 2 == 0 ? 0.0005 : -0.0005)
+            if scrubber.update(travel: travel) { changes += 1 }
+        }
+        XCTAssertEqual(changes, 1)
+        XCTAssertEqual(scrubber.steps, 1)
+    }
+
+    func testLimitsThatArriveLateKeepTheMarginAgainstTheFinger() {
+        var scrubber = SeekScrubber()
+        _ = scrubber.update(travel: 0)
+        _ = scrubber.update(travel: -0.16)
+        XCTAssertEqual(scrubber.steps, -3)
+        // The limits pull the count toward zero, but the finger was still moving away from it.
+        XCTAssertTrue(scrubber.update(travel: -0.16, limits: -1...50))
+        XCTAssertEqual(scrubber.steps, -1)
+        XCTAssertFalse(scrubber.update(travel: -0.1494, limits: -1...50))
+        XCTAssertEqual(scrubber.steps, -1)
+    }
+
+    func testLimitsThatArriveLateHoldTheCount() {
+        var scrubber = SeekScrubber()
+        _ = scrubber.update(travel: 0)
+        _ = scrubber.update(travel: 0.52)
+        XCTAssertEqual(scrubber.steps, 10)
+        _ = scrubber.update(travel: 0.52, limits: -3...4)
+        XCTAssertEqual(scrubber.steps, 4)
     }
 
     func testNoTickWhilePinnedAtALimit() {
