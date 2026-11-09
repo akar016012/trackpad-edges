@@ -58,10 +58,12 @@ nonisolated struct CornerSetting: Codable, Equatable, Sendable {
     /// Settings saved before corners held several actions have one action and one click count.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        if let saved = try container.decodeIfPresent([CornerAction].self, forKey: .actions) {
-            // A list of the wrong length is repaired, so one odd value cannot lose a corner.
+        if let saved = try container.decodeIfPresent([Lenient<CornerAction>].self, forKey: .actions)
+        {
+            // An action that this version cannot read becomes no action, and a list of the wrong
+            // length is repaired, so one odd value cannot lose a corner.
             let padding = Array(repeating: CornerAction.none, count: Self.maxClicks)
-            actions = Array((saved + padding).prefix(Self.maxClicks))
+            actions = Array((saved.map { $0.value ?? .none } + padding).prefix(Self.maxClicks))
             return
         }
         let action = try container.decode(CornerAction.self, forKey: .action)

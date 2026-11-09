@@ -24,12 +24,12 @@ By default, a slide starts as soon as one finger lands inside a strip. A finger 
 
 With the **Require a click to start** setting, the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
 
-The pointer freezes at landing, but a touch counts as a slide only after the finger has been down for 0.08 seconds and has traveled 4% of the pad, mostly along the strip. Steps count from that point, so a tap does not change a level. A move of more than 12% of the pad between two frames is treated as a contact glitch and ignored, because the reported position can jump near the rim.
+The pointer freezes at landing, but a touch counts as a slide only after the finger has been down for 0.08 seconds and has traveled 4% of the pad, mostly along the strip. Steps count from that point, so a tap does not change a level. A step in the same direction as the last one counts as soon as the finger crosses the line between two steps. A step that turns back must pass that line by a quarter of a step, so a finger that rests on a line does not flip the level back and forth. A move of more than 12% of the pad between two frames is treated as a contact glitch and ignored, because the reported position can jump near the rim.
 
 ## Ending a slide
 
 - Lifting the finger ends the slide, so easing off the click during a slide does not stop it.
-- Contact can drop out near the rim of the pad, which was seen about every 0.2 seconds in testing. A slide therefore survives a gap of up to 0.18 seconds, and wherever the contact returns in the strip produces no steps. A contact that returns outside the strip, or with a second finger, ends the slide and starts fresh.
+- Contact can drop out near the rim of the pad, which was seen about every 0.2 seconds in testing. A slide therefore survives a gap of up to 0.18 seconds, and wherever the contact returns in the strip produces no steps. The gap is timed from the latest time the contact left, so a slide still ends on time when the contact drops out just before the finger lifts. A contact that returns outside the strip, or with a second finger, ends the slide and starts fresh.
 - Leaving the strip by more than 3% of the pad cancels a slide that has not changed anything yet. Once a slide has changed something, it can stray a further 25% of the pad, because a real slide drifts. A second finger cancels a one-finger slide, unless it lands soon enough to start a [two-finger slide](roadmap/two-finger-slides.md).
 - Volume and brightness steps that were already applied stay applied after a cancel.
 - A click with no slide passes through to macOS as a normal click when you release it.

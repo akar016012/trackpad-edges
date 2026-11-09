@@ -10,7 +10,7 @@ The right edge controls system volume by default, and [settings.md](settings.md)
 - One step takes 3.5% of the pad height at the default sensitivity, so a full sweep takes about 56% of the pad height. Touch mode adds 4% of travel before the first step.
 - Steps are relative to the level when the slide began, and the level stays between 0 and 16.
 - A tap in the strip never changes the volume, because a touch must travel 4% of the pad before steps begin.
-- Reversing direction during a slide works.
+- Reversing direction during a slide works. A step back needs a quarter of a step more travel than a step forward, which keeps the level steady while a finger rests between two steps.
 - Holding Shift+Option during a slide gives quarter steps, as it does on the keyboard.
 - The native macOS volume indicator appears, because the app presses the volume keys on your behalf.
 

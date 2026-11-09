@@ -12,6 +12,7 @@ The bottom edge seeks through the media that is playing. You touch the strip, sl
 - Each step moves a chosen amount, which you set in the Media pane. It can be 0.5% to 10% of the track, or 1 to 60 seconds. The default is 1%, so a step moves 6 seconds of a 10-minute video.
 - Finger speed has no effect, so the same slide always moves the same amount.
 - The preview stops at the start and just before the end of the track, because some players skip to the next track at the very end. Travel past those limits is forgotten, so reversing responds within about a step or two of travel.
+- A finger that rests on the line between two steps does not make the preview flicker, at a limit or anywhere else, because a step that turns back needs a quarter of a step of extra travel.
 - A slide that returns to where it began does not seek.
 - A slide tolerates drift once it has started, so it can stray up to 25% of the pad past the strip without canceling.
 - Nothing changes in the player until you lift your finger. An overlay shows the target time, the total time, a progress bar, and the percentage change.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A level no longer flips back and forth when your finger rests between two steps, and the seek preview holds steady in the same way.
+- A seek now applies on time when your finger briefly lost contact just before you lifted it.
+- Settings saved by a newer version no longer reset every setting when an older version opens them.
+- A click on an edge or in a corner is no longer dropped on rare occasions.
+- Switch Spaces starts working as soon as you turn on its shortcuts in System Settings and leave that window.
+
 ## 1.2 - 2026-11-07
 
 - The app now runs on macOS 13 or later. All testing so far has used macOS 27.2.

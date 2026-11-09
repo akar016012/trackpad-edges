@@ -6,7 +6,7 @@ This project is a macOS menu bar app that turns the edges and corners of a track
 
 ## Feature status
 
-This list was last updated on 2026-11-07. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
+This list was last updated on 2026-11-09. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
 
 ### Done
 
@@ -46,6 +46,7 @@ This list was last updated on 2026-11-07. **Done** means that it was tried on a 
 - [ ] [Custom app and menu bar icons](dependencies.md)
 - [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
 - [ ] Media seek in Safari still needs a check, because only Chrome was tried.
+- [ ] Four fixes from 2026-11-09 have not been tried on a trackpad yet: steps that hold steady on a line, a slide that ends on time after contact drops out, the second look before a mouse-up counts as lost, and the recheck of Switch Spaces when another app comes to the front. Unit tests cover the step logic and the grace period's arithmetic, but the timers and the system's answers need a real run.
 
 ### Known limits
 

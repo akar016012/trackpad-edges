@@ -73,6 +73,9 @@ nonisolated enum HapticPattern: String, Codable, CaseIterable, Sendable {
 }
 
 nonisolated struct HapticSettings: Codable, Equatable, Sendable {
+    /// The strengths that the Haptics pane offers.
+    static let strengthRange: ClosedRange<Float> = 0.4...2.0
+
     var enabled = true
     /// A scale from 0.4 to 2.0 that multiplies the pattern's base strength.
     var strength: Float = 1.0
@@ -81,6 +84,21 @@ nonisolated struct HapticSettings: Codable, Equatable, Sendable {
     var onLimit = true
     var onCorner = true
     var onSeek = true
+}
+
+nonisolated extension HapticSettings {
+    /// Reads each value on its own, so that one this version cannot read keeps its default.
+    init(from decoder: Decoder) throws {
+        self.init()
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        enabled = container.lenient(.enabled) ?? enabled
+        strength = Self.strengthRange.holding(container.lenient(.strength)) ?? strength
+        pattern = container.lenient(.pattern) ?? pattern
+        onStep = container.lenient(.onStep) ?? onStep
+        onLimit = container.lenient(.onLimit) ?? onLimit
+        onCorner = container.lenient(.onCorner) ?? onCorner
+        onSeek = container.lenient(.onSeek) ?? onSeek
+    }
 }
 
 /// One assignable slide on one edge.
@@ -162,9 +180,31 @@ nonisolated struct AppProfile: Codable, Equatable, Sendable {
     }
 }
 
+nonisolated extension AppProfile {
+    /// Reads each edge and corner on its own. One that this version cannot read is left out, so
+    /// that slot follows the default settings and the rest of the profile still loads.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            bundleID: try container.decode(String.self, forKey: .bundleID),
+            name: try container.decode(String.self, forKey: .name))
+        edges = container.lenientPairs(.edges)
+        corners = container.lenientPairs(.corners)
+    }
+}
+
 /// All settings. The stored edges and corners are the default profile, which every app without a
 /// profile of its own uses, so settings saved before profiles existed need no conversion.
 nonisolated struct AppSettings: Codable, Equatable, Sendable {
+    /// The ranges that the window offers. Loaded settings are held to them, because the gesture
+    /// and seek arithmetic divides by the sensitivity and the seek step, and the window's controls
+    /// can neither show nor produce a value outside its range.
+    static let edgeWidthRange: ClosedRange<Float> = 0.05...0.20
+    static let sensitivityRange: ClosedRange<Float> = 0.5...2.0
+    static let pressThresholdRange: ClosedRange<Float> = 70...115
+    static let seekPercentRange: ClosedRange<Double> = 0.5...10
+    static let seekSecondsRange: ClosedRange<Double> = 1...60
+
     var leftEdge: SlideKind? = .brightness
     var rightEdge: SlideKind? = .volume
     var bottomEdge: SlideKind? = .seek
@@ -324,5 +364,49 @@ nonisolated struct AppSettings: Codable, Equatable, Sendable {
         ]
         config.pressThreshold = pressThreshold
         return config
+    }
+}
+
+nonisolated extension AppSettings {
+    /// The range of one seek step for each step type.
+    static func seekStepRange(for type: SeekStepType) -> ClosedRange<Double> {
+        type == .percent ? seekPercentRange : seekSecondsRange
+    }
+
+    /// Reads each setting on its own. A value that this version cannot read, such as an action
+    /// that a newer version added, falls back by itself, where a plain read would refuse every
+    /// setting. An edge falls back to Off and a profile slot to the default settings, because
+    /// doing nothing is safer than doing something else. Numbers are held to their ranges.
+    init(from decoder: Decoder) throws {
+        self.init()
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        leftEdge = container.lenient(.leftEdge)
+        rightEdge = container.lenient(.rightEdge)
+        bottomEdge = container.lenient(.bottomEdge)
+        topEdge = container.lenient(.topEdge)
+        twoFingerLeft = container.lenient(.twoFingerLeft)
+        twoFingerRight = container.lenient(.twoFingerRight)
+        twoFingerBottom = container.lenient(.twoFingerBottom)
+        twoFingerTop = container.lenient(.twoFingerTop)
+        topLeft = container.lenient(.topLeft) ?? topLeft
+        topRight = container.lenient(.topRight) ?? topRight
+        storedBottomLeft = container.lenient(.storedBottomLeft)
+        storedBottomRight = container.lenient(.storedBottomRight)
+        storedSeekStepPercent = Self.seekPercentRange.holding(
+            container.lenient(.storedSeekStepPercent))
+        storedSeekStepSeconds = Self.seekSecondsRange.holding(
+            container.lenient(.storedSeekStepSeconds))
+        storedSeekStepType = container.lenient(.storedSeekStepType)
+        storedPressThreshold = Self.pressThresholdRange.holding(
+            container.lenient(.storedPressThreshold))
+        storedOverlayStyle = container.lenient(.storedOverlayStyle)
+        storedOverlayPlacement = container.lenient(.storedOverlayPlacement)
+        storedProfiles = container.lenientList(.storedProfiles)
+        bottomQuarterOnly = container.lenient(.bottomQuarterOnly) ?? bottomQuarterOnly
+        requireClick = container.lenient(.requireClick) ?? requireClick
+        requiredModifier = container.lenient(.requiredModifier) ?? requiredModifier
+        edgeWidth = Self.edgeWidthRange.holding(container.lenient(.edgeWidth)) ?? edgeWidth
+        sensitivity = Self.sensitivityRange.holding(container.lenient(.sensitivity)) ?? sensitivity
+        haptics = container.lenient(.haptics) ?? haptics
     }
 }

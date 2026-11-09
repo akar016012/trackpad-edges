@@ -38,7 +38,10 @@ final class HapticsPane: SettingsPane {
             [
                 (
                     "Strength:",
-                    slider(value: Double(current.strength), range: 0.4...2.0) { [weak self] value in
+                    slider(
+                        value: Double(current.strength),
+                        range: Self.sliderRange(HapticSettings.strengthRange)
+                    ) { [weak self] value in
                         self?.settings.haptics.strength = Float(value)
                     }
                 ),

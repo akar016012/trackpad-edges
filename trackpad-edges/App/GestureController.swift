@@ -32,7 +32,12 @@ final class GestureController {
     private var healthChecks = 0
     /// Keeps the system from delaying the timers that protect clicks while the app has no window.
     private var latencyActivity: NSObjectProtocol?
-    private var tickScheduled = false
+    /// The trackpads with a check already on its way for the end of a slide's grace period.
+    private var pendingTicks: Set<UnsafeRawPointer> = []
+    /// Whether the last health check already saw the button up during a swallowed click.
+    private var sawButtonUp = false
+    /// The availability that the engines last received.
+    private var appliedUnavailable: Set<SlideKind> = []
 
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
@@ -123,6 +128,7 @@ final class GestureController {
         seek.step = settings.seekStep
         seek.sensitivity = settings.sensitivity
         seek.applyOverlay(style: settings.overlayStyle, placement: settings.overlayPlacement)
+        appliedUnavailable = unavailableKinds
         let config = currentConfig()
         for device in engines.keys { engines[device]?.config = config }
     }
@@ -144,9 +150,11 @@ final class GestureController {
         SettingsStore.shared.settings.resolved(for: frontBundleID)
     }
 
-    /// A gesture in progress keeps its action, because the engine holds it until the gesture ends.
+    /// Uses the availability that `applySettings` last recorded, so that an engine made later
+    /// matches the others. A gesture in progress keeps its action, because the engine holds it
+    /// until the gesture ends.
     private func currentConfig() -> GestureConfig {
-        effectiveSettings.gestureConfig(unavailable: unavailableKinds)
+        effectiveSettings.gestureConfig(unavailable: appliedUnavailable)
     }
 
     /// Shows a sample of the seek preview, so that a style can be judged as it is chosen.
@@ -196,9 +204,7 @@ final class GestureController {
         engines[device] = engine
         dispatch(events, device: device)
         // This asks the engine, because a palm keeps frames arriving after the finger has lifted.
-        if engine.isAwaitingLift, !tickScheduled {
-            scheduleTick(device: device, grace: engine.config.liftGrace)
-        }
+        scheduleTickIfAwaitingLift(device: device)
     }
 
     /// Checks back once a corner's click window has closed, because no event marks that moment.
@@ -213,19 +219,26 @@ final class GestureController {
     }
 
     /// Checks back after the grace period, because no more frames arrive once a finger lifts.
-    private func scheduleTick(device: UnsafeRawPointer, grace: TimeInterval) {
-        tickScheduled = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + grace + 0.02) { [weak self] in
-            self?.tickScheduled = false
-            guard let self, var engine = self.engines[device] else { return }
+    /// Each trackpad has its own check. Contact can drop out, return, and leave for good while a
+    /// check is on its way, and that check then comes too early, so it sets up the next one.
+    private func scheduleTickIfAwaitingLift(device: UnsafeRawPointer) {
+        guard let remaining = engines[device]?.liftGraceRemaining(now: now),
+            pendingTicks.insert(device).inserted
+        else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + remaining + 0.02) { [weak self] in
+            guard let self else { return }
+            self.pendingTicks.remove(device)
+            guard var engine = self.engines[device] else { return }
             let events = engine.tick(now: self.now)
             self.engines[device] = engine
             self.dispatch(events, device: device)
+            self.scheduleTickIfAwaitingLift(device: device)
         }
     }
 
     private func mouseDown(_ event: CGEvent) -> Bool {
         discardNextUp = false
+        sawButtonUp = false
         guard !paused, !locked else { return false }
         if let device = clickDevice { recoverLostMouseUp(device: device) }
 
@@ -398,9 +411,19 @@ final class GestureController {
             watchdog.beat(ports: [])
         }
         if let device = clickDevice, !CGEventSource.buttonState(.hidSystemState, button: .left) {
-            recoverLostMouseUp(device: device)
-            // The real mouse-up may still be on its way, and no app saw this click's mouse-down.
-            discardNextUp = true
+            // The button reads as up a moment before its mouse-up reaches the tap, so one look
+            // could take a click that is about to end normally for a lost one, and drop it.
+            if sawButtonUp {
+                sawButtonUp = false
+                recoverLostMouseUp(device: device)
+                // The real mouse-up may still be on its way, and no app saw this click's
+                // mouse-down.
+                discardNextUp = true
+            } else {
+                sawButtonUp = true
+            }
+        } else {
+            sawButtonUp = false
         }
         for device in Array(engines.keys) {
             guard let engine = engines[device],
@@ -468,7 +491,13 @@ final class GestureController {
         let wasUsing = SettingsStore.shared.settings.profile(for: frontBundleID)
         frontBundleID = app?.bundleIdentifier
         // Most apps have no profile, so this usually has nothing to change.
-        if wasUsing != SettingsStore.shared.settings.profile(for: frontBundleID) { applySettings() }
+        let profileChanged = wasUsing != SettingsStore.shared.settings.profile(for: frontBundleID)
+        // Some availability changes send no notice, such as the Spaces shortcuts being turned on
+        // in System Settings. Leaving System Settings brings another app to the front, so this
+        // is when the app looks.
+        let availabilityChanged = unavailableKinds != appliedUnavailable
+        if profileChanged || availabilityChanged { applySettings() }
+        if availabilityChanged { onAvailabilityChanged?() }
     }
 
     @objc private func displayOptionsChanged() {

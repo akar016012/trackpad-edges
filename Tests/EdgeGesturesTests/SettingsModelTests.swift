@@ -50,6 +50,63 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(AppSettings.self, from: data), settings)
     }
 
+    /// Reading is written by hand, so a setting left out of it would reset on every launch.
+    func testEverySettingSurvivesSaving() throws {
+        var settings = AppSettings()
+        settings.leftEdge = .zoom
+        settings.rightEdge = .scroll
+        settings.bottomEdge = .keyboardBacklight
+        settings.topEdge = .switchApps
+        settings.twoFingerLeft = .volume
+        settings.twoFingerRight = .brightness
+        settings.twoFingerBottom = .seek
+        settings.twoFingerTop = .switchSpaces
+        settings.topLeft = CornerSetting(action: .nextTrack, clicks: 2)
+        settings.topRight = CornerSetting(
+            action: .openApp(path: "/Applications/Notes.app"), clicks: 3)
+        settings.bottomLeft = CornerSetting(action: .shortcut(name: "Focus"), clicks: 1)
+        settings.bottomRight = CornerSetting(
+            action: .keyCombination(keyCode: 12, modifiers: 256, label: "Q"), clicks: 4)
+        settings.seekStepType = .seconds
+        settings.seekStepValue = 30
+        settings.seekStepType = .percent
+        settings.seekStepValue = 2.5
+        settings.pressThreshold = 100
+        settings.overlayStyle = .solid
+        settings.overlayPlacement = .top
+        settings.profiles = [AppProfile(bundleID: "com.example.app", name: "Example")]
+        settings.bottomQuarterOnly = true
+        settings.requireClick = true
+        settings.requiredModifier = .option
+        settings.edgeWidth = 0.15
+        settings.sensitivity = 1.25
+        settings.haptics = HapticSettings(
+            enabled: false, strength: 0.75, pattern: .soft, onStep: false, onLimit: false,
+            onCorner: false, onSeek: false)
+
+        let data = try JSONEncoder().encode(settings)
+        let loaded = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(loaded, settings)
+        // Every stored value differs from its default, so each key must appear in the saved form
+        // and be read back. A setting added later is missing from the saved form until this test
+        // sets it too, which the two counts below catch even for an optional setting.
+        let saved = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let defaults = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(AppSettings()))
+                as? [String: Any])
+        XCTAssertEqual(saved.count, Mirror(reflecting: settings).children.count)
+        XCTAssertEqual(
+            (saved["haptics"] as? [String: Any])?.count,
+            Mirror(reflecting: settings.haptics).children.count)
+        for (key, value) in defaults {
+            XCTAssertFalse(
+                (saved[key] as? NSObject)?.isEqual(value) ?? true, "\(key) kept its default")
+        }
+        var switched = loaded
+        switched.seekStepType = .seconds
+        XCTAssertEqual(switched.seekStepValue, 30)
+    }
+
     private func settingsWithProfile() -> AppSettings {
         var settings = AppSettings()
         settings.profiles = [AppProfile(bundleID: "app", name: "App")]
@@ -162,5 +219,113 @@ final class SettingsModelTests: XCTestCase {
         XCTAssertEqual(
             profile.summary,
             ["The right edge uses nothing.", "The top-left corner has its own actions."])
+    }
+
+    /// Returns the default settings as saved data, after one change to the saved form.
+    private func saved(_ edit: (inout [String: Any]) -> Void) throws -> Data {
+        let data = try JSONEncoder().encode(AppSettings())
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        edit(&object)
+        return try JSONSerialization.data(withJSONObject: object)
+    }
+
+    func testAnEdgeActionFromANewerVersionTurnsOnlyThatEdgeOff() throws {
+        let data = try saved {
+            $0["leftEdge"] = "somethingNew"
+            $0["rightEdge"] = "zoom"
+            $0["sensitivity"] = 1.5
+        }
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertNil(settings.leftEdge)
+        XCTAssertEqual(settings.rightEdge, .zoom)
+        XCTAssertEqual(settings.sensitivity, 1.5)
+        XCTAssertEqual(settings.bottomEdge, .seek)
+    }
+
+    func testAHapticValueFromANewerVersionKeepsTheOtherHaptics() throws {
+        let data = try saved {
+            $0["haptics"] = ["enabled": false, "pattern": "somethingNew", "strength": 1.5]
+        }
+        let haptics = try JSONDecoder().decode(AppSettings.self, from: data).haptics
+        XCTAssertFalse(haptics.enabled)
+        XCTAssertEqual(haptics.strength, 1.5)
+        XCTAssertEqual(haptics.pattern, .firm)
+        XCTAssertTrue(haptics.onSeek)
+    }
+
+    func testACornerActionFromANewerVersionKeepsTheOtherClicks() throws {
+        let data = try saved {
+            $0["topRight"] = [
+                "actions": [
+                    ["somethingNew": [:]], ["playPause": [:]], ["none": [:]], ["none": [:]],
+                ]
+            ]
+        }
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.topRight[1], CornerAction.none)
+        XCTAssertEqual(settings.topRight[2], .playPause)
+        XCTAssertEqual(settings.topLeft[1], .mute)
+    }
+
+    func testAProfileKeepsTheSlotsThatCanBeRead() throws {
+        let data = try saved {
+            $0["storedProfiles"] = [
+                [
+                    "bundleID": "app", "name": "App",
+                    "edges": [
+                        "left", ["kind": "somethingNew"], "someNewSlot", ["kind": "zoom"],
+                        "right", ["kind": "scroll"], "top", [:],
+                    ],
+                    "corners": ["topLeft", ["actions": [["playPause": [:]]]]],
+                ],
+                ["name": "A profile with no app"],
+            ]
+        }
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.profiles.count, 1)
+        let profile = try XCTUnwrap(settings.profiles.first)
+        XCTAssertEqual(
+            profile.edges, [.right: EdgeChoice(kind: .scroll), .top: EdgeChoice(kind: nil)])
+        XCTAssertEqual(profile.corners[.topLeft]?[1], .playPause)
+        XCTAssertEqual(settings.resolved(for: "app").leftEdge, .brightness)
+    }
+
+    func testNumbersOutsideTheirRangesAreHeldToThem() throws {
+        let data = try saved {
+            $0["sensitivity"] = 0
+            $0["edgeWidth"] = 0.9
+            $0["storedPressThreshold"] = 5
+            $0["storedSeekStepType"] = "seconds"
+            $0["storedSeekStepSeconds"] = 0
+            $0["storedSeekStepPercent"] = 500
+            $0["haptics"] = ["strength": 40]
+        }
+        var settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.sensitivity, 0.5)
+        XCTAssertEqual(settings.edgeWidth, 0.20)
+        XCTAssertEqual(settings.pressThreshold, 70)
+        XCTAssertEqual(settings.seekStep, .seconds(1))
+        XCTAssertEqual(settings.haptics.strength, 2.0)
+        XCTAssertTrue(settings.gestureConfig(unavailable: []).stepSize.isFinite)
+        settings.seekStepType = .percent
+        XCTAssertEqual(settings.seekStep, .percent(10))
+    }
+
+    func testAValueOfTheWrongKindKeepsItsDefault() throws {
+        let data = try saved {
+            $0["edgeWidth"] = "wide"
+            $0["requireClick"] = "yes"
+            $0["haptics"] = "strong"
+            $0["topLeft"] = 3
+        }
+        let settings = try JSONDecoder().decode(AppSettings.self, from: data)
+        XCTAssertEqual(settings.edgeWidth, 0.10)
+        XCTAssertFalse(settings.requireClick)
+        XCTAssertEqual(settings.haptics, HapticSettings())
+        XCTAssertEqual(settings.topLeft[1], .mute)
+    }
+
+    func testSettingsThatAreNotAnObjectAreStillRefused() {
+        XCTAssertThrowsError(try JSONDecoder().decode(AppSettings.self, from: Data("[1, 2]".utf8)))
     }
 }

@@ -359,9 +359,9 @@ final class WelcomeTour: SettingsPane {
         let enabled = checkbox("Feel a tick on each step", isOn: current.enabled) {
             [weak self] isOn in self?.settings.haptics.enabled = isOn
         }
-        let strength = slider(value: Double(current.strength), range: 0.4...2.0) {
-            [weak self] value in self?.settings.haptics.strength = Float(value)
-        }
+        let strength = slider(
+            value: Double(current.strength), range: Self.sliderRange(HapticSettings.strengthRange)
+        ) { [weak self] value in self?.settings.haptics.strength = Float(value) }
         let pattern = popup(
             patterns.map(\.rawValue.capitalized),
             selected: patterns.firstIndex(of: current.pattern) ?? 0
