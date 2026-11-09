@@ -10,7 +10,7 @@ Thank you for your interest in this project. It is maintained by one person in t
 
 ## The project's focus
 
-Trackpad Edges turns the edges and corners of a Mac trackpad into controls, and it leaves the middle of the trackpad alone. Controls move in fixed steps, and each step can be felt. Ideas that keep this simple are the most likely to be accepted, and [docs/plan.md](docs/plan.md) shows what is built and what needs a check.
+Trackpad Edges turns the edges and corners of a Mac trackpad into controls, and it leaves the middle of the trackpad alone. Controls move in fixed steps, and each step can be felt. Ideas that keep this simple are the most likely to be accepted, and [docs/plan.md](docs/plan.md) shows what is built, what needs a check, and what is planned next.
 
 ## Reporting a bug
 
