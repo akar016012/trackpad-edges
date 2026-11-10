@@ -22,6 +22,16 @@ body:
         3. Nothing changes.
     validations:
       required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >-
+        In the app, choose Report a Problem… from the menu bar item, or click Copy Diagnostics on
+        the General pane, and then paste here. The report lists your versions, trackpads, and
+        settings, and it leaves out paths, links, and names. A file from Record Touches… goes in
+        the last field, because this one takes text only.
+      render: text
   - type: input
     id: version
     attributes:

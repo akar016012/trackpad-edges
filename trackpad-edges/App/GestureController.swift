@@ -34,10 +34,15 @@ final class GestureController {
     private var latencyActivity: NSObjectProtocol?
     /// The trackpads with a check already on its way for the end of a slide's grace period.
     private var pendingTicks: Set<UnsafeRawPointer> = []
+    /// The trackpads with a check already on its way for the end of a resting finger's wait.
+    private var pendingRestTicks: Set<UnsafeRawPointer> = []
     /// Whether the last health check already saw the button up during a swallowed click.
     private var sawButtonUp = false
     /// The availability that the engines last received.
     private var appliedUnavailable: Set<SlideKind> = []
+    /// The touch recording in progress, with the time it began and what receives the result.
+    private var recording: (data: TouchRecording, start: TimeInterval)?
+    private var onRecordingFinished: ((TouchRecording) -> Void)?
 
     private(set) var trackpadCount = 0
     /// Receives every touch frame, so that the window can show fingers live.
@@ -58,6 +63,7 @@ final class GestureController {
     func start() {
         let bridge = MultitouchBridge.shared
         bridge.onFrame = { [weak self] device, touches in
+            self?.record(device: device, touches: touches)
             self?.handle(device: device, touches: touches)
         }
         trackpadCount = bridge.start()
@@ -181,6 +187,71 @@ final class GestureController {
             "This trackpad has no haptic engine that the app can control, so the strength and pattern settings may have no effect."
     }
 
+    // MARK: Diagnostics
+
+    /// Gathers the facts for a bug report. Nothing here is sent anywhere.
+    var diagnosticsReport: DiagnosticsReport {
+        let info = Bundle.main.infoDictionary
+        return DiagnosticsReport(
+            appVersion: info?["CFBundleShortVersionString"] as? String ?? "unknown",
+            appBuild: info?["CFBundleVersion"] as? String ?? "unknown",
+            systemVersion: Self.systemVersion,
+            macModel: Self.systemValue("hw.model"), trackpads: MultitouchBridge.shared.deviceInfo,
+            accessibilityGranted: AXIsProcessTrusted(),
+            clickWatchingOn: ClickTap.shared.isInstalled, gesturesPaused: paused,
+            mediaAdapterLoaded: seek.isAvailable, unavailable: unavailableKinds,
+            settings: SettingsStore.shared.settings)
+    }
+
+    /// The macOS version as plain numbers with the build, such as `27.2.0 (26B123)`. The
+    /// system's own description is translated, which would make a report harder to read.
+    private static var systemVersion: String {
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) "
+            + "(\(systemValue("kern.osversion")))"
+    }
+
+    /// Reads one of the system's text values. `hw.model` is the model identifier, such as
+    /// `MacBookPro18,1`, which names the hardware and not its owner.
+    private static func systemValue(_ name: String) -> String {
+        var size = 0
+        guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return "unknown" }
+        var buffer = [CChar](repeating: 0, count: size)
+        guard sysctlbyname(name, &buffer, &size, nil, 0) == 0 else { return "unknown" }
+        return String(cString: buffer)
+    }
+
+    /// Copies the raw touch frames of every trackpad for a fixed time, and then hands them back.
+    /// Gestures keep working meanwhile, so the recording shows the problem as it happens.
+    func recordTouches(completion: @escaping (TouchRecording) -> Void) {
+        // A recording that is still running ends here, so that whoever asked for it hears back
+        // and the new one gets its full time.
+        finishRecording()
+        let start = now
+        recording = (TouchRecording(trackpads: MultitouchBridge.shared.deviceInfo), start)
+        onRecordingFinished = completion
+        DispatchQueue.main.asyncAfter(deadline: .now() + TouchRecording.duration) { [weak self] in
+            // A recording that ended early must not let this timer end the one after it.
+            guard self?.recording?.start == start else { return }
+            self?.finishRecording()
+        }
+    }
+
+    private func record(device: UnsafeRawPointer, touches: [TouchPoint]) {
+        guard let start = recording?.start,
+            let index = MultitouchBridge.shared.devices.firstIndex(of: device)
+        else { return }
+        recording?.data.add(touches, trackpad: index, at: now - start)
+    }
+
+    private func finishRecording() {
+        guard let finished = recording?.data else { return }
+        recording = nil
+        let completion = onRecordingFinished
+        onRecordingFinished = nil
+        completion?(finished)
+    }
+
     private func newEngine() -> GestureEngine {
         var engine = GestureEngine()
         engine.config = currentConfig()
@@ -205,16 +276,38 @@ final class GestureController {
         dispatch(events, device: device)
         // This asks the engine, because a palm keeps frames arriving after the finger has lifted.
         scheduleTickIfAwaitingLift(device: device)
+        scheduleTickIfResting(device: device)
+    }
+
+    /// Lets one trackpad's engine act on whatever it was waiting for.
+    private func runTick(device: UnsafeRawPointer) {
+        guard var engine = engines[device] else { return }
+        let events = engine.tick(now: now)
+        engines[device] = engine
+        dispatch(events, device: device)
     }
 
     /// Checks back once a corner's click window has closed, because no event marks that moment.
     private func scheduleCornerTick(device: UnsafeRawPointer) {
         let delay = engines[device]?.config.multiClickWindow ?? 0
         DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.02) { [weak self] in
-            guard let self, var engine = self.engines[device] else { return }
-            let events = engine.tick(now: self.now)
-            self.engines[device] = engine
-            self.dispatch(events, device: device)
+            self?.runTick(device: device)
+        }
+    }
+
+    /// Checks back when a resting finger's wait ends. Frames normally keep arriving while a
+    /// finger is down, so this only makes sure that the pointer comes back on time. It has its
+    /// own list of checks, so that it can never hold up the one for a slide's grace period.
+    private func scheduleTickIfResting(device: UnsafeRawPointer) {
+        guard let remaining = engines[device]?.restReleaseRemaining(now: now),
+            pendingRestTicks.insert(device).inserted
+        else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + remaining + 0.02) { [weak self] in
+            guard let self else { return }
+            self.pendingRestTicks.remove(device)
+            self.runTick(device: device)
+            // A new finger can land while a check is on its way, and its wait ends later.
+            self.scheduleTickIfResting(device: device)
         }
     }
 
@@ -228,10 +321,7 @@ final class GestureController {
         DispatchQueue.main.asyncAfter(deadline: .now() + remaining + 0.02) { [weak self] in
             guard let self else { return }
             self.pendingTicks.remove(device)
-            guard var engine = self.engines[device] else { return }
-            let events = engine.tick(now: self.now)
-            self.engines[device] = engine
-            self.dispatch(events, device: device)
+            self.runTick(device: device)
             self.scheduleTickIfAwaitingLift(device: device)
         }
     }
@@ -452,6 +542,8 @@ final class GestureController {
         haptics.end()
         engines = [:]
         lastFrames = [:]
+        // The trackpads are about to be listed afresh, so a recording could not tell them apart.
+        finishRecording()
         MultitouchBridge.shared.stop()
         trackpadCount = MultitouchBridge.shared.start()
         applySettings()

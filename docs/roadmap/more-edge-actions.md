@@ -1,6 +1,6 @@
 # More edge actions
 
-Status: these actions are built, unit tested, and confirmed working. External monitor brightness is the exception: the one monitor tried refused DDC, so it has never been seen working.
+Status: these actions are built, unit tested, and confirmed working, including external monitor brightness. One monitor that was tried refused DDC, so that action still depends on the monitor and its port.
 
 ## Goal
 

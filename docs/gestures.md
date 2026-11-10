@@ -1,6 +1,6 @@
 # Gestures
 
-Status: touch slides on the left, right, and bottom edges and the corners are confirmed working on the built-in trackpad. Click mode and palm detection are built and unit tested, but they have not been confirmed on hardware yet.
+Status: touch slides on the left, right, and bottom edges and the corners are confirmed working on the built-in trackpad. Palm detection is confirmed working too. Click mode is built and unit tested, but it has not been confirmed on hardware yet.
 
 ## Zones
 
@@ -20,7 +20,7 @@ Zones are tested in this order: corners, top edge, bottom edge, left edge, then 
 
 ## Starting a slide
 
-By default, a slide starts as soon as one finger lands inside a strip. A finger that lands elsewhere and moves into a strip does nothing, which keeps ordinary trackpad use undisturbed. The trade-off is that the pointer does not move while a finger that landed in a strip stays there.
+By default, a slide starts as soon as one finger lands inside a strip. A finger that lands elsewhere and moves into a strip does nothing, which keeps ordinary trackpad use undisturbed. The trade-off is that the pointer does not move while a finger that landed in a strip is deciding whether to slide. A finger that has not started a slide within 0.6 seconds gives the pointer back, and it then works as an ordinary pointer finger until it lifts. See [resting-finger-release.md](roadmap/resting-finger-release.md), which has not been confirmed on a trackpad yet.
 
 With the **Require a click to start** setting, the finger must land in the strip and then click. Testing showed that a light touch at the edge produces no click at all, so this mode needs a firm press.
 

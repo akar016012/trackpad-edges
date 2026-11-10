@@ -1,6 +1,6 @@
 # Seconds per step
 
-Status: this feature is built and unit tested, but it has not been confirmed on the trackpad yet.
+Status: this feature is built, unit tested, and confirmed working.
 
 ## Goal
 

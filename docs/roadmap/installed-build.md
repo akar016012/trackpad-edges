@@ -1,6 +1,6 @@
 # Installed build
 
-Status: the install script and the signed adapter are built, and a signed copy passes `codesign --verify --strict --deep`. The script has only been run into a test folder, so a real install and a real login still need a check.
+Status: the install script and the signed adapter are built and confirmed working with a real install, and a signed copy passes `codesign --verify --strict --deep`.
 
 ## Goal
 

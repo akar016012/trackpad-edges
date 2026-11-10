@@ -28,22 +28,23 @@ This list was last updated on 2026-11-09. **Done** means that it was tried on a 
 - [x] [Custom icons in the window](dependencies.md)
 - [x] [Assignable edges from the window and the menu bar](settings.md)
 - [x] [Top edge](roadmap/top-edge.md)
-- [x] [More edge actions, apart from Monitor Brightness](roadmap/more-edge-actions.md)
+- [x] [More edge actions, including Monitor Brightness](roadmap/more-edge-actions.md)
 - [x] [Two-finger edge slides](roadmap/two-finger-slides.md)
 - [x] [Per-app profiles](roadmap/per-app-profiles.md)
 - [x] [Welcome tour](welcome-tour.md)
+- [x] [Palm detection](roadmap/palm-detection.md)
+- [x] [Installed build](roadmap/installed-build.md)
+- [x] [Seconds per step](roadmap/seconds-per-step.md)
+- [x] [Launch at login](menu-bar-and-onboarding.md)
+- [x] [Custom app and menu bar icons](dependencies.md)
 
 ### Needs a check
 
 - Automatic updates are built, and their signing is tested, but no installed copy has updated itself yet. The first real test comes with the version after the first one that includes the updater.
-- [ ] [Monitor Brightness](roadmap/more-edge-actions.md), because the one monitor tried refused it
-- [ ] [Palm detection](roadmap/palm-detection.md)
-- [ ] [Installed build](roadmap/installed-build.md)
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
-- [ ] [Seconds per step](roadmap/seconds-per-step.md)
 - [ ] [Click-to-start option](gestures.md)
-- [ ] [Launch at login](menu-bar-and-onboarding.md)
-- [ ] [Custom app and menu bar icons](dependencies.md)
+- [ ] [Release a resting finger](roadmap/resting-finger-release.md), which is built and unit tested, but the 0.6 second wait has not been tried with real slides
+- [ ] [Diagnostics report](roadmap/diagnostics-report.md), which is built and unit tested, but no report has been pasted into an issue and no recording has been made on a trackpad yet
 - [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
 - [ ] Media seek in Safari still needs a check, because only Chrome was tried.
 - [ ] Four fixes from 2026-11-09 have not been tried on a trackpad yet: steps that hold steady on a line, a slide that ends on time after contact drops out, the second look before a mouse-up counts as lost, and the recheck of Switch Spaces when another app comes to the front. Unit tests cover the step logic and the grace period's arithmetic, but the timers and the system's answers need a real run.
@@ -52,8 +53,6 @@ This list was last updated on 2026-11-09. **Done** means that it was tried on a 
 
 None of these is built yet, and each document describes the plan.
 
-- [ ] [Release a resting finger](roadmap/resting-finger-release.md)
-- [ ] [Diagnostics report](roadmap/diagnostics-report.md)
 - [ ] [Press Keys on an edge](roadmap/key-step-edges.md)
 - [ ] [Hold a corner](roadmap/corner-hold.md)
 - [ ] [Level overlay](roadmap/level-overlay.md)
@@ -63,7 +62,7 @@ None of these is built yet, and each document describes the plan.
 ### Known limits
 
 - The app supports macOS 13 or later, but it has been tried only on macOS 27.2. The private frameworks that read touches could behave differently on earlier systems.
-- A finger that lands in a strip freezes the pointer until it leaves, because slides start on touch. [Release a resting finger](roadmap/resting-finger-release.md) plans a fix.
+- A finger that lands in a strip freezes the pointer, because slides start on touch. [Release a resting finger](roadmap/resting-finger-release.md) gives the pointer back after 0.6 seconds if the finger stays still, but that has not been tried on a trackpad yet, so this limit stays listed until it is confirmed.
 - A tap with tap-to-click can still count as a click in a corner.
 - A click from a second pointing device can be captured while a finger rests in a zone.
 - A finger that is already down after a wake or an unpause can count as a landing.
@@ -113,7 +112,7 @@ All source lives under `trackpad-edges/`.
 
 - `App/` holds the app delegate, the gesture controller, the main menu, the updater, and the project's links.
 - `Input/` holds the `MultitouchSupport` bridge, device hot-plug and sleep handling, the event taps, and the watchdog that protects clicks.
-- `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it.
+- `Gestures/` holds the zone map and a gesture state machine with no system dependencies, so unit tests can cover it. The settings model, the diagnostics report, and the touch recording format live there for the same reason.
 - `Actions/` holds the edge actions, including volume, brightness, media seek, and external displays, and the corner actions.
 - `Haptics/` holds the haptic engine behind one small interface.
 - `Settings/` holds the settings store and the panes of the app window.
@@ -134,7 +133,7 @@ All source lives under `trackpad-edges/`.
 
 ## Roadmap
 
-Phases 0 to 4 and phase 6 are complete, and phase 5 is built but needs a real install. Phases 7 to 9 are planned, and none of their features is built yet. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by a real install and then phase 7.
+Phases 0 to 6 are complete, and phase 7 is built but needs a check on a trackpad. Phases 8 and 9 are planned, and none of their features is built yet. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by phase 8.
 
 ### Phase 0: Hardware test session (complete)
 
@@ -143,7 +142,7 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 ### Phase 1: Reliability (complete)
 
 - **[Lighter corner presses](roadmap/lighter-corner-presses.md):** A corner fires on a light press, detected from the pressure in the touch data. This is confirmed working.
-- **[Palm detection](roadmap/palm-detection.md):** A large contact is ignored, so a resting palm does not start a slide or freeze the pointer. This is built, but it still needs a check.
+- **[Palm detection](roadmap/palm-detection.md):** A large contact is ignored, so a resting palm does not start a slide or freeze the pointer. This is confirmed working.
 
 ### Phase 2: Small additions (complete)
 
@@ -159,18 +158,18 @@ This phase confirmed brightness, the corners, and the Haptics pane, and it recor
 
 See [two-finger-slides.md](roadmap/two-finger-slides.md). Each edge can hold a second action for a two-finger slide, such as one finger for volume and two for brightness. This is confirmed working.
 
-### Phase 5: Installed build (built, needs a real install)
+### Phase 5: Installed build (complete)
 
-See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it moves the adapter library inside the signed app, where the app checks it against its signature.
+See [installed-build.md](roadmap/installed-build.md). A signed copy in the Applications folder makes launch at login reliable, and it moves the adapter library inside the signed app, where the app checks it against its signature. This is confirmed working.
 
 ### Phase 6: Per-app profiles (complete)
 
 See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can change with the front app. The saved settings stay as the default profile, so nothing needed converting. This is confirmed working.
 
-### Phase 7: Reliability and reports (planned)
+### Phase 7: Reliability and reports (built, needs a check)
 
-- **[Release a resting finger](roadmap/resting-finger-release.md):** A finger that lands in a strip and stays still gives the pointer back after 0.6 seconds, which removes one of the known limits.
-- **[Diagnostics report](roadmap/diagnostics-report.md):** The app copies a report for bug reports and can record a few seconds of touches, which helps with external trackpads and earlier systems that have not been tried.
+- **[Release a resting finger](roadmap/resting-finger-release.md):** A finger that lands in a strip and stays still gives the pointer back after 0.6 seconds. This is built and unit tested, and it removes one of the known limits once it is confirmed on a trackpad.
+- **[Diagnostics report](roadmap/diagnostics-report.md):** The app copies a report for bug reports and can record 10 seconds of touches, which helps with external trackpads and earlier systems that have not been tried. This is built and unit tested, but no report has been pasted into a real issue yet.
 
 ### Phase 8: More controls (planned)
 
@@ -185,6 +184,6 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 
 ## Verification
 
-- Unit tests cover the zone map and the gesture state machine.
+- Unit tests cover the zone map, the gesture state machine, the settings model, the diagnostics report, and the touch recording format.
 - The app is built and run on a MacBook, and each edge and corner is tested by hand on the built-in trackpad, because touch hardware cannot be simulated.
 - Clicks near the edges, palm contact, typing, and multi-finger gestures are checked to confirm that normal use is undisturbed.

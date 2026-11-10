@@ -22,16 +22,16 @@
 
 <p align="center"><a href="https://trackpad.adiworks.dev/assets/launch.mp4">Watch the film with sound</a></p>
 
-Slide along the side of your trackpad to change the volume, the brightness, or your place in a video, and feel a tick on each step. Press a corner to run whatever you choose. The middle of the trackpad keeps working as it always has. A finger that lands on an edge is treated as the start of a slide, so the pointer waits, and a click there arrives when you let go.
+Slide along the side of your trackpad to change the volume, the brightness, or your place in a video, and feel a tick on each step. Press a corner to run whatever you choose. The middle of the trackpad keeps working as it always has. A finger that lands on an edge is treated as the start of a slide, so the pointer waits, and a click there arrives when you let go. A finger that rests there without sliding gives the pointer back after 0.6 seconds.
 
 ## What it does
 
-| Zone                               | How you use it         | What it can do                                                                                                                                                       |
-| ---------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Left, right, top, and bottom edges | Slide along the edge   | Each edge can change the volume, brightness, or keyboard backlight, seek through media, scroll, zoom, or switch apps and Spaces. Monitor brightness is experimental. |
-| The same edges with two fingers    | Slide with two fingers | Each edge can hold a second action, so one finger can change the volume and two fingers can zoom.                                                                    |
-| All four corners                   | Press lightly          | A corner can mute, control media, open an app, link, or file, press a key combination, or run a shortcut. It can hold a different action for each number of presses. |
-| The middle                         | Use it as usual        | Nothing changes here.                                                                                                                                                |
+| Zone                               | How you use it         | What it can do                                                                                                                                                                            |
+| ---------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Left, right, top, and bottom edges | Slide along the edge   | Each edge can change the volume, brightness, or keyboard backlight, seek through media, scroll, zoom, or switch apps and Spaces. Monitor brightness works only on monitors that allow it. |
+| The same edges with two fingers    | Slide with two fingers | Each edge can hold a second action, so one finger can change the volume and two fingers can zoom.                                                                                         |
+| All four corners                   | Press lightly          | A corner can mute, control media, open an app, link, or file, press a key combination, or run a shortcut. It can hold a different action for each number of presses.                      |
+| The middle                         | Use it as usual        | Nothing changes here.                                                                                                                                                                     |
 
 Controls move in fixed steps, so a slide goes as far as you expect, and a tap on an edge changes nothing. You can set how strong the haptic tick feels, or turn it off. The top-left corner mutes until you change it, and all testing so far has used built-in trackpads.
 
@@ -74,7 +74,7 @@ You can also build the app from source with Xcode 27.2 or later. This command bu
 scripts/install.sh
 ```
 
-The script looks for the project's Developer ID, and it falls back to your own Apple Development identity. Follow the signing step in [CONTRIBUTING.md](CONTRIBUTING.md) first, because media seek refuses a build signed by a team that it does not expect. The script does not notarize the app, so a build made this way is for your own Mac. An install by this script into the Applications folder has not been fully confirmed yet.
+The script looks for the project's Developer ID, and it falls back to your own Apple Development identity. Follow the signing step in [CONTRIBUTING.md](CONTRIBUTING.md) first, because media seek refuses a build signed by a team that it does not expect. The script does not notarize the app, so a build made this way is for your own Mac.
 
 ## Build and run
 

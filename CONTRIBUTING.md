@@ -14,7 +14,7 @@ Trackpad Edges turns the edges and corners of a Mac trackpad into controls, and 
 
 ## Reporting a bug
 
-Open an issue with the bug report form. Include your Mac model, your macOS version, which trackpad you use, and the steps that cause the problem. Security problems are different, so please follow [SECURITY.md](SECURITY.md) and do not open a public issue for them.
+Open an issue with the bug report form. Include your Mac model, your macOS version, which trackpad you use, and the steps that cause the problem. **Report a Problem…** in the app's menu bar menu copies a report with those details and opens the form, so that you can paste it. The report leaves out paths, links, and names, and the app sends nothing itself. If a gesture misbehaves, **Record Touches…** on the General pane saves 10 seconds of touch data that you can attach. Security problems are different, so please follow [SECURITY.md](SECURITY.md) and do not open a public issue for them.
 
 ## Suggesting a feature
 

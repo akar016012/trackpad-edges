@@ -146,6 +146,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         notes.target = self
         notes.toolTip = "Opens the notes for this version in your browser."
         menu.addItem(notes)
+        let report = NSMenuItem(
+            title: "Report a Problem…", action: #selector(reportProblem), keyEquivalent: "")
+        report.target = self
+        report.toolTip =
+            "Copies a diagnostics report and opens a new issue in your browser, so that you can paste it there."
+        menu.addItem(report)
         let tour = NSMenuItem(
             title: "Welcome Tour…", action: #selector(showWelcomeTour), keyEquivalent: "")
         tour.target = self
@@ -202,7 +208,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             },
             setChecksForUpdatesAutomatically: { [weak self] in
                 self?.updater.checksAutomatically = $0
+            },
+            copyDiagnostics: { [weak self] in self?.copyDiagnostics() },
+            recordTouches: { [weak self] completion in
+                self?.controller.recordTouches(completion: completion)
             })
+    }
+
+    /// Puts the diagnostics report on the clipboard, so that you can read it before you share it.
+    private func copyDiagnostics() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(controller.diagnosticsReport.text, forType: .string)
+    }
+
+    /// Opens the empty bug report form. The report waits on the clipboard for you to paste it,
+    /// because the app itself never sends anything.
+    @objc private func reportProblem() {
+        copyDiagnostics()
+        NSWorkspace.shared.open(ProjectLinks.newBugReport)
     }
 
     @objc private func openWindow() {

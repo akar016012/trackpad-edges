@@ -1102,15 +1102,16 @@ final class GestureEngineTests: XCTestCase {
         var engine = touchMode()
         _ = engine.process(finger(0.95, 0.5), now: 0)
         XCTAssertNil(engine.liftGraceRemaining(now: 0))
-        _ = engine.process([], now: 1)
-        XCTAssertEqual(engine.liftGraceRemaining(now: 1.1) ?? 0, 0.08, accuracy: 0.001)
-        _ = engine.process(finger(0.95, 0.5), now: 1.1)
-        XCTAssertNil(engine.liftGraceRemaining(now: 1.1))
-        _ = engine.process([], now: 1.15)
+        // These times stay inside the wait that releases a resting finger.
+        _ = engine.process([], now: 0.2)
+        XCTAssertEqual(engine.liftGraceRemaining(now: 0.3) ?? 0, 0.08, accuracy: 0.001)
+        _ = engine.process(finger(0.95, 0.5), now: 0.3)
+        XCTAssertNil(engine.liftGraceRemaining(now: 0.3))
+        _ = engine.process([], now: 0.35)
         // A check set up for the first lift comes too early for the second one.
-        XCTAssertEqual(engine.tick(now: 1.2), [])
-        XCTAssertEqual(engine.liftGraceRemaining(now: 1.2) ?? 0, 0.13, accuracy: 0.001)
-        XCTAssertEqual(engine.tick(now: 1.34), [.slideCanceled(.volume), .pointerReleased])
-        XCTAssertNil(engine.liftGraceRemaining(now: 1.34))
+        XCTAssertEqual(engine.tick(now: 0.4), [])
+        XCTAssertEqual(engine.liftGraceRemaining(now: 0.4) ?? 0, 0.13, accuracy: 0.001)
+        XCTAssertEqual(engine.tick(now: 0.54), [.slideCanceled(.volume), .pointerReleased])
+        XCTAssertNil(engine.liftGraceRemaining(now: 0.54))
     }
 }
