@@ -1,6 +1,6 @@
 # Release a resting finger
 
-Status: this feature is built and unit tested, but it has not been tried on a trackpad yet. The 0.6 second wait is a first guess that real slides still have to confirm.
+Status: this feature is built and unit tested, but it has not been tried on a trackpad yet. The 0.6 second wait is a first guess that real slides still have to confirm. It ships in version 1.3.
 
 ## Goal
 

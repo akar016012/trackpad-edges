@@ -2,12 +2,14 @@
 
 ## Unreleased
 
+## 1.3 - 2026-11-09
+
 - A finger that rests on an edge without sliding now gives the pointer back after 0.6 seconds.
 - The menu bar menu has a new Report a Problem… item, which copies a diagnostics report and opens a bug report for you to paste it into. The report leaves out paths, links, and names, and the app sends nothing itself.
 - The General pane can copy the same report, and it can record 10 seconds of touch data to a file that you can attach to a bug report.
 - A level no longer flips back and forth when your finger rests between two steps, and the seek preview holds steady in the same way.
 - A seek now applies on time when your finger briefly lost contact just before you lifted it.
-- Settings saved by a newer version no longer reset every setting when an older version opens them.
+- This version no longer resets every setting when it opens settings that a newer version saved.
 - A click on an edge or in a corner is no longer dropped on rare occasions.
 - Switch Spaces starts working as soon as you turn on its shortcuts in System Settings and leave that window.
 

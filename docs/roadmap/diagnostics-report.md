@@ -1,6 +1,6 @@
 # Diagnostics report
 
-Status: this feature is built and unit tested, and the layout of the General pane has been inspected. The buttons have not been used in the running app yet, so no report has been pasted into a real issue and no recording has been saved.
+Status: this feature is built and unit tested, and the layout of the General pane has been inspected. The buttons have not been used in the running app yet, so no report has been pasted into a real issue and no recording has been saved. It ships in version 1.3.
 
 ## Goal
 
