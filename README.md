@@ -108,7 +108,7 @@ Touch hardware cannot be simulated, so changes to how gestures feel also need a 
 
 ## Contributing
 
-Contributions are welcome, and [CONTRIBUTING.md](CONTRIBUTING.md) explains how to help. This project has one maintainer, so replies can take up to two weeks. Please report security problems privately, as [SECURITY.md](SECURITY.md) explains. Everyone who takes part agrees to follow the [code of conduct](CODE_OF_CONDUCT.md).
+Contributions are welcome, and [CONTRIBUTING.md](CONTRIBUTING.md) explains how to help. To report a bug, choose **Report a Problem…** from the app's menu bar menu, which copies a diagnostics report and opens the bug report form for you to paste it into. This project has one maintainer, so replies can take up to two weeks. Please report security problems privately, as [SECURITY.md](SECURITY.md) explains. Everyone who takes part agrees to follow the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

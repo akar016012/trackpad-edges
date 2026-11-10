@@ -40,7 +40,7 @@ This list was last updated on 2026-11-09. **Done** means that it was tried on a 
 
 ### Needs a check
 
-- Automatic updates are built, and their signing is tested, but no installed copy has updated itself yet. The first real test comes with the version after the first one that includes the updater.
+- Automatic updates are built, and their signing is tested. Versions 1.2 and 1.3 are the first updates that installed copies can receive on their own, but no successful update of an installed copy has been recorded here yet.
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Click-to-start option](gestures.md)
 - [ ] [Release a resting finger](roadmap/resting-finger-release.md), which is built and unit tested, but the 0.6 second wait has not been tried with real slides
@@ -133,7 +133,7 @@ All source lives under `trackpad-edges/`.
 
 ## Roadmap
 
-Phases 0 to 6 are complete, and phase 7 is built but needs a check on a trackpad. Phases 8 and 9 are planned, and none of their features is built yet. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by phase 8.
+Phases 0 to 6 are complete, and phase 7 is built but needs a check on a trackpad. Version 1.3 includes phase 7. Phases 8 and 9 are planned, and none of their features is built yet. Each feature has its own document in `docs/roadmap/`. The **Needs a check** list comes next, followed by phase 8.
 
 ### Phase 0: Hardware test session (complete)
 
