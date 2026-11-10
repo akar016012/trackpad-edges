@@ -63,3 +63,11 @@ The app is named Trackpad Edges, and it is in the Utilities category. Its name, 
 This pane can reopen the welcome tour.
 
 The pane holds the first-run steps, the Accessibility status, launch at login, and updates. **Check daily** is on by default, and **Check Now** checks right away. Both are unavailable in a copy that is not signed with this project's Developer ID.
+
+The **Report a problem** section helps with a bug report, and the app sends nothing itself. Its **Diagnostics** row lines up with the rows above it, with one button beneath the other. A line beneath the buttons says what just happened, and VoiceOver announces it.
+
+- **Copy Diagnostics** puts a plain-text report on the clipboard. It lists the app version, the macOS version, the Mac model, each trackpad with its family ID and whether it is built in, the Accessibility state, whether the app is watching clicks, whether gestures are paused, whether the media adapter loaded, each dimmed action with its reason, and a summary of the settings.
+- The report leaves out file paths, links, app names, bundle identifiers, recorded key labels, and shortcut names. A corner shows only the kind of action for each click count, and a profile shows only its number and what it changes.
+- **Record Touches…** says what it records, and then records 10 seconds of touch data while gestures keep working. It then asks where to save the file and shows it in the Finder. The file holds a format version, each trackpad's family ID and whether it is built in, and the time of each frame with the number, position, pressure, size, and long axis of each contact. It holds nothing else.
+
+See [diagnostics-report.md](roadmap/diagnostics-report.md).

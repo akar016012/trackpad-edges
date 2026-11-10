@@ -1,6 +1,6 @@
 # Palm detection
 
-Status: this feature is built, using measurements from the phase 0 test session, but it has not been confirmed on the trackpad yet.
+Status: this feature is built and confirmed working on the built-in trackpad, using measurements from the phase 0 test session.
 
 A contact counts as a palm at a size of 1.6 or more, or at a long axis of 13 or more with a size of 1.2 or more. A firm click flattens a finger to about 1.3 in size, and three-finger gestures have long axes with small sizes, so neither of those counts.
 

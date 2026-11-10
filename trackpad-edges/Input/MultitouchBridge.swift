@@ -14,6 +14,7 @@ final class MultitouchBridge {
     private typealias Stop = @convention(c) (UnsafeRawPointer) -> Int32
     private typealias GetFamilyID =
         @convention(c) (UnsafeRawPointer, UnsafeMutablePointer<Int32>) -> Int32
+    private typealias IsBuiltIn = @convention(c) (UnsafeRawPointer) -> Bool
 
     /// The family IDs of Apple's touch mice, which also report touches but are not trackpads.
     private static let mouseFamilies: Set<Int32> = [112, 113]
@@ -22,6 +23,8 @@ final class MultitouchBridge {
     var onFrame: ((_ device: UnsafeRawPointer, _ touches: [TouchPoint]) -> Void)?
 
     private(set) var devices: [UnsafeRawPointer] = []
+    /// What the framework says about each device, in the same order, for the diagnostics report.
+    private(set) var deviceInfo: [TrackpadInfo] = []
     private var deviceList: CFArray?
 
     private let unregister: Unregister? = MultitouchFramework.symbol(
@@ -37,6 +40,7 @@ final class MultitouchBridge {
             let list = createList()
         else { return 0 }
         let getFamilyID: GetFamilyID? = MultitouchFramework.symbol("MTDeviceGetFamilyID")
+        let isBuiltIn: IsBuiltIn? = MultitouchFramework.symbol("MTDeviceIsBuiltIn")
 
         // The list owns the devices, so it must stay alive for as long as they are in use.
         let array = Unmanaged<CFArray>.fromOpaque(list).takeRetainedValue()
@@ -44,10 +48,13 @@ final class MultitouchBridge {
         for index in 0..<CFArrayGetCount(array) {
             guard let device = CFArrayGetValueAtIndex(array, index) else { continue }
             var family: Int32 = 0
-            if getFamilyID?(device, &family) == 0, Self.mouseFamilies.contains(family) { continue }
+            let hasFamily = getFamilyID?(device, &family) == 0
+            if hasFamily, Self.mouseFamilies.contains(family) { continue }
             _ = register(device, contactFrameCallback)
             _ = startDevice(device, 0)
             devices.append(device)
+            deviceInfo.append(
+                TrackpadInfo(familyID: hasFamily ? family : nil, isBuiltIn: isBuiltIn?(device)))
         }
         return devices.count
     }
@@ -59,6 +66,7 @@ final class MultitouchBridge {
             _ = stopDevice?(device)
         }
         devices = []
+        deviceInfo = []
         deviceList = nil
     }
 }

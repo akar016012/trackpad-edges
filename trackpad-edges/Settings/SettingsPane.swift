@@ -13,6 +13,9 @@ struct WindowActions {
     var canCheckForUpdates: () -> Bool
     var checksForUpdatesAutomatically: () -> Bool
     var setChecksForUpdatesAutomatically: (Bool) -> Void
+    var copyDiagnostics: () -> Void
+    /// Records touches for a fixed time, and then hands the recording to the closure.
+    var recordTouches: (@escaping (TouchRecording) -> Void) -> Void
 }
 
 /// Forwards a control's action to a closure.
