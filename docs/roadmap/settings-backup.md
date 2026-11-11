@@ -32,6 +32,7 @@ The General pane gains a **Settings** row with **Export…** and **Import…** b
 
 - A file holds file paths, links, and shortcut names, which can be personal. The export dialog should say so before you share one.
 - A file from someone else could set a corner to open a link or press keys. The summary and the confirmation are the defense, so they must list those actions plainly.
+- A file can also hold Run Command corners, which run shell commands as you. An import must show each command in full, and it must keep every imported command off until you confirm it, so that no import can turn one on silently.
 
 ## Verification
 

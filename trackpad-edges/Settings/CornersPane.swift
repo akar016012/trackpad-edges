@@ -4,37 +4,19 @@ import UniformTypeIdentifiers
 /// Lets you choose an action for each click count of each corner. The clicks popup picks the
 /// count to edit, so a corner with several actions needs no extra rows.
 final class CornersPane: ProfilePane {
-    private enum Choice: Int, CaseIterable {
-        case none, mute, playPause, nextTrack, previousTrack, app, link, file, keys, shortcut
+    private typealias Kind = CornerActionKind
 
-        var title: String {
-            switch self {
-            case .none: return "No Action"
-            case .mute: return "Mute"
-            case .playPause: return "Play or Pause"
-            case .nextTrack: return "Next Track"
-            case .previousTrack: return "Previous Track"
-            case .app: return "Open App"
-            case .link: return "Open Link"
-            case .file: return "Open File or Folder"
-            case .keys: return "Press Keys"
-            case .shortcut: return "Run Shortcut"
-            }
-        }
+    /// The name of the width constraint that each text field gets.
+    private static let fieldWidthID = "fieldWidth"
+    /// The width of the Stop button that appears beside a running command.
+    private static let stopWidth: CGFloat = 64
+    private static let keyboardSettings = URL(
+        string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")
 
-        init(_ action: CornerAction) {
-            switch action {
-            case .none: self = .none
-            case .mute: self = .mute
-            case .playPause: self = .playPause
-            case .nextTrack: self = .nextTrack
-            case .previousTrack: self = .previousTrack
-            case .openApp: self = .app
-            case .openLink: self = .link
-            case .openFile: self = .file
-            case .keyCombination: self = .keys
-            case .shortcut: self = .shortcut
-            }
+    /// The popup's items, grouped as `CornerActionGroup` lists the groups.
+    private static var actionGroups: [(header: String?, items: [(title: String, tag: Int)])] {
+        CornerActionGroup.allCases.map { group in
+            (group.title, Kind.allCases.filter { $0.group == group }.map { ($0.title, $0.tag) })
         }
     }
 
@@ -48,6 +30,9 @@ final class CornersPane: ProfilePane {
     private var clickPopups: [Corner: NSPopUpButton] = [:]
     /// The click count being edited for each corner.
     private var selectedClicks: [Corner: Int] = [:]
+    private var sectionTitles: [Corner: String] = [:]
+    /// The command field of each corner that shows one, with its Stop button and its width.
+    private var commandRows: [Corner: (stop: NSButton, width: NSLayoutConstraint)] = [:]
     private let strengthLabel = NSTextField(labelWithString: "")
 
     override func loadView() {
@@ -67,12 +52,33 @@ final class CornersPane: ProfilePane {
     override func profileChanged() {
         for (corner, action) in actionPopups {
             selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
-            action.selectItem(at: Choice(currentAction(corner)).rawValue)
+            action.selectItem(withTag: Kind(currentAction(corner)).tag)
             clickPopups[corner]?.selectItem(at: (selectedClicks[corner] ?? 1) - 1)
             refreshClickTitles(corner)
             rebuildDetails(corner: corner)
         }
         onChange?()
+    }
+
+    /// Reads the Do Not Disturb key again, so that the pane never shows an old answer.
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        for corner in actionPopups.keys
+        where currentAction(corner) == .system(action: .toggleDoNotDisturb) {
+            rebuildDetails(corner: corner)
+        }
+    }
+
+    /// Shows the Stop button beside each command that is running, and hides it beside the rest.
+    func commandsChanged() {
+        let running = actions.runningCommands()
+        for (corner, row) in commandRows {
+            guard case .command(let script) = currentAction(corner) else { continue }
+            let isRunning = running.contains(script)
+            row.stop.isHidden = !isRunning
+            row.width.constant =
+                isRunning ? Self.columnWidth - Self.stopWidth - 8 : Self.columnWidth
+        }
     }
 
     private func pressControls() -> NSView {
@@ -97,10 +103,11 @@ final class CornersPane: ProfilePane {
         _ title: String, corner: Corner
     ) -> NSView {
         selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
-        let action = popup(
-            Choice.allCases.map(\.title), selected: Choice(currentAction(corner)).rawValue
-        ) { [weak self] index in
-            self?.choose(Choice(rawValue: index) ?? .none, corner: corner)
+        sectionTitles[corner] = title
+        let action = groupedPopup(
+            Self.actionGroups, selectedTag: Kind(currentAction(corner)).tag
+        ) { [weak self] tag in
+            self?.choose(Kind(tag: tag) ?? .none, corner: corner)
         }
         let clicks = popup(clickTitles(corner), selected: (selectedClicks[corner] ?? 1) - 1) {
             [weak self] index in self?.selectClicks(index + 1, corner: corner)
@@ -123,24 +130,13 @@ final class CornersPane: ProfilePane {
         return column([heading(title), controls, details])
     }
 
-    private func choose(_ choice: Choice, corner: Corner) {
+    private func choose(_ kind: Kind, corner: Corner) {
         // A text field commits when it loses focus, so that must happen before the new action is
         // stored, or the old text would overwrite it.
         view.window?.makeFirstResponder(nil)
         // AppKit also sends the action for the item that is already selected.
-        guard Choice(currentAction(corner)) != choice else { return }
-        switch choice {
-        case .none: assign(.none, corner: corner)
-        case .mute: assign(.mute, corner: corner)
-        case .playPause: assign(.playPause, corner: corner)
-        case .nextTrack: assign(.nextTrack, corner: corner)
-        case .previousTrack: assign(.previousTrack, corner: corner)
-        case .app: assign(.openApp(path: ""), corner: corner)
-        case .link: assign(.openLink(url: "", browserPath: nil), corner: corner)
-        case .file: assign(.openFile(path: ""), corner: corner)
-        case .keys: assign(.keyCombination(keyCode: nil, modifiers: 0, label: ""), corner: corner)
-        case .shortcut: assign(.shortcut(name: ""), corner: corner)
-        }
+        guard Kind(currentAction(corner)) != kind else { return }
+        assign(kind.blankAction, corner: corner)
         rebuildDetails(corner: corner)
         // The window fits the pane, so it must hear about this after the rows have changed.
         onChange?()
@@ -174,21 +170,27 @@ final class CornersPane: ProfilePane {
     private func selectClicks(_ count: Int, corner: Corner) {
         view.window?.makeFirstResponder(nil)
         selectedClicks[corner] = count
-        actionPopups[corner]?.selectItem(at: Choice(currentAction(corner)).rawValue)
+        actionPopups[corner]?.selectItem(withTag: Kind(currentAction(corner)).tag)
         rebuildDetails(corner: corner)
         onChange?()
     }
 
     private func rebuildDetails(corner: Corner) {
         guard let stack = detailStacks[corner] else { return }
+        commandRows[corner] = nil
         stack.setViews([], in: .leading)
         for view in detailViews(corner: corner) { stack.addView(view, in: .leading) }
+        commandsChanged()
     }
 
     private func detailViews(corner: Corner) -> [NSView] {
         switch currentAction(corner) {
         case .none, .mute, .playPause, .nextTrack, .previousTrack:
             return []
+        case .system(let action):
+            return action == .toggleDoNotDisturb ? doNotDisturbViews() : []
+        case .command(let script):
+            return commandViews(script: script, corner: corner)
         case .openApp(let path):
             return chooser(path: path, title: "Choose App…", types: [.application]) {
                 [weak self] chosen in
@@ -276,12 +278,59 @@ final class CornersPane: ProfilePane {
         return [recorder]
     }
 
+    /// A field for one command, in a fixed-width font, that fills the column. A Stop button takes
+    /// part of the row while the command runs.
+    private func commandViews(script: String, corner: Corner) -> [NSView] {
+        let field = textField(value: script, placeholder: "Shell command", width: Self.columnWidth)
+        {
+            [weak self] text in
+            self?.assign(.command(script: text), corner: corner)
+            // This is the moment when the reason for notifications is clear.
+            if ShellCommand.isConfigured(text) { self?.actions.requestNotificationPermission() }
+        }
+        field.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        field.lineBreakMode = .byTruncatingTail
+        field.setAccessibilityLabel("\(sectionTitles[corner] ?? "") corner command")
+        let stop = button("Stop") { [weak self] in
+            guard let self, case .command(let script) = self.currentAction(corner) else { return }
+            self.actions.stopCommand(script)
+        }
+        stop.widthAnchor.constraint(equalToConstant: Self.stopWidth).isActive = true
+        stop.setAccessibilityLabel("Stop the \(sectionTitles[corner] ?? "") corner command")
+        stop.isHidden = true
+        if let width = field.constraints.first(where: { $0.identifier == Self.fieldWidthID }) {
+            commandRows[corner] = (stop, width)
+        }
+        return [field, stop]
+    }
+
+    /// Says whether Do Not Disturb has a key, and offers Keyboard settings while it has none.
+    private func doNotDisturbViews() -> [NSView] {
+        guard SystemActionRunner.doNotDisturbKey == nil else {
+            let label = NSTextField(labelWithString: "It presses your key for Do Not Disturb.")
+            label.textColor = .secondaryLabelColor
+            return [label]
+        }
+        let label = NSTextField(labelWithString: "No key is assigned yet.")
+        label.textColor = .secondaryLabelColor
+        let open = button("Keyboard Settings…") {
+            if let url = Self.keyboardSettings { NSWorkspace.shared.open(url) }
+        }
+        open.toolTip =
+            "Assign a key to Do Not Disturb under Keyboard Shortcuts, in the Mission Control section."
+        return [label, open]
+    }
+
     private func textField(
-        value: String, placeholder: String, _ assign: @escaping (String) -> Void
+        value: String, placeholder: String, width: CGFloat = 150,
+        _ assign: @escaping (String) -> Void
     ) -> NSTextField {
         let field = NSTextField(string: value)
         field.placeholderString = placeholder
-        field.widthAnchor.constraint(equalToConstant: 150).isActive = true
+        let widthConstraint = field.widthAnchor.constraint(equalToConstant: width)
+        // The command row finds this constraint by name, so that it can make room for Stop.
+        widthConstraint.identifier = Self.fieldWidthID
+        widthConstraint.isActive = true
         bind(field) { [weak field] in assign(field?.stringValue ?? "") }
         return field
     }

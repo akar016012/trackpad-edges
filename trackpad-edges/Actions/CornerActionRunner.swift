@@ -2,11 +2,37 @@ import AppKit
 
 /// Carries out the action assigned to a corner.
 final class CornerActionRunner {
-    func run(_ action: CornerAction) {
+    private let events = AppleEventSender()
+    let system: SystemActionRunner
+    let session: SessionActionRunner
+    let commands = CommandRunner()
+
+    /// Shows a short notice, with a title and a sentence that says what to do.
+    var showNotice: ((String, String) -> Void)? {
+        didSet {
+            system.showNotice = showNotice
+            session.showNotice = showNotice
+            commands.showNotice = showNotice
+        }
+    }
+
+    init() {
+        system = SystemActionRunner(events: events)
+        session = SessionActionRunner(events: events)
+    }
+
+    /// Runs one action. The corner names who asked, in the confirm box and in failure reports.
+    func run(_ action: CornerAction, corner: CornerSlot) {
         guard action.isConfigured else { return }
         switch action {
         case .none:
             break
+        case .system(let action) where action.confirmsFirst:
+            session.confirm(action, corner: corner)
+        case .system(let action):
+            system.run(action)
+        case .command(let script):
+            commands.run(script, corner: corner)
         case .mute:
             MediaKeys.press(MediaKeys.mute)
         case .playPause:

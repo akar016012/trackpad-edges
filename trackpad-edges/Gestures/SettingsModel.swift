@@ -145,6 +145,27 @@ nonisolated enum CornerSlot: String, Codable, CaseIterable, Sendable {
         }
     }
 
+    /// The corner of a trackpad zone, or nil for an edge.
+    init?(zone: Zone) {
+        switch zone {
+        case .topLeft: self = .topLeft
+        case .topRight: self = .topRight
+        case .bottomLeft: self = .bottomLeft
+        case .bottomRight: self = .bottomRight
+        case .left, .right, .bottom, .top: return nil
+        }
+    }
+
+    /// The corner's place alone, such as `top-left`, for short notices.
+    var shortName: String {
+        switch self {
+        case .topLeft: return "top-left"
+        case .topRight: return "top-right"
+        case .bottomLeft: return "bottom-left"
+        case .bottomRight: return "bottom-right"
+        }
+    }
+
     var title: String {
         switch self {
         case .topLeft: return "The top-left corner"

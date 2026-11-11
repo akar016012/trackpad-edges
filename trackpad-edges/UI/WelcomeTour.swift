@@ -80,10 +80,10 @@ final class WelcomeTour: SettingsPane {
         Preset(title: "Browsing", left: .switchApps, right: .scroll, top: .zoom, bottom: .switchSpaces),
         Preset(title: "Volume Only", left: nil, right: .volume, top: nil, bottom: nil),
     ]
-    private static let cornerChoices: [(title: String, action: CornerAction)] = [
-        ("No Action", .none), ("Mute", .mute), ("Play or Pause", .playPause),
-        ("Next Track", .nextTrack), ("Previous Track", .previousTrack),
-    ]
+    private static let cornerChoices: [(title: String, action: CornerAction)] =
+        [CornerAction.none, .mute, .playPause, .nextTrack, .previousTrack].map {
+            (CornerActionKind($0).title, $0)
+        }
     private static let pageHeight: CGFloat = 330
     private static let iconSize: CGFloat = 128
 
@@ -330,7 +330,7 @@ final class WelcomeTour: SettingsPane {
             cornerSection("Bottom left", .bottomLeft), cornerSection("Bottom right", .bottomRight))
         return page(
             "Choose your corners",
-            "Press a corner lightly to fire it. The Corners tab can also open apps, links, and files, press keys, or run shortcuts.",
+            "Press a corner lightly to fire it. The Corners tab can also open apps, links, and files, press keys, run shortcuts and commands, or lock, sleep, and restart the Mac.",
             [top, bottom])
     }
 

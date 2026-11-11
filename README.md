@@ -26,12 +26,12 @@ Slide along the side of your trackpad to change the volume, the brightness, or y
 
 ## What it does
 
-| Zone                               | How you use it         | What it can do                                                                                                                                                                            |
-| ---------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Left, right, top, and bottom edges | Slide along the edge   | Each edge can change the volume, brightness, or keyboard backlight, seek through media, scroll, zoom, or switch apps and Spaces. Monitor brightness works only on monitors that allow it. |
-| The same edges with two fingers    | Slide with two fingers | Each edge can hold a second action, so one finger can change the volume and two fingers can zoom.                                                                                         |
-| All four corners                   | Press lightly          | A corner can mute, control media, open an app, link, or file, press a key combination, or run a shortcut. It can hold a different action for each number of presses.                      |
-| The middle                         | Use it as usual        | Nothing changes here.                                                                                                                                                                     |
+| Zone                               | How you use it         | What it can do                                                                                                                                                                                                                                 |
+| ---------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Left, right, top, and bottom edges | Slide along the edge   | Each edge can change the volume, brightness, or keyboard backlight, seek through media, scroll, zoom, or switch apps and Spaces. Monitor brightness works only on monitors that allow it.                                                      |
+| The same edges with two fingers    | Slide with two fingers | Each edge can hold a second action, so one finger can change the volume and two fingers can zoom.                                                                                                                                              |
+| All four corners                   | Press lightly          | A corner can mute, control media, open an app, link, or file, press keys, run a shortcut or a shell command, lock, sleep, or restart the Mac, toggle Dark Mode, or empty the Trash. It can hold a different action for each number of presses. |
+| The middle                         | Use it as usual        | Nothing changes here.                                                                                                                                                                                                                          |
 
 Controls move in fixed steps, so a slide goes as far as you expect, and a tap on an edge changes nothing. You can set how strong the haptic tick feels, or turn it off. The top-left corner mutes until you change it, and all testing so far has used built-in trackpads.
 

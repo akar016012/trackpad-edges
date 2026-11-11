@@ -16,6 +16,22 @@ struct WindowActions {
     var copyDiagnostics: () -> Void
     /// Records touches for a fixed time, and then hands the recording to the closure.
     var recordTouches: (@escaping (TouchRecording) -> Void) -> Void
+    /// The corner commands that are running now, by their text.
+    var runningCommands: () -> Set<String>
+    var stopCommand: (String) -> Void
+    /// Asks once for permission to report failed commands in a notification.
+    var requestNotificationPermission: () -> Void
+}
+
+extension NSMenuItem {
+    /// A header above a group of items. macOS 13 has no section header, so a disabled item stands
+    /// in for one there.
+    static func header(_ title: String) -> NSMenuItem {
+        if #available(macOS 14.0, *) { return .sectionHeader(title: title) }
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
+    }
 }
 
 /// Forwards a control's action to a closure.
@@ -80,6 +96,28 @@ class SettingsPane: NSViewController {
         }
         button.selectItem(at: selected)
         bind(button) { [weak button] in handler(button?.indexOfSelectedItem ?? 0) }
+        return button
+    }
+
+    /// A popup whose items are grouped under headers, with a separator between groups. Each item
+    /// is found by its tag, because the headers and separators shift the positions.
+    func groupedPopup(
+        _ groups: [(header: String?, items: [(title: String, tag: Int)])], selectedTag: Int,
+        _ handler: @escaping (Int) -> Void
+    ) -> NSPopUpButton {
+        let button = NSPopUpButton()
+        button.autoenablesItems = false
+        for (index, group) in groups.enumerated() {
+            if index > 0 { button.menu?.addItem(.separator()) }
+            if let header = group.header { button.menu?.addItem(.header(header)) }
+            for item in group.items {
+                let menuItem = NSMenuItem(title: item.title, action: nil, keyEquivalent: "")
+                menuItem.tag = item.tag
+                button.menu?.addItem(menuItem)
+            }
+        }
+        button.selectItem(withTag: selectedTag)
+        bind(button) { [weak button] in handler(button?.selectedTag() ?? 0) }
         return button
     }
 

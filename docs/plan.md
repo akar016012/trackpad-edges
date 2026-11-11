@@ -6,7 +6,7 @@ This project is a macOS menu bar app that turns the edges and corners of a track
 
 ## Feature status
 
-This list was last updated on 2026-11-09. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
+This list was last updated on 2026-11-11. **Done** means that it was tried on a built-in trackpad and works. **Needs a check** means that it is in the code but has not been tried yet.
 
 ### Done
 
@@ -47,6 +47,7 @@ This list was last updated on 2026-11-09. **Done** means that it was tried on a 
 - [ ] [Diagnostics report](roadmap/diagnostics-report.md), which is built and unit tested, but no report has been pasted into an issue and no recording has been made on a trackpad yet
 - [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
 - [ ] Media seek in Safari still needs a check, because only Chrome was tried.
+- [ ] [System actions and custom commands on a corner](roadmap/system-and-command-corners.md), which is built and unit tested. A debug build showed the confirm box, ran a command through the login shell, reported its failure, and stopped a command with its background job. No action has fired from the trackpad yet, and the spike questions that need a real press, a consent prompt, or an update of an installed copy are still open.
 - [ ] Four fixes from 2026-11-09 have not been tried on a trackpad yet: steps that hold steady on a line, a slide that ends on time after contact drops out, the second look before a mouse-up counts as lost, and the recheck of Switch Spaces when another app comes to the front. Unit tests cover the step logic and the grace period's arithmetic, but the timers and the system's answers need a real run.
 
 ### Planned
@@ -171,10 +172,11 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 - **[Release a resting finger](roadmap/resting-finger-release.md):** A finger that lands in a strip and stays still gives the pointer back after 0.6 seconds. This is built and unit tested, and it removes one of the known limits once it is confirmed on a trackpad.
 - **[Diagnostics report](roadmap/diagnostics-report.md):** The app copies a report for bug reports and can record 10 seconds of touches, which helps with external trackpads and earlier systems that have not been tried. This is built and unit tested, but no report has been pasted into a real issue yet.
 
-### Phase 8: More controls (planned)
+### Phase 8: More controls (in progress)
 
 - **[Press Keys on an edge](roadmap/key-step-edges.md):** An edge presses one recorded key combination for each step up and another for each step down, such as switching browser tabs.
 - **[Hold a corner](roadmap/corner-hold.md):** Each corner can hold one more action for a press that is held for half a second.
+- **[System actions and custom commands on a corner](roadmap/system-and-command-corners.md):** A corner can lock, sleep, restart, or shut down the Mac, toggle Dark Mode or Do Not Disturb, empty the Trash, or run a shell command. Log Out, Restart, and Shut Down ask you to confirm first. This is built and unit tested, and it needs a check on the trackpad.
 - **[Level overlay](roadmap/level-overlay.md):** Monitor Brightness and Switch Apps show their level or the next app, because macOS shows no indicator for them.
 
 ### Phase 9: Backup and automation (planned)
@@ -184,6 +186,6 @@ See [per-app-profiles.md](roadmap/per-app-profiles.md). Edges and corners can ch
 
 ## Verification
 
-- Unit tests cover the zone map, the gesture state machine, the settings model, the diagnostics report, and the touch recording format.
+- Unit tests cover the zone map, the gesture state machine, the settings model, the diagnostics report, the touch recording format, and the rules behind the system actions and Run Command.
 - The app is built and run on a MacBook, and each edge and corner is tested by hand on the built-in trackpad, because touch hardware cannot be simulated.
 - Clicks near the edges, palm contact, typing, and multi-finger gestures are checked to confirm that normal use is undisturbed.
