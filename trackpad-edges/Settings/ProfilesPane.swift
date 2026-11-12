@@ -123,8 +123,10 @@ final class ProfilesPane: SettingsPane, NSTableViewDataSource, NSTableViewDelega
         refresh()
     }
 
-    /// Brings the list and its details in step with what is saved. A hidden pane waits until it
-    /// appears, because this runs on every settings change.
+    /**
+     Brings the list and its details in step with what is saved. A hidden pane waits until it
+     appears, because this runs on every settings change.
+     */
     func refresh() {
         guard isViewLoaded, view.window != nil else { return }
         let row = table.selectedRow

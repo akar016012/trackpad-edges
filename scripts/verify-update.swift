@@ -1,8 +1,8 @@
-// Checks a signed update the way an installed app will, using the public key inside the built app.
-// A release stops here if the signing secret and the app's public key do not belong together,
-// because installed copies would refuse every update signed with the wrong key.
-//
-// Usage: swift scripts/verify-update.swift <file> <signature> <public key>
+/* Checks a signed update the way an installed app will, using the public key inside the built app.
+   A release stops here if the signing secret and the app's public key do not belong together,
+   because installed copies would refuse every update signed with the wrong key.
+
+   Usage: swift scripts/verify-update.swift <file> <signature> <public key> */
 
 import CryptoKit
 import Foundation

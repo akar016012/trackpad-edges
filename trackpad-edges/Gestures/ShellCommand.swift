@@ -31,8 +31,10 @@ nonisolated enum ShellCommand {
         return shell
     }
 
-    /// `-l` loads your profile so your tools are on the path; `-c` skips the interactive setup,
-    /// which can hang without a terminal.
+    /**
+     `-l` loads your profile so your tools are on the path; `-c` skips the interactive setup,
+     which can hang without a terminal.
+     */
     static func arguments(for script: String) -> [String] {
         ["-l", "-c", script]
     }
@@ -60,9 +62,10 @@ nonisolated enum ShellCommand {
         }
     }
 
-    /** Describes a failure, or returns nil for success or a command you stopped. The summary
-        fits the overlay, and the body adds error output. `corner` is a short name such as
-        `top-left`. */
+    /**
+     Describes a failure, or returns nil for success or a command you stopped. The summary fits
+     the overlay, and the body adds error output. `corner` is a short name such as `top-left`.
+     */
     static func failure(
         _ end: End, stopped: Bool, tail: OutputTail, corner: String
     ) -> (title: String, summary: String, body: String)? {

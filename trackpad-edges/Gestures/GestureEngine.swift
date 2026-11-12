@@ -38,11 +38,15 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var multiClickWindow: TimeInterval = 0.45
     /// How long a finger can lose contact before a slide ends. Contact drops out near the pad's rim.
     var liftGrace: TimeInterval = 0.18
-    /// How long a finger may rest in a strip without starting a slide before the pointer moves
-    /// again. This is a first guess, and it has not been measured against real slides yet.
+    /**
+     How long a finger may rest in a strip without starting a slide before the pointer moves
+     again. This is a first guess, and it has not been measured against real slides yet.
+     */
     var restRelease: TimeInterval = 0.6
-    /// Whether a one-finger slide needs a physical click. Otherwise, landing in a strip starts it.
-    /// A two-finger slide always starts on touch, because a two-finger click is a secondary click.
+    /**
+     Whether a one-finger slide needs a physical click. Otherwise, landing in a strip starts it.
+     A two-finger slide always starts on touch, because a two-finger click is a secondary click.
+     */
     var requireClick = true
     /// The travel needed before a touch counts as a slide, which is what keeps a tap inert.
     var slideDeadZone: Float = 0.04
@@ -64,20 +68,26 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     var unavailableKinds: Set<SlideKind> = []
     /// The click counts that fire each corner. A corner with none is a normal part of the pad.
     var cornerCounts: [Zone: Set<Int>] = [.topLeft: [1]]
-    /// The pressure that counts as a corner press, or nil to need a physical click. Measured on
-    /// the built-in trackpad, resting fingers and taps peak near 50, and clicks start near 120.
+    /**
+     The pressure that counts as a corner press, or nil to need a physical click. Measured on
+     the built-in trackpad, resting fingers and taps peak near 50, and clicks start near 120.
+     */
     var pressThreshold: Float?
     /// The pressure that a finger must fall below before it can press again.
     var pressRelease: Float = 50
-    /// A contact this long and this large is a palm. Fingers measured up to 12.5 long, and a firm
-    /// click flattens a finger to about 1.3 in size, so both are needed for the first check.
+    /**
+     A contact this long and this large is a palm. Fingers measured up to 12.5 long, and a firm
+     click flattens a finger to about 1.3 in size, so both are needed for the first check.
+     */
     var palmAxis: Float = 13
     var palmAxisSize: Float = 1.2
     /// A contact this large is a palm whatever its shape.
     var palmSize: Float = 1.6
 
-    /// Returns the zone at a point, testing corners, then top, bottom, left, and right. A corner
-    /// with no action does not count, so the edge beneath it still works.
+    /**
+     Returns the zone at a point, testing corners, then top, bottom, left, and right. A corner
+     with no action does not count, so the edge beneath it still works.
+     */
     func zone(x: Float, y: Float) -> Zone? {
         corner(x: x, y: y) ?? strip(x: x, y: y) { slideKind(for: $0) != nil }
     }
@@ -151,14 +161,16 @@ nonisolated struct GestureConfig: Sendable, Equatable {
     }
 }
 
-/// Turns touch frames and physical clicks from one trackpad into gesture events.
-///
-/// This type has no system dependencies, so unit tests can drive it with plain values. A gesture
-/// needs a single finger that landed in a zone, or two that landed together in a strip with a
-/// two-finger action. A slide starts on landing, or on a physical click in click mode for one
-/// finger, and a corner fires on a press or a physical click. A click that stays swallowed
-/// loses both halves, and a click that turns out to be ordinary is replayed. The controller
-/// handles the rare cases where macOS loses a mouse-up.
+/**
+ Turns touch frames and physical clicks from one trackpad into gesture events.
+
+ This type has no system dependencies, so unit tests can drive it with plain values. A gesture
+ needs a single finger that landed in a zone, or two that landed together in a strip with a
+ two-finger action. A slide starts on landing, or on a physical click in click mode for one
+ finger, and a corner fires on a press or a physical click. A click that stays swallowed
+ loses both halves, and a click that turns out to be ordinary is replayed. The controller
+ handles the rare cases where macOS loses a mouse-up.
+ */
 nonisolated struct GestureEngine {
     enum Event: Sendable, Equatable {
         case slideBegan(SlideKind)
@@ -166,8 +178,10 @@ nonisolated struct GestureEngine {
         case seekMoved(Float)
         case slideEnded(SlideKind)
         case slideCanceled(SlideKind)
-        /// The pointer may move again. If a slide changed a level before it was canceled, or a
-        /// two-finger slide ended with a finger still down, this comes only after they lift.
+        /**
+         The pointer may move again. If a slide changed a level before it was canceled, or a
+         two-finger slide ended with a finger still down, this comes only after they lift.
+         */
         case pointerReleased
         /// The swallowed mouse-down must be delivered now, and the real mouse-up will follow it.
         case passthroughClick
@@ -188,8 +202,10 @@ nonisolated struct GestureEngine {
         let zone: Zone
         let kind: SlideKind
         var id: Int32
-        /// The fingers of a two-finger slide and where each last was along the slide's axis. A
-        /// two-finger slide follows the point between them, and a one-finger slide leaves this empty.
+        /**
+         The fingers of a two-finger slide and where each last was along the slide's axis. A
+         two-finger slide follows the point between them, and a one-finger slide leaves this empty.
+         */
         var fingers: [Int32: Float] = [:]
         var isPair: Bool { !fingers.isEmpty }
         /// The position along the slide's axis that steps are counted from.
@@ -197,12 +213,16 @@ nonisolated struct GestureEngine {
         var lastPosition: Float
         /// The position across the slide's axis where the finger started.
         var crossAnchor: Float
-        /// The latest position across the slide's axis, which tells a returning finger from a
-        /// new one.
+        /**
+         The latest position across the slide's axis, which tells a returning finger from a
+         new one.
+         */
         var lastCross: Float
         var startedAt: TimeInterval
-        /// When the finger first landed. A contact that drops out and returns starts the settle
-        /// time over, but it must not start over the wait that releases a resting finger.
+        /**
+         When the finger first landed. A contact that drops out and returns starts the settle
+         time over, but it must not start over the wait that releases a resting finger.
+         */
         let landedAt: TimeInterval
         var emittedSteps = 0
         /// The sign of the last step, which a step that turns back must overcome by a margin.
@@ -256,8 +276,10 @@ nonisolated struct GestureEngine {
         var lastClick: TimeInterval
     }
 
-    /// The fingers of a slide that was dropped because they rested. They work as ordinary
-    /// pointer fingers, and they cannot start a slide until they lift.
+    /**
+     The fingers of a slide that was dropped because they rested. They work as ordinary
+     pointer fingers, and they cannot start a slide until they lift.
+     */
     private struct Rested {
         /// Where each finger last was, which tells a contact that returns from a new finger.
         var fingers: [Int32: TouchPoint]
@@ -295,16 +317,20 @@ nonisolated struct GestureEngine {
     var isAwaitingLift: Bool { slide?.liftedAt != nil }
     var hasTouches: Bool { !touches.isEmpty }
 
-    /// How long until a slide whose fingers have left ends, or nil if no slide is waiting. A
-    /// finger can return and leave again, which starts the wait over.
+    /**
+     How long until a slide whose fingers have left ends, or nil if no slide is waiting. A
+     finger can return and leave again, which starts the wait over.
+     */
     func liftGraceRemaining(now: TimeInterval) -> TimeInterval? {
         guard let liftedAt = slide?.liftedAt else { return nil }
         return max(liftedAt + config.liftGrace - now, 0)
     }
 
-    /// The slide of a finger that is down and has not started sliding yet, which is dropped if
-    /// that lasts. Only a slide that started on touch counts. A slide that started with a click
-    /// freezes the pointer only while the button is down, so its release already ends the freeze.
+    /**
+     The slide of a finger that is down and has not started sliding yet, which is dropped if
+     that lasts. Only a slide that started on touch counts. A slide that started with a click
+     freezes the pointer only while the button is down, so its release already ends the freeze.
+     */
     private var restingSlide: Slide? {
         guard let slide, !slide.engaged, !slide.moved, slide.liftedAt == nil,
             !config.requireClick || slide.isPair
@@ -367,8 +393,10 @@ nonisolated struct GestureEngine {
             + startTouchSlide(now: now, modifierSatisfied: modifierSatisfied)
     }
 
-    /// Counts a corner press from pressure alone, so a corner needs no physical click. Separate
-    /// press and release levels stop a wobbling finger from counting twice.
+    /**
+     Counts a corner press from pressure alone, so a corner needs no physical click. Separate
+     press and release levels stop a wobbling finger from counting twice.
+     */
     private mutating func updateCornerPress(now: TimeInterval) -> [Event] {
         guard touches.count == 1, let touch = touches.first, let threshold = config.pressThreshold,
             let landing, touch.id == landing.id, config.slideKind(for: landing.zone) == nil,
@@ -387,21 +415,25 @@ nonisolated struct GestureEngine {
         return countCornerClick(landing.zone, now: now)
     }
 
-    /// Handles what waits on time: a corner's click window, a slide's lift grace, and the wait
-    /// that releases a resting finger.
+    /**
+     Handles what waits on time: a corner's click window, a slide's lift grace, and the wait
+     that releases a resting finger.
+     */
     mutating func tick(now: TimeInterval) -> [Event] {
         settleCorner(now: now) + endLiftedSlide(now: now) + releaseRestingSlide(now: now)
     }
 
-    /// Drops the slide of a finger that has rested in a strip for the whole wait, so that the
-    /// pointer moves again. A click that is still held is delivered, so a drag can follow it.
+    /**
+     Drops the slide of a finger that has rested in a strip for the whole wait, so that the
+     pointer moves again. A click that is still held is delivered, so a drag can follow it.
+     */
     private mutating func releaseRestingSlide(now: TimeInterval) -> [Event] {
         guard let current = restingSlide, now - current.landedAt >= config.restRelease else {
             return []
         }
         slide = nil
-        // A slide that began with a click leaves its landing in place, and that landing must not
-        // start the slide again on the next frame.
+        /* A slide that began with a click leaves its landing in place, and that landing must not
+           start the slide again on the next frame. */
         landing = nil
         // The fingers of a slide that has not lifted are the only ones on the pad.
         rested = Rested(
@@ -409,9 +441,11 @@ nonisolated struct GestureEngine {
         return cancelUnmoved(current)
     }
 
-    /// Follows the fingers that rested until they lift. Contact can drop out near the pad's rim,
-    /// so a contact that returns within the grace period, close to where they were, is still
-    /// them. Without this, each gap would freeze the pointer for another wait.
+    /**
+     Follows the fingers that rested until they lift. Contact can drop out near the pad's rim,
+     so a contact that returns within the grace period, close to where they were, is still
+     them. Without this, each gap would freeze the pointer for another wait.
+     */
     private mutating func updateRested(_ rawTouches: [TouchPoint], now: TimeInterval) {
         guard var current = rested else { return }
         let present = rawTouches.filter { current.fingers[$0.id] != nil }
@@ -460,8 +494,10 @@ nonisolated struct GestureEngine {
         return leave(current)
     }
 
-    /// Starts a two-finger slide when both fingers landed in one strip within a short window. A
-    /// slide that one finger began gives way, as long as it has done nothing yet.
+    /**
+     Starts a two-finger slide when both fingers landed in one strip within a short window. A
+     slide that one finger began gives way, as long as it has done nothing yet.
+     */
     private mutating func startPairSlide(now: TimeInterval, modifierSatisfied: Bool) -> [Event]? {
         guard touches.count == 2, let firstContactAt, now - firstContactAt <= config.twoFingerWindow,
             modifierSatisfied, !swallowedDown, rested == nil, slide?.engaged != true,
@@ -532,8 +568,10 @@ nonisolated struct GestureEngine {
         return advance(current, position: position, cross: cross, now: now)
     }
 
-    /// Ends a slide whose fingers are gone or have become another gesture. If it changed
-    /// something, the pointer stays frozen until the fingers of that motion lift.
+    /**
+     Ends a slide whose fingers are gone or have become another gesture. If it changed
+     something, the pointer stays frozen until the fingers of that motion lift.
+     */
     private mutating func leave(_ current: Slide) -> [Event] {
         slide = nil
         guard current.moved else { return cancelUnmoved(current) }
@@ -747,8 +785,10 @@ nonisolated struct GestureEngine {
         return events
     }
 
-    /// Counts one press or click. The highest configured count fires at once, and a lower one waits
-    /// for the click window to close, so that a single click can still become a double click.
+    /**
+     Counts one press or click. The highest configured count fires at once, and a lower one waits
+     for the click window to close, so that a single click can still become a double click.
+     */
     private mutating func countCornerClick(_ zone: Zone, now: TimeInterval) -> [Event] {
         var events: [Event] = []
         var count = 1

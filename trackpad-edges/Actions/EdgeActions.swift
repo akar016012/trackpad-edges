@@ -13,8 +13,10 @@ final class EdgeActions {
     private let brightness = BrightnessController()
     private let keyboardBacklight = KeyboardBacklightController()
     private let monitors = ExternalDisplayController()
-    /// The apps that a slide moves through, and where it has reached. The list is fixed for one
-    /// slide, because the front app takes a moment to change after each step.
+    /**
+     The apps that a slide moves through, and where it has reached. The list is fixed for one
+     slide, because the front app takes a moment to change after each step.
+     */
     private var switcherApps: [NSRunningApplication] = []
     private var switcherIndex = 0
 
@@ -110,8 +112,10 @@ final class EdgeActions {
         event?.post(tap: .cghidEventTap)
     }
 
-    /// Brings the next app forward through Accessibility, because macOS ignores a plain activation
-    /// request from an app that is not in front.
+    /**
+     Brings the next app forward through Accessibility, because macOS ignores a plain activation
+     request from an app that is not in front.
+     */
     private func switchApp(forward: Bool) -> Bool {
         guard switcherApps.count > 1 else { return false }
         let count = switcherApps.count

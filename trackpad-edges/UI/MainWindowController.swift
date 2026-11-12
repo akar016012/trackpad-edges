@@ -1,8 +1,10 @@
 import AppKit
 
 extension NSWindow {
-    /// Puts the window in the exact center of the screen under the pointer. The system's own
-    /// `center()` deliberately sits above the middle.
+    /**
+     Puts the window in the exact center of the screen under the pointer. The system's own
+     `center()` deliberately sits above the middle.
+     */
     func centerOnPointerScreen() {
         let pointer = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
@@ -90,8 +92,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     var isOpen: Bool { window?.isVisible == true || window?.isMiniaturized == true }
 
-    /// Sizes the window to the selected pane around its current center, so that every pane has
-    /// the same margins and the window stays where it is.
+    /**
+     Sizes the window to the selected pane around its current center, so that every pane has
+     the same margins and the window stays where it is.
+     */
     private func fitPane() {
         let index = tabs.selectedTabViewItemIndex
         guard let window, tabs.tabViewItems.indices.contains(index),

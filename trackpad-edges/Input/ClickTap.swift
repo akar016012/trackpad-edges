@@ -1,9 +1,11 @@
 import CoreGraphics
 
-/// Watches left clicks so that a gesture can hold them back from other apps.
-///
-/// This tap sees only click events, so it stays on all the time without slowing the pointer. It
-/// needs the Accessibility permission, and without it every click passes through untouched.
+/**
+ Watches left clicks so that a gesture can hold them back from other apps.
+
+ This tap sees only click events, so it stays on all the time without slowing the pointer. It
+ needs the Accessibility permission, and without it every click passes through untouched.
+ */
 final class ClickTap {
     static let shared = ClickTap()
     /// Marks events that this app posts, so that the tap lets them through.
@@ -20,9 +22,11 @@ final class ClickTap {
     var isInstalled: Bool { tap != nil }
     var port: CFMachPort? { tap }
 
-    /// Asks the system whether a tap is still allowed, by creating one that does no work, as well
-    /// as through the documented check. A tap whose permission was removed can stop clicks for the
-    /// whole Mac, so this does not rely on any one answer.
+    /**
+     Asks the system whether a tap is still allowed, by creating one that does no work, as well
+     as through the documented check. A tap whose permission was removed can stop clicks for the
+     whole Mac, so this does not rely on any one answer.
+     */
     static var isAllowed: Bool {
         guard CGPreflightPostEventAccess() else { return false }
         let mask = CGEventMask(1) << CGEventMask(CGEventType.tabletProximity.rawValue)

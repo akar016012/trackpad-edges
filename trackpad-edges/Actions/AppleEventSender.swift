@@ -1,8 +1,10 @@
 import AppKit
 import CoreServices
 
-/// Sends Apple events off the main thread, because a send can wait on a consent prompt. Don't use
-/// `NSAppleScript`, which is main-thread only. A request to an app with one pending is dropped.
+/**
+ Sends Apple events off the main thread, because a send can wait on a consent prompt. Don't use
+ `NSAppleScript`, which is main-thread only. A request to an app with one pending is dropped.
+ */
 nonisolated final class AppleEventSender: @unchecked Sendable {
     /// Why an event did not arrive.
     enum Failure: Error, Equatable {
@@ -20,8 +22,10 @@ nonisolated final class AppleEventSender: @unchecked Sendable {
     private let lock = NSLock()
     private var pending: Set<String> = []
 
-    /// Runs `body` on the queue unless a request to the same app is pending. Failures arrive on
-    /// the main thread.
+    /**
+     Runs `body` on the queue unless a request to the same app is pending. Failures arrive on
+     the main thread.
+     */
     func perform(
         target bundleID: String, _ body: @escaping @Sendable () throws -> Void,
         onFailure: @escaping @MainActor (Failure) -> Void
@@ -74,8 +78,10 @@ nonisolated final class AppleEventSender: @unchecked Sendable {
         }
     }
 
-    /// Starts the app in the background if needed, because events to a stopped app fail. It
-    /// blocks, so call it only inside `perform`.
+    /**
+     Starts the app in the background if needed, because events to a stopped app fail. It
+     blocks, so call it only inside `perform`.
+     */
     static func launchIfNeeded(_ bundleID: String) {
         guard NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty,
             let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)

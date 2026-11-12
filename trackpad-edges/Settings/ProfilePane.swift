@@ -1,7 +1,9 @@
 import AppKit
 
-/// The base class of panes that edit one profile at a time. The picker row appears only once an
-/// app has a profile, so that the pane stays simple until then.
+/**
+ The base class of panes that edit one profile at a time. The picker row appears only once an
+ app has a profile, so that the pane stays simple until then.
+ */
 class ProfilePane: SettingsPane {
     /// The app being edited, where nil is the default settings for all apps.
     private(set) var bundleID: String?
@@ -35,8 +37,10 @@ class ProfilePane: SettingsPane {
         onSelectProfile?(index == 0 ? nil : profiles[index - 1].bundleID)
     }
 
-    /// Shows a profile. A text field commits when it loses focus, so that happens first, or its
-    /// text would land in the newly selected profile.
+    /**
+     Shows a profile. A text field commits when it loses focus, so that happens first, or its
+     text would land in the newly selected profile.
+     */
     func select(_ bundleID: String?) {
         guard bundleID != self.bundleID else { return }
         if isViewLoaded { view.window?.makeFirstResponder(nil) }
@@ -51,8 +55,8 @@ class ProfilePane: SettingsPane {
         let profiles = SettingsStore.shared.settings.profiles
         if bundleID != nil, !profiles.contains(where: { $0.bundleID == bundleID }) {
             bundleID = nil
-            // A pane that is still loading shows the right values by itself, and asking it to
-            // show them here would load it a second time.
+            /* A pane that is still loading shows the right values by itself, and asking it to
+               show them here would load it a second time. */
             if isViewLoaded { profileChanged() }
         }
         let titles = ["All Apps"] + profiles.map(\.name)

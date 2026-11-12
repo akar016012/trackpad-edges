@@ -1,7 +1,9 @@
 import Foundation
 
-/// Loads the private MultitouchSupport framework at runtime, so that a missing symbol disables
-/// the feature instead of stopping the app from launching.
+/**
+ Loads the private MultitouchSupport framework at runtime, so that a missing symbol disables
+ the feature instead of stopping the app from launching.
+ */
 final class MultitouchBridge {
     static let shared = MultitouchBridge()
 

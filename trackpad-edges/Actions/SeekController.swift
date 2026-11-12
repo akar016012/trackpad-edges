@@ -40,8 +40,10 @@ final class SeekController {
         applyChosenStyle()
     }
 
-    /// Applies the chosen style, or the solid one for someone who has asked for less transparency.
-    /// Rebuilding is skipped when nothing changed, because display options change for other reasons.
+    /**
+     Applies the chosen style, or the solid one for someone who has asked for less transparency.
+     Rebuilding is skipped when nothing changed, because display options change for other reasons.
+     */
     func applyChosenStyle() {
         let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
         let style = reduced ? OverlayStyle.solid : overlayStyle
@@ -85,8 +87,10 @@ final class SeekController {
         }
     #endif
 
-    /// Reads the position. This waits for real movement, so that an ordinary touch on the bottom
-    /// strip never starts a process.
+    /**
+     Reads the position. This waits for real movement, so that an ordinary touch on the bottom
+     strip never starts a process.
+     */
     private func begin() {
         generation += 1
         origin = nil

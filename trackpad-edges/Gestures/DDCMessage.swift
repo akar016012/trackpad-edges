@@ -25,17 +25,21 @@ nonisolated enum DDCMessage {
         return withChecksum(body, seed: displayAddress ^ hostAddress)
     }
 
-    /// The forms of the read request, with the standard form first. Some monitors answer only the
-    /// second form, which leaves the host address out of the checksum.
+    /**
+     The forms of the read request, with the standard form first. Some monitors answer only the
+     second form, which leaves the host address out of the checksum.
+     */
     static let readRequests: [[UInt8]] = [
         withChecksum([0x82, 0x01, brightnessCode], seed: displayAddress ^ hostAddress),
         withChecksum([0x82, 0x01, brightnessCode], seed: displayAddress),
     ]
 
-    /// Returns the reading in a reply, or nil if the monitor did not answer the request.
-    ///
-    /// A reply's shape is checked rather than its checksum, because the reply's first byte can
-    /// differ between connections, and a shape check already rejects an empty or garbled reply.
+    /**
+     Returns the reading in a reply, or nil if the monitor did not answer the request.
+
+     A reply's shape is checked rather than its checksum, because the reply's first byte can
+     differ between connections, and a shape check already rejects an empty or garbled reply.
+     */
     static func reading(from reply: [UInt8]) -> Reading? {
         // Byte 2 is the Get VCP Feature reply opcode, and byte 3 is the result code for success.
         guard reply.count >= 10, reply[2] == 0x02, reply[3] == 0x00, reply[4] == brightnessCode

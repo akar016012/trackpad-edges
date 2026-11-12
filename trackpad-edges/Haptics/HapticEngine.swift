@@ -1,7 +1,9 @@
 import AppKit
 
-/// Fires trackpad haptics through the private actuator API, which supports strength control.
-/// It falls back to the public API when a device has no usable actuator.
+/**
+ Fires trackpad haptics through the private actuator API, which supports strength control.
+ It falls back to the public API when a device has no usable actuator.
+ */
 final class HapticEngine {
     private typealias GetActuator = @convention(c) (UnsafeRawPointer) -> UnsafeRawPointer?
     private typealias Open = @convention(c) (UnsafeRawPointer, UInt32) -> Int32
@@ -23,8 +25,10 @@ final class HapticEngine {
     /// Uptime rather than the clock, because a clock change must not mute the haptics.
     private var lastTick = -TimeInterval.infinity
 
-    /// Names the trackpad for a gesture. The actuator stays closed until the first haptic, because
-    /// opening it requests control of the trackpad's click, and a touch may turn out to be a click.
+    /**
+     Names the trackpad for a gesture. The actuator stays closed until the first haptic, because
+     opening it requests control of the trackpad's click, and a touch may turn out to be a click.
+     */
     func begin(device: UnsafeRawPointer) {
         self.device = device
     }

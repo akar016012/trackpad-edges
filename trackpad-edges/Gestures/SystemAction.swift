@@ -46,8 +46,10 @@ nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Whether the action is ignored just after a wake or unlock, so a resting finger cannot send
-    /// the Mac back to sleep.
+    /**
+     Whether the action is ignored just after a wake or unlock, so a resting finger cannot send
+     the Mac back to sleep.
+     */
     var pausesAfterWake: Bool {
         switch self {
         case .lockScreen, .startScreenSaver, .sleepDisplay, .sleep: return true

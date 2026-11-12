@@ -1090,8 +1090,8 @@ final class GestureEngineTests: XCTestCase {
         _ = engine.process(finger(0.95, 0.3), now: 0)
         _ = engine.process(finger(0.95, 0.36), now: 0.2)
         XCTAssertEqual(engine.process(finger(0.95, 0.40), now: 0.3), [.stepped(1)])
-        // The line is at 0.395. A fifth of a step under it is inside the margin of a quarter
-        // step, and a third of a step under it is past the margin.
+        /* The line is at 0.395. A fifth of a step under it is inside the margin of a quarter
+           step, and a third of a step under it is past the margin. */
         XCTAssertEqual(engine.process(finger(0.95, 0.388), now: 0.4), [])
         XCTAssertEqual(engine.process(finger(0.95, 0.384), now: 0.5), [.stepped(-1)])
         // The same direction needs no margin, so the next line counts as soon as it is crossed.

@@ -46,11 +46,13 @@ private final class ClosureTarget: NSObject {
     }
 }
 
-/// The base class of the panes in the app window.
-///
-/// Every pane uses the same layout: one margin on all sides, two equal columns, and one label
-/// width. That keeps controls in the same place from tab to tab. The window fits each pane, so
-/// a pane never has leftover space.
+/**
+ The base class of the panes in the app window.
+
+ Every pane uses the same layout: one margin on all sides, two equal columns, and one label
+ width. That keeps controls in the same place from tab to tab. The window fits each pane, so
+ a pane never has leftover space.
+ */
 class SettingsPane: NSViewController {
     static let margin: CGFloat = 24
     static let columnGap: CGFloat = 24
@@ -88,8 +90,8 @@ class SettingsPane: NSViewController {
     func popup(_ titles: [String], selected: Int, _ handler: @escaping (Int) -> Void) -> NSPopUpButton
     {
         let button = NSPopUpButton()
-        // This adds items one at a time, because `addItems` removes duplicate titles, which would
-        // shift the indexes of the items that follow them.
+        /* This adds items one at a time, because `addItems` removes duplicate titles, which would
+           shift the indexes of the items that follow them. */
         for title in titles {
             button.menu?.addItem(withTitle: title, action: nil, keyEquivalent: "")
         }

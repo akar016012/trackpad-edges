@@ -1,11 +1,13 @@
 import CoreGraphics
 import OSLog
 
-/// Holds the pointer still during a slide and leaves it exactly where it was.
-///
-/// Detaching the pointer from the mouse needs no permission. The event tap needs the Accessibility
-/// permission, and it is enabled only during a slide because an always-active tap on pointer
-/// movement can slow the cursor.
+/**
+ Holds the pointer still during a slide and leaves it exactly where it was.
+
+ Detaching the pointer from the mouse needs no permission. The event tap needs the Accessibility
+ permission, and it is enabled only during a slide because an always-active tap on pointer
+ movement can slow the cursor.
+ */
 final class PointerFreeze {
     static let shared = PointerFreeze()
 

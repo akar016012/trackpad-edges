@@ -15,11 +15,13 @@ nonisolated struct TrackpadInfo: Codable, Equatable, Sendable {
     }
 }
 
-/// The facts that a bug report needs, as plain text for the clipboard.
-///
-/// The formatting makes no system calls, so unit tests can check what the report includes and
-/// what it leaves out. It never prints a file path, a link, an app name, a bundle identifier, a
-/// recorded key label, a shortcut name, or a command, because those can be personal.
+/**
+ The facts that a bug report needs, as plain text for the clipboard.
+
+ The formatting makes no system calls, so unit tests can check what the report includes and
+ what it leaves out. It never prints a file path, a link, an app name, a bundle identifier, a
+ recorded key label, a shortcut name, or a command, because those can be personal.
+ */
 nonisolated struct DiagnosticsReport: Equatable, Sendable {
     var appVersion: String
     var appBuild: String

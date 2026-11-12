@@ -26,8 +26,10 @@ enum KeyModifier: CaseIterable {
         }
     }
 
-    /// The bits that say which physical key is down. The system's event flags carry these
-    /// alongside the general flag.
+    /**
+     The bits that say which physical key is down. The system's event flags carry these
+     alongside the general flag.
+     */
     private var sideBits: (left: UInt64, right: UInt64)? {
         switch self {
         case .control: return (UInt64(NX_DEVICELCTLKEYMASK), UInt64(NX_DEVICERCTLKEYMASK))
@@ -43,8 +45,10 @@ enum KeyModifier: CaseIterable {
         return flags & sideBits.right != 0 && flags & sideBits.left == 0
     }
 
-    /// The key code of the modifier itself, for a shortcut that is only a modifier. It uses the
-    /// left key unless the flags say the right one.
+    /**
+     The key code of the modifier itself, for a shortcut that is only a modifier. It uses the
+     left key unless the flags say the right one.
+     */
     func keyCode(in flags: UInt64) -> UInt16 {
         let right = isRight(in: flags)
         switch self {
@@ -75,11 +79,13 @@ enum KeyModifier: CaseIterable {
     }
 }
 
-/// A button that records the next key combination you press, or modifiers on their own.
-///
-/// macOS handles shortcuts such as Command-Space and Command-Tab before an app can see them, so
-/// recording uses an event tap at the hardware level, which sees every key first. The tap holds
-/// keys back only while recording, so that the shortcut being recorded does not also run.
+/**
+ A button that records the next key combination you press, or modifiers on their own.
+
+ macOS handles shortcuts such as Command-Space and Command-Tab before an app can see them, so
+ recording uses an event tap at the hardware level, which sees every key first. The tap holds
+ keys back only while recording, so that the shortcut being recorded does not also run.
+ */
 final class KeyRecorderButton: NSButton {
     /// Reports a key, or nil for a shortcut that is only modifiers.
     var onRecord: ((_ keyCode: UInt16?, _ modifiers: UInt64, _ label: String) -> Void)?

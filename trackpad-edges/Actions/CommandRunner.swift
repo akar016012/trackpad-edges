@@ -1,9 +1,11 @@
 import AppKit
 import Darwin
 
-/** Runs the commands of Run Command corners through the login shell, in the background. A
-    command never gets the app's permissions; if that cannot be ensured, it does not run. Each
-    command gets its own process group, so Stop ends everything it started. */
+/**
+ Runs the commands of Run Command corners through the login shell, in the background. A
+ command never gets the app's permissions; if that cannot be ensured, it does not run. Each
+ command gets its own process group, so Stop ends everything it started.
+ */
 final class CommandRunner {
     /// Makes a child process answer for its own permissions.
     private typealias DisclaimCall =
@@ -111,8 +113,10 @@ final class CommandRunner {
         }
     }
 
-    /// Keeps a command listed while anything in its process group still runs, such as a
-    /// background job.
+    /**
+     Keeps a command listed while anything in its process group still runs, such as a
+     background job.
+     */
     private func finishWhenGroupEnds(pid: pid_t, script: String, job: Job) {
         guard jobs[script] === job else { return }
         guard kill(-pid, 0) == -1, errno == ESRCH else {
@@ -137,16 +141,20 @@ final class CommandRunner {
         for script in jobs.keys { stop(script) }
     }
 
-    /// Asks every command to end when the app quits. The app cannot wait, so a command that
-    /// ignores this keeps running.
+    /**
+     Asks every command to end when the app quits. The app cannot wait, so a command that
+     ignores this keeps running.
+     */
     func stopAllForQuit() {
         for job in jobs.values {
             if let pid = job.pid { kill(-pid, SIGTERM) }
         }
     }
 
-    /** Sends SIGTERM to the process group, then SIGKILL if it remains. A group keeps its ID
-        while any member lives, so the kill cannot hit another program. */
+    /**
+     Sends SIGTERM to the process group, then SIGKILL if it remains. A group keeps its ID while
+     any member lives, so the kill cannot hit another program.
+     */
     private static func signal(group pid: pid_t) {
         kill(-pid, SIGTERM)
         DispatchQueue.main.asyncAfter(deadline: .now() + stopGrace) {
@@ -154,8 +162,10 @@ final class CommandRunner {
         }
     }
 
-    /// Collects error output and finishes when the process exits, not at end of output, which a
-    /// background job can hold open forever.
+    /**
+     Collects error output and finishes when the process exits, not at end of output, which a
+     background job can hold open forever.
+     */
     private func watch(
         pid: pid_t, errors: Int32,
         _ finished: @escaping @MainActor (ShellCommand.End, OutputTail) -> Void

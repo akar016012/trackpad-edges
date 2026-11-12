@@ -10,8 +10,10 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
     case openApp(path: String)
     case openLink(url: String, browserPath: String?)
     case openFile(path: String)
-    /// A nil key code with modifiers presses those modifiers alone. A nil key code with no
-    /// modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
+    /**
+     A nil key code with modifiers presses those modifiers alone. A nil key code with no
+     modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
+     */
     case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
     case shortcut(name: String)
     /// Controls the Mac, such as locking or restarting it.
@@ -19,8 +21,10 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
     /// Runs a shell command through your login shell.
     case command(script: String)
 
-    /// Whether the action has everything it needs. A corner that is not configured stays a normal
-    /// part of the trackpad, so that it never swallows clicks while doing nothing.
+    /**
+     Whether the action has everything it needs. A corner that is not configured stays a normal
+     part of the trackpad, so that it never swallows clicks while doing nothing.
+     */
     var isConfigured: Bool {
         switch self {
         case .none: return false
@@ -67,8 +71,8 @@ nonisolated struct CornerSetting: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let saved = try container.decodeIfPresent([Lenient<CornerAction>].self, forKey: .actions)
         {
-            // An action that this version cannot read becomes no action, and a list of the wrong
-            // length is repaired, so one odd value cannot lose a corner.
+            /* An action that this version cannot read becomes no action, and a list of the wrong
+               length is repaired, so one odd value cannot lose a corner. */
             let padding = Array(repeating: CornerAction.none, count: Self.maxClicks)
             actions = Array((saved.map { $0.value ?? .none } + padding).prefix(Self.maxClicks))
             return
