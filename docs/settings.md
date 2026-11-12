@@ -22,7 +22,7 @@ The menu bar item can also assign each edge for All Apps, and the window stays i
 
 ## Corners
 
-All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. The action popup groups its 21 actions under headers. **Run Command** shows a field in a fixed-width font that fills the column, and a **Stop** button takes part of that row while the command runs. **Toggle Do Not Disturb** shows whether a key is assigned, with a button that opens Keyboard settings while none is, and the pane reads that again each time it appears. See [corners.md](corners.md).
+All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. The action popup groups its 21 actions under headers. **Run Command** shows a field in a fixed-width font with one button beside it, and together they fill the column. The button is **Save**, which turns on while the field holds text that is not saved yet, and a corner press still runs the saved command. **Save**, Return, and leaving the field each save the text. While the saved command runs and nothing is waiting to be saved, **Stop** takes the button's place. The field never changes width. **Toggle Do Not Disturb** shows whether a key is assigned, with a button that opens Keyboard settings while none is, and the pane reads that again each time it appears. See [corners.md](corners.md).
 
 ## Profiles
 

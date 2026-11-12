@@ -36,11 +36,13 @@ Log Out, Restart, and Shut Down never run straight from a press, because a corne
 
 ## Run Command
 
+- A **Save** button sits beside the command field and turns on while the field holds text that you have not saved. **Save**, Return, and leaving the field each save it. Until then, a press runs the saved command.
 - Each click count of each corner holds one command, so a profile can override it like any other corner action. A command that is blank leaves the corner a normal part of the trackpad.
+- The shell reads the command as you would type it in a terminal, so a path with a space needs quotes or a backslash, such as `open "/Volumes/Drive/Meeting Notes/talk.md"`. Open File or Folder opens a file without any quoting.
 - The command runs as `<your login shell> -l -c <command>`, with no window, no input, and your home folder as its working folder. A login shell reads your profile file, so the tools that you installed are on the path.
 - A command does not get the app's permissions. It starts in a way that makes it answer for its own permissions, so a command that wants to control another app or press keys needs your permission on its own. If macOS cannot start a command that way, the app does not run it and shows a notice.
 - A command has no time limit. A press while the same command is still running does not start it again, and a notice says that it is still running.
-- **Stop** appears beside the command field while that command runs, and the menu bar menu shows **Stop Running Commands** while any command runs. Stop ends the command and everything that it started in its process group, including a job that it left running in the background. A command counts as running until everything in that group has ended, so a press does not start a second copy while its background job runs. The Stop button follows the text in the field, so after you edit a running command, only the menu bar item can stop the old one. Stop cannot end a process in that group that runs as another user, such as one started with `sudo`, so that command stays listed until the process ends by itself.
+- **Stop** takes the place of **Save** while the saved command runs and the field has nothing to save, and the menu bar menu shows **Stop Running Commands** while any command runs. Stop ends the command and everything that it started in its process group, including a job that it left running in the background. A command counts as running until everything in that group has ended, so a press does not start a second copy while its background job runs. While you edit a running command, the slot holds **Save** again, so **Stop Running Commands** in the menu bar stops the old command until you save or undo your edit. After you save, the old command is no longer tied to the field, and only the menu bar item can stop it. Stop cannot end a process in that group that runs as another user, such as one started with `sudo`, so that command stays listed until the process ends by itself.
 - Quitting the app asks every running command to end.
 - If a command fails, the app reports its exit status and the last lines of its error output in a notification. Without permission for notifications, the overlay notice shows a short summary instead. A command that you stopped is not reported.
 - The app asks for permission to show notifications when you first enter a command.
@@ -76,7 +78,7 @@ Apps are opened through `NSWorkspace`, and key combinations are synthesized with
 - `FailureNotifier` posts one notification for each corner, so a new failure replaces the old one, and it falls back to the overlay notice.
 - `PowerActionGuard` decides from the time of the last wake or unlock whether a power action may run.
 
-Debug builds accept three launch arguments for trying these without a trackpad. `-debugConfirm YES` shows the confirm box, and confirming it only shows a notice. `-debugCommand '<command>'` runs a command as the top-left corner would, and `-debugStopAfter 3` stops every command after that many seconds.
+Debug builds accept four launch arguments for trying these without a trackpad. `-debugConfirm YES` shows the confirm box, and confirming it only shows a notice. `-debugCommand '<command>'` runs a command as the top-left corner would, `-debugStopAfter 3` stops every command after that many seconds, and `-debugCommandDraft '<text>'` puts unsaved text in each command field, so that the Save button shows.
 
 ## Haptics
 

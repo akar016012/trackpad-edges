@@ -18,6 +18,7 @@ The build follows the plan, with these differences:
 - The notification delegate is set by `FailureNotifier`, which `GestureController` installs at launch, instead of by `AppDelegate`.
 - The overlay notice holds one short line, so a failure shows only its exit status there, and the last lines of error output appear only in a notification.
 - The action button of the confirm box is also tinted red, because macOS 27.2 did not draw the destructive style on a plain button.
+- The command field has a **Save** button that turns on while the field holds unsaved text, and **Stop** shares its slot, so the field never changes width. A press that came while the field held unsaved text ran the old command without any sign of it, which a user hit on 2026-11-11.
 - A command stays listed, with its Stop button, until everything in its process group has ended, so that Stop can still end a job that the shell left in the background.
 - Quitting the app asks every running command to end, so that no command is left that the app cannot stop.
 - `docs/images/corners.png` still shows the old popup, because a new screenshot needs the app's real settings.
