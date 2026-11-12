@@ -15,8 +15,10 @@ final class HapticsPane: SettingsPane {
         setContent([controls(), status])
     }
 
-    /// Both columns share one grid, so that each row lines up across the pane even though a
-    /// popup is taller than a checkbox.
+    /**
+     Both columns share one grid, so that each row lines up across the pane even though a
+     popup is taller than a checkbox.
+     */
     private func controls() -> NSView {
         let current = settings.haptics
         let patterns = HapticPattern.allCases

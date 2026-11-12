@@ -1,7 +1,9 @@
 import AppKit
 
-/// A progress bar that snaps to each value. The system bar glides between values, which hides
-/// the steps of a seek.
+/**
+ A progress bar that snaps to each value. The system bar glides between values, which hides
+ the steps of a seek.
+ */
 private final class SteppedBarView: NSView {
     var value: Double = 0 {
         didSet { needsDisplay = true }
@@ -21,8 +23,10 @@ private final class SteppedBarView: NSView {
     }
 }
 
-/// A rounded fill. It draws its color each time, so that it follows light and dark mode, which a
-/// color stored on a layer would not.
+/**
+ A rounded fill. It draws its color each time, so that it follows light and dark mode, which a
+ color stored on a layer would not.
+ */
 private final class SolidBackgroundView: NSView {
     var cornerRadius: CGFloat = 0
     var color = NSColor.windowBackgroundColor
@@ -33,8 +37,10 @@ private final class SolidBackgroundView: NSView {
     }
 }
 
-/// A small floating panel that previews a seek or shows a short notice. It never takes focus or
-/// receives clicks.
+/**
+ A small floating panel that previews a seek or shows a short notice. It never takes focus or
+ receives clicks.
+ */
 final class SeekOverlayPanel: NSPanel {
     private static let size = NSSize(width: 320, height: 92)
     private static let cornerRadius: CGFloat = 22
@@ -68,8 +74,8 @@ final class SeekOverlayPanel: NSPanel {
     func apply(style chosen: OverlayStyle, placement: OverlayPlacement) {
         self.placement = placement
         let style = Self.drawnStyle(for: chosen)
-        // Clear glass and the frosted material show whatever is behind them, so they always use a
-        // dimmed tint with light text, which stays readable over bright and dark content.
+        /* Clear glass and the frosted material show whatever is behind them, so they always use a
+           dimmed tint with light text, which stays readable over bright and dark content. */
         let alwaysDark = style == .clearGlass || style == .frosted
         appearance = alwaysDark ? NSAppearance(named: .darkAqua) : baseAppearance
         content.removeFromSuperview()
@@ -85,8 +91,10 @@ final class SeekOverlayPanel: NSPanel {
         if isVisible { moveIntoPlace() }
     }
 
-    /// Glass arrived in macOS 26, so earlier systems draw the frosted style instead, with its
-    /// colors and shadow as well as its background.
+    /**
+     Glass arrived in macOS 26, so earlier systems draw the frosted style instead, with its
+     colors and shadow as well as its background.
+     */
     private static func drawnStyle(for style: OverlayStyle) -> OverlayStyle {
         if #available(macOS 26.0, *) { return style }
         return style == .glass || style == .clearGlass ? .frosted : style
@@ -166,8 +174,8 @@ final class SeekOverlayPanel: NSPanel {
             frosted.material = .hudWindow
             frosted.blendingMode = .behindWindow
             frosted.state = .active
-            // A mask image is what rounds this view. A layer's corner radius has no effect on
-            // a material that draws behind the window.
+            /* A mask image is what rounds this view. A layer's corner radius has no effect on
+               a material that draws behind the window. */
             frosted.maskImage = Self.roundedMask()
             let dimmer = SolidBackgroundView()
             dimmer.cornerRadius = Self.cornerRadius
@@ -183,8 +191,10 @@ final class SeekOverlayPanel: NSPanel {
         }
     }
 
-    /// Pins the content with constraints, because a glass view that held it earlier leaves it
-    /// without any size of its own.
+    /**
+     Pins the content with constraints, because a glass view that held it earlier leaves it
+     without any size of its own.
+     */
     private func install(_ view: NSView, in parent: NSView) {
         view.translatesAutoresizingMaskIntoConstraints = false
         parent.addSubview(view)
@@ -214,8 +224,8 @@ final class SeekOverlayPanel: NSPanel {
         timeLabel.font = .monospacedDigitSystemFont(ofSize: 20, weight: .semibold)
         timeLabel.alignment = .center
         hintLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        // Secondary label color is too faint over glass. An alpha variant would stop following
-        // light and dark mode, so this stays a plain system color.
+        /* Secondary label color is too faint over glass. An alpha variant would stop following
+           light and dark mode, so this stays a plain system color. */
         hintLabel.textColor = .labelColor
 
         let stack = NSStackView(views: [timeLabel, progress, hintLabel])

@@ -17,8 +17,10 @@ nonisolated enum CornerActionGroup: String, CaseIterable, Sendable {
     }
 }
 
-/// A corner action's kind, without details. This is the one place that names each action, so the
-/// Corners pane, the tour, and the diagnostics report agree.
+/**
+ A corner action's kind, without details. This is the one place that names each action, so the
+ Corners pane, the tour, and the diagnostics report agree.
+ */
 nonisolated enum CornerActionKind: Hashable, Sendable {
     case none, mute, playPause, nextTrack, previousTrack
     case app, link, file

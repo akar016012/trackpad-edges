@@ -1,7 +1,9 @@
 import Foundation
 
-/// A key from the system shortcut table. Apps cannot change a Focus directly, so Toggle Do Not
-/// Disturb presses the key assigned in Keyboard settings.
+/**
+ A key from the system shortcut table. Apps cannot change a Focus directly, so Toggle Do Not
+ Disturb presses the key assigned in Keyboard settings.
+ */
 nonisolated struct SymbolicHotKey: Equatable, Sendable {
     /// The Do Not Disturb entry.
     static let doNotDisturb = "175"
@@ -12,8 +14,10 @@ nonisolated struct SymbolicHotKey: Equatable, Sendable {
     /// Modifier flags, in key-event bits.
     let modifiers: UInt64
 
-    /// Reads an entry of `AppleSymbolicHotKeys`, whose `parameters` are the character, the key
-    /// code, and the modifiers. Returns nil if it is missing, off, unset, or malformed.
+    /**
+     Reads an entry of `AppleSymbolicHotKeys`, whose `parameters` are the character, the key
+     code, and the modifiers. Returns nil if it is missing, off, unset, or malformed.
+     */
     init?(entry: String, in table: [String: Any]?) {
         guard let item = table?[entry] as? [String: Any],
             (item["enabled"] as? NSNumber)?.boolValue == true,

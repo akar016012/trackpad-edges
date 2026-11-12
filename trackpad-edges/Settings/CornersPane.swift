@@ -1,8 +1,10 @@
 import AppKit
 import UniformTypeIdentifiers
 
-/// Lets you choose an action for each click count of each corner. The clicks popup picks the
-/// count to edit, so a corner with several actions needs no extra rows.
+/**
+ Lets you choose an action for each click count of each corner. The clicks popup picks the
+ count to edit, so a corner with several actions needs no extra rows.
+ */
 final class CornersPane: ProfilePane, NSTextFieldDelegate {
     private typealias Kind = CornerActionKind
 
@@ -79,8 +81,10 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         for corner in commandRows.keys { updateCommandButtons(corner) }
     }
 
-    /// Enables Save while the field has unsaved text, and shows Stop instead while the saved
-    /// command runs with nothing to save.
+    /**
+     Enables Save while the field has unsaved text, and shows Stop instead while the saved
+     command runs with nothing to save.
+     */
     private func updateCommandButtons(_ corner: Corner) {
         guard let row = commandRows[corner], case .command(let saved) = currentAction(corner)
         else { return }
@@ -171,8 +175,8 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
     }
 
     private func choose(_ kind: Kind, corner: Corner) {
-        // A text field commits when it loses focus, so that must happen before the new action is
-        // stored, or the old text would overwrite it.
+        /* A text field commits when it loses focus, so that must happen before the new action is
+           stored, or the old text would overwrite it. */
         view.window?.makeFirstResponder(nil)
         // AppKit also sends the action for the item that is already selected.
         guard Kind(currentAction(corner)) != kind else { return }
@@ -319,8 +323,10 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         return [recorder]
     }
 
-    /// Builds a monospaced command field with a Save or Stop slot. A corner press runs the saved
-    /// command, and Return, Save, or leaving the field saves.
+    /**
+     Builds a monospaced command field with a Save or Stop slot. A corner press runs the saved
+     command, and Return, Save, or leaving the field saves.
+     */
     private func commandViews(script: String, corner: Corner) -> [NSView] {
         let fieldWidth = Self.columnWidth - Self.commandButtonWidth - 8
         let field = textField(value: script, placeholder: "Shell command", width: fieldWidth) {

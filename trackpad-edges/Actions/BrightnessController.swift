@@ -1,8 +1,10 @@
 import CoreGraphics
 import Foundation
 
-/// Changes brightness by pressing the brightness keys, which act on the built-in display unless
-/// something such as a monitor utility sends them to the display under the pointer.
+/**
+ Changes brightness by pressing the brightness keys, which act on the built-in display unless
+ something such as a monitor utility sends them to the display under the pointer.
+ */
 final class BrightnessController {
     private typealias GetBrightness =
         @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
@@ -39,8 +41,10 @@ final class BrightnessController {
         return CGDisplayBounds(display).contains(pointer)
     }
 
-    /// Moves one step and returns false if the level is already at a limit. The key is always
-    /// pressed, because a limit on the built-in display may not be a limit where the key lands.
+    /**
+     Moves one step and returns false if the level is already at a limit. The key is always
+     pressed, because a limit on the built-in display may not be a limit where the key lands.
+     */
     func step(up: Bool, fine: Bool) -> Bool {
         let reachedLimit = BrightnessLimit.isReached(
             level: level, up: up, pointerOnBuiltIn: pointerIsOnBuiltIn)

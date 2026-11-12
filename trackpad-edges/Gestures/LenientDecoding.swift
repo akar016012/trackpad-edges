@@ -1,8 +1,10 @@
-/// Reads one value, and holds nil when this version of the app cannot read it.
-///
-/// Settings saved by a newer version can hold values that an older one does not know, such as a
-/// new edge action. Reading each value through this type means that only that value falls back,
-/// where a plain read would refuse the whole set of settings.
+/**
+ Reads one value, and holds nil when this version of the app cannot read it.
+
+ Settings saved by a newer version can hold values that an older one does not know, such as a
+ new edge action. Reading each value through this type means that only that value falls back,
+ where a plain read would refuse the whole set of settings.
+ */
 nonisolated struct Lenient<Value: Decodable>: Decodable {
     let value: Value?
 
@@ -23,8 +25,10 @@ nonisolated extension KeyedDecodingContainer {
         return list?.compactMap(\.value)
     }
 
-    /// Returns the pairs of a dictionary that can be read. A dictionary whose keys are not plain
-    /// strings is saved as one list that alternates keys and values, so this walks that list.
+    /**
+     Returns the pairs of a dictionary that can be read. A dictionary whose keys are not plain
+     strings is saved as one list that alternates keys and values, so this walks that list.
+     */
     func lenientPairs<Name: Decodable & Hashable, Value: Decodable>(_ key: Key) -> [Name: Value] {
         guard var list = try? nestedUnkeyedContainer(forKey: key) else { return [:] }
         var pairs: [Name: Value] = [:]

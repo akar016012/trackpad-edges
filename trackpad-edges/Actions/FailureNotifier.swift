@@ -1,8 +1,10 @@
 import AppKit
 import UserNotifications
 
-/// Reports failed commands as notifications, or as an overlay notice when notifications are off.
-/// Each corner has one notification, so a new failure replaces the old one.
+/**
+ Reports failed commands as notifications, or as an overlay notice when notifications are off.
+ Each corner has one notification, so a new failure replaces the old one.
+ */
 final class FailureNotifier: NSObject, UNUserNotificationCenterDelegate {
     /// How long the fallback notice stays.
     private static let noticeDuration: TimeInterval = 5

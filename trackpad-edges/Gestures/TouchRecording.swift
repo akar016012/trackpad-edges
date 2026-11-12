@@ -1,11 +1,13 @@
 import Foundation
 
-/// A short recording of raw touch data, which helps set thresholds on a trackpad that the
-/// project has never tried.
-///
-/// The file holds each trackpad's family ID and whether it is built in. For each frame, it
-/// holds the time since the recording began and every contact's number, position, pressure, and
-/// size. It holds nothing else, so it says nothing about what was on the screen.
+/**
+ A short recording of raw touch data, which helps set thresholds on a trackpad that the
+ project has never tried.
+
+ The file holds each trackpad's family ID and whether it is built in. For each frame, it
+ holds the time since the recording began and every contact's number, position, pressure, and
+ size. It holds nothing else, so it says nothing about what was on the screen.
+ */
 nonisolated struct TouchRecording: Codable, Equatable, Sendable {
     /// How long a recording runs. It stops by itself, so the file stays small.
     static let duration: TimeInterval = 10

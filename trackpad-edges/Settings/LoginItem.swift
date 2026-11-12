@@ -5,8 +5,10 @@ import ServiceManagement
 enum LoginItem {
     static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
 
-    /// Turns the setting on or off. A login item can also wait for your approval in System
-    /// Settings, and that is the only place to give it, so this takes you there.
+    /**
+     Turns the setting on or off. A login item can also wait for your approval in System
+     Settings, and that is the only place to give it, so this takes you there.
+     */
     static func set(_ isOn: Bool) {
         let service = SMAppService.mainApp
         guard isOn != isEnabled else { return }

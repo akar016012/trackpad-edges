@@ -1,8 +1,10 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Runs the system actions that need no confirmation. Lock Screen and Toggle Dark Mode use a
-/// private call when it exists and fall back otherwise.
+/**
+ Runs the system actions that need no confirmation. Lock Screen and Toggle Dark Mode use a
+ private call when it exists and fall back otherwise.
+ */
 final class SystemActionRunner {
     private typealias LockCall = @convention(c) () -> Int32
     private typealias ReadThemeCall = @convention(c) () -> Bool

@@ -1,13 +1,15 @@
 import Foundation
 import Security
 
-/// Reads and seeks the system's Now Playing app through the bundled third-party adapter.
-///
-/// macOS blocks third-party apps from MediaRemote, but the system Perl can still use it. The
-/// adapter is a small library that Perl loads, and this type talks to it as a child process. An
-/// installed build holds the library inside the signed app. Xcode skips compiled binaries in
-/// resources, so a build run from Xcode has it as base64 text and unpacks it into Application
-/// Support at launch.
+/**
+ Reads and seeks the system's Now Playing app through the bundled third-party adapter.
+
+ macOS blocks third-party apps from MediaRemote, but the system Perl can still use it. The
+ adapter is a small library that Perl loads, and this type talks to it as a child process. An
+ installed build holds the library inside the signed app. Xcode skips compiled binaries in
+ resources, so a build run from Xcode has it as base64 text and unpacks it into Application
+ Support at launch.
+ */
 nonisolated struct NowPlayingAdapter: Sendable {
     struct Playback: Sendable, Equatable {
         let elapsed: Double
@@ -24,8 +26,10 @@ nonisolated struct NowPlayingAdapter: Sendable {
     private let script: URL
     private let framework: URL
     private let library: URL
-    /// The expected bytes of an unpacked library. A library inside the app has no such bytes,
-    /// because signing changes them, so the app's signature is checked instead.
+    /**
+     The expected bytes of an unpacked library. A library inside the app has no such bytes,
+     because signing changes them, so the app's signature is checked instead.
+     */
     private let binary: Data?
 
     /// Returns nil if the bundled files are missing or cannot be unpacked.
@@ -72,8 +76,10 @@ nonisolated struct NowPlayingAdapter: Sendable {
         return (try? Data(contentsOf: library)) == binary
     }
 
-    /// Checks the whole app against its signature, including the library and the Perl script.
-    /// Perl does not validate what it loads, so this is what protects a library inside the app.
+    /**
+     Checks the whole app against its signature, including the library and the Perl script.
+     Perl does not validate what it loads, so this is what protects a library inside the app.
+     */
     private static func appSignatureIsIntact() -> Bool {
         var code: SecStaticCode?
         var requirement: SecRequirement?
@@ -106,10 +112,10 @@ nonisolated struct NowPlayingAdapter: Sendable {
     }
 
     private func run(_ arguments: [String]) -> Data? {
-        // The child inherits this app's Accessibility permission, so it must run only the exact
-        // library that shipped with the app. Anything running as you can write to both places the
-        // library can sit, so it is checked each time. A clean environment stops Perl options such
-        // as PERL5OPT from loading other code.
+        /* The child inherits this app's Accessibility permission, so it must run only the exact
+           library that shipped with the app. Anything running as you can write to both places the
+           library can sit, so it is checked each time. A clean environment stops Perl options such
+           as PERL5OPT from loading other code. */
         guard libraryIsTrusted() else { return nil }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")

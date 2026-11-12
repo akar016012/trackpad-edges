@@ -1,11 +1,13 @@
 import Foundation
 import IOKit
 
-/// Changes the brightness of external displays over DDC, the control channel in a display cable.
-///
-/// This uses private IOKit functions, because no public API can reach an external display's
-/// brightness. Not every monitor or port answers, so a display counts only after it has answered a
-/// read. All display traffic runs on one background queue, because each transfer blocks.
+/**
+ Changes the brightness of external displays over DDC, the control channel in a display cable.
+
+ This uses private IOKit functions, because no public API can reach an external display's
+ brightness. Not every monitor or port answers, so a display counts only after it has answered a
+ read. All display traffic runs on one background queue, because each transfer blocks.
+ */
 final class ExternalDisplayController {
     private static let stepSize = 6
     /// A display can appear a moment after the system reports the change, so this looks again.

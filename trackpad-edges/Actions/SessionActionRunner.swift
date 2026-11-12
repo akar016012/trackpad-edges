@@ -1,8 +1,10 @@
 import AppKit
 import CoreServices
 
-/// Logs out, restarts, or shuts down after you confirm. The event codes are private to this file,
-/// and `confirm` is the only way in, so nothing can skip the confirm box.
+/**
+ Logs out, restarts, or shuts down after you confirm. The event codes are private to this file,
+ and `confirm` is the only way in, so nothing can skip the confirm box.
+ */
 final class SessionActionRunner {
     nonisolated private static let loginWindow = "com.apple.loginwindow"
 

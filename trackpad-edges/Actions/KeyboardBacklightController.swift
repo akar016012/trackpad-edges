@@ -1,9 +1,11 @@
 import AppKit
 
-/// Changes the keyboard backlight by pressing its media keys, which also shows the system slider.
-///
-/// No public API can read the backlight, so this reads its state from the private CoreBrightness
-/// client. It never sets the level through that client, and without it the keys still work.
+/**
+ Changes the keyboard backlight by pressing its media keys, which also shows the system slider.
+
+ No public API can read the backlight, so this reads its state from the private CoreBrightness
+ client. It never sets the level through that client, and without it the keys still work.
+ */
 final class KeyboardBacklightController {
     private typealias GetFloat = @convention(c) (AnyObject, Selector, UInt64) -> Float
     private typealias GetBool = @convention(c) (AnyObject, Selector, UInt64) -> Bool
@@ -53,8 +55,10 @@ final class KeyboardBacklightController {
         return value < 0 ? nil : value
     }
 
-    /// Whether macOS is holding the backlight off because the room is bright. The sensor can stay
-    /// saturated with automatic brightness off, and the keys are free to move the light then.
+    /**
+     Whether macOS is holding the backlight off because the room is bright. The sensor can stay
+     saturated with automatic brightness off, and the keys are free to move the light then.
+     */
     var isLocked: Bool {
         guard let client, let keyboard = currentKeyboard(),
             flag(Self.saturatedSelector, on: client, keyboard: keyboard)
@@ -63,8 +67,10 @@ final class KeyboardBacklightController {
         return flag(Self.automaticSelector, on: client, keyboard: keyboard)
     }
 
-    /// Moves one step, and returns false if nothing can change. The key is always pressed, because
-    /// that is what shows the system slider, including when macOS has it locked.
+    /**
+     Moves one step, and returns false if nothing can change. The key is always pressed, because
+     that is what shows the system slider, including when macOS has it locked.
+     */
     func step(up: Bool, fine: Bool) -> Bool {
         let reachedLimit = BrightnessLimit.isKeyboardStopped(level: level, isLocked: isLocked, up: up)
         MediaKeys.press(up ? MediaKeys.illuminationUp : MediaKeys.illuminationDown, fine: fine)

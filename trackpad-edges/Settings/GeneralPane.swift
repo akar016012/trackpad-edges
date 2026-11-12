@@ -1,8 +1,10 @@
 import AppKit
 import UniformTypeIdentifiers
 
-/// Holds the first-run steps, the Accessibility permission, launch at login, updates, and the
-/// diagnostics for a bug report.
+/**
+ Holds the first-run steps, the Accessibility permission, launch at login, updates, and the
+ diagnostics for a bug report.
+ */
 final class GeneralPane: SettingsPane {
     private let permissionLabel = NSTextField(labelWithString: "")
     private var statusForm: NSGridView?
@@ -149,8 +151,10 @@ final class GeneralPane: SettingsPane {
             ])
     }
 
-    /// Says what a recording holds before it starts, because it is the only raw data that the
-    /// app ever writes to a file.
+    /**
+     Says what a recording holds before it starts, because it is the only raw data that the
+     app ever writes to a file.
+     */
     private func confirmRecording() {
         guard let window = view.window else { return }
         let seconds = Int(TouchRecording.duration)
@@ -188,8 +192,10 @@ final class GeneralPane: SettingsPane {
         actions.recordTouches { [weak self] recording in self?.save(recording) }
     }
 
-    /// Asks where to put a finished recording. The app may be behind another one by now,
-    /// because the recording ran while you used the trackpad.
+    /**
+     Asks where to put a finished recording. The app may be behind another one by now,
+     because the recording ran while you used the trackpad.
+     */
     private func save(_ recording: TouchRecording) {
         countdownTimer?.invalidate()
         countdownTimer = nil
@@ -216,8 +222,8 @@ final class GeneralPane: SettingsPane {
                 NSAlert(error: error).runModal()
             }
         }
-        // This says that the recording is over before the panel opens, because the panel can
-        // open behind another app, and macOS may refuse to bring this one forward.
+        /* This says that the recording is over before the panel opens, because the panel can
+           open behind another app, and macOS may refuse to bring this one forward. */
         setDiagnosticsStatus("Choose where to save the file.")
         NSApp.requestUserAttention(.informationalRequest)
         NSApp.bringForward()

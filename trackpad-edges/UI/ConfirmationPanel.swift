@@ -5,9 +5,11 @@ private final class ClickOnlyButton: NSButton {
     override var acceptsFirstResponder: Bool { false }
 }
 
-/// The confirm box for Log Out, Restart, and Shut Down. It takes the keyboard without activating
-/// the app, has no default button, and only a click confirms. Buttons arm after one second, and
-/// the box cancels itself after 30 seconds, on screen lock, or on sleep.
+/**
+ The confirm box for Log Out, Restart, and Shut Down. It takes the keyboard without activating
+ the app, has no default button, and only a click confirms. Buttons arm after one second, and
+ the box cancels itself after 30 seconds, on screen lock, or on sleep.
+ */
 final class ConfirmationPanel: NSPanel {
     private static let width: CGFloat = 340
     private static let margin: CGFloat = 20

@@ -103,8 +103,8 @@ final class RestingFingerTests: XCTestCase {
 
     func testReleasedSlideThatAClickStartedDoesNotStartAgain() {
         var engine = touchMode()
-        // The required key is up at landing, so the landing waits, and a click with the key
-        // down then starts the slide and leaves that landing in place.
+        /* The required key is up at landing, so the landing waits, and a click with the key
+           down then starts the slide and leaves that landing in place. */
         XCTAssertEqual(engine.process(finger(0.95, 0.5), now: 0, modifierSatisfied: false), [])
         XCTAssertTrue(engine.mouseDown(now: 0.1).swallow)
         XCTAssertEqual(

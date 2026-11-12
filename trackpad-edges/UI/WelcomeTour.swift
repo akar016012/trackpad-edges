@@ -65,8 +65,10 @@ private final class StepDots: NSView {
     }
 }
 
-/// Walks a new user through the permission, a first slide, and the main settings. Every control
-/// here changes the real settings, so the app is set up when the tour ends.
+/**
+ Walks a new user through the permission, a first slide, and the main settings. Every control
+ here changes the real settings, so the app is set up when the tour ends.
+ */
 final class WelcomeTour: SettingsPane {
     private struct Preset {
         let title: String

@@ -229,8 +229,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pasteboard.setString(controller.diagnosticsReport.text, forType: .string)
     }
 
-    /// Opens the empty bug report form. The report waits on the clipboard for you to paste it,
-    /// because the app itself never sends anything.
+    /**
+     Opens the empty bug report form. The report waits on the clipboard for you to paste it,
+     because the app itself never sends anything.
+     */
     @objc private func reportProblem() {
         copyDiagnostics()
         NSWorkspace.shared.open(ProjectLinks.newBugReport)

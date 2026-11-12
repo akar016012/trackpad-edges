@@ -177,8 +177,10 @@ nonisolated enum CornerSlot: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// What a profile sets an edge to. This wraps the value, because Off is a choice of its own and
-/// must differ from a slot that the profile leaves alone.
+/**
+ What a profile sets an edge to. This wraps the value, because Off is a choice of its own and
+ must differ from a slot that the profile leaves alone.
+ */
 nonisolated struct EdgeChoice: Codable, Equatable, Sendable {
     var kind: SlideKind?
 }
@@ -203,8 +205,10 @@ nonisolated struct AppProfile: Codable, Equatable, Sendable {
 }
 
 nonisolated extension AppProfile {
-    /// Reads each edge and corner on its own. One that this version cannot read is left out, so
-    /// that slot follows the default settings and the rest of the profile still loads.
+    /**
+     Reads each edge and corner on its own. One that this version cannot read is left out, so
+     that slot follows the default settings and the rest of the profile still loads.
+     */
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -215,12 +219,16 @@ nonisolated extension AppProfile {
     }
 }
 
-/// All settings. The stored edges and corners are the default profile, which every app without a
-/// profile of its own uses, so settings saved before profiles existed need no conversion.
+/**
+ All settings. The stored edges and corners are the default profile, which every app without a
+ profile of its own uses, so settings saved before profiles existed need no conversion.
+ */
 nonisolated struct AppSettings: Codable, Equatable, Sendable {
-    /// The ranges that the window offers. Loaded settings are held to them, because the gesture
-    /// and seek arithmetic divides by the sensitivity and the seek step, and the window's controls
-    /// can neither show nor produce a value outside its range.
+    /**
+     The ranges that the window offers. Loaded settings are held to them, because the gesture
+     and seek arithmetic divides by the sensitivity and the seek step, and the window's controls
+     can neither show nor produce a value outside its range.
+     */
     static let edgeWidthRange: ClosedRange<Float> = 0.05...0.20
     static let sensitivityRange: ClosedRange<Float> = 0.5...2.0
     static let pressThresholdRange: ClosedRange<Float> = 70...115
@@ -325,9 +333,11 @@ nonisolated struct AppSettings: Codable, Equatable, Sendable {
         return result
     }
 
-    /// Saves settings that were edited for one app. Only slots that changed are touched, and one
-    /// set back to its default stops being stored, so it follows the default again. Every setting
-    /// outside a profile applies to all apps.
+    /**
+     Saves settings that were edited for one app. Only slots that changed are touched, and one
+     set back to its default stops being stored, so it follows the default again. Every setting
+     outside a profile applies to all apps.
+     */
     mutating func apply(_ edited: AppSettings, toProfile bundleID: String?) {
         guard let index = profiles.firstIndex(where: { $0.bundleID == bundleID }) else {
             self = edited
@@ -396,10 +406,12 @@ nonisolated extension AppSettings {
         type == .percent ? seekPercentRange : seekSecondsRange
     }
 
-    /// Reads each setting on its own. A value that this version cannot read, such as an action
-    /// that a newer version added, falls back by itself, where a plain read would refuse every
-    /// setting. An edge falls back to Off and a profile slot to the default settings, because
-    /// doing nothing is safer than doing something else. Numbers are held to their ranges.
+    /**
+     Reads each setting on its own. A value that this version cannot read, such as an action
+     that a newer version added, falls back by itself, where a plain read would refuse every
+     setting. An edge falls back to Off and a profile slot to the default settings, because
+     doing nothing is safer than doing something else. Numbers are held to their ranges.
+     */
     init(from decoder: Decoder) throws {
         self.init()
         let container = try decoder.container(keyedBy: CodingKeys.self)

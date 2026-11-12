@@ -200,9 +200,11 @@ final class GestureController {
         SettingsStore.shared.settings.resolved(for: frontBundleID)
     }
 
-    /// Uses the availability that `applySettings` last recorded, so that an engine made later
-    /// matches the others. A gesture in progress keeps its action, because the engine holds it
-    /// until the gesture ends.
+    /**
+     Uses the availability that `applySettings` last recorded, so that an engine made later
+     matches the others. A gesture in progress keeps its action, because the engine holds it
+     until the gesture ends.
+     */
     private func currentConfig() -> GestureConfig {
         effectiveSettings.gestureConfig(unavailable: appliedUnavailable)
     }
@@ -269,16 +271,20 @@ final class GestureController {
         failures.requestPermissionIfNeeded()
     }
 
-    /// The macOS version as plain numbers with the build, such as `27.2.0 (26B123)`. The
-    /// system's own description is translated, which would make a report harder to read.
+    /**
+     The macOS version as plain numbers with the build, such as `27.2.0 (26B123)`. The
+     system's own description is translated, which would make a report harder to read.
+     */
     private static var systemVersion: String {
         let version = ProcessInfo.processInfo.operatingSystemVersion
         return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion) "
             + "(\(systemValue("kern.osversion")))"
     }
 
-    /// Reads one of the system's text values. `hw.model` is the model identifier, such as
-    /// `MacBookPro18,1`, which names the hardware and not its owner.
+    /**
+     Reads one of the system's text values. `hw.model` is the model identifier, such as
+     `MacBookPro18,1`, which names the hardware and not its owner.
+     */
     private static func systemValue(_ name: String) -> String {
         var size = 0
         guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return "unknown" }
@@ -287,11 +293,13 @@ final class GestureController {
         return String(cString: buffer)
     }
 
-    /// Copies the raw touch frames of every trackpad for a fixed time, and then hands them back.
-    /// Gestures keep working meanwhile, so the recording shows the problem as it happens.
+    /**
+     Copies the raw touch frames of every trackpad for a fixed time, and then hands them back.
+     Gestures keep working meanwhile, so the recording shows the problem as it happens.
+     */
     func recordTouches(completion: @escaping (TouchRecording) -> Void) {
-        // A recording that is still running ends here, so that whoever asked for it hears back
-        // and the new one gets its full time.
+        /* A recording that is still running ends here, so that whoever asked for it hears back
+           and the new one gets its full time. */
         finishRecording()
         let start = now
         recording = (TouchRecording(trackpads: MultitouchBridge.shared.deviceInfo), start)
@@ -328,8 +336,9 @@ final class GestureController {
 
     private func handle(device: UnsafeRawPointer, touches: [TouchPoint]) {
         onTouches?(touches)
-        // A frame that was queued before a rebuild can name a device that no longer exists.
-        // Without the click tap there is no permission to press keys, so a slide would do nothing.
+        /* A frame that was queued before a rebuild can name a device that no longer exists.
+           Without the click tap there is no permission to press keys, so a slide would do
+           nothing. */
         guard !paused, !locked, ClickTap.shared.isInstalled,
             MultitouchBridge.shared.devices.contains(device)
         else { return }
@@ -362,9 +371,11 @@ final class GestureController {
         }
     }
 
-    /// Checks back when a resting finger's wait ends. Frames normally keep arriving while a
-    /// finger is down, so this only makes sure that the pointer comes back on time. It has its
-    /// own list of checks, so that it can never hold up the one for a slide's grace period.
+    /**
+     Checks back when a resting finger's wait ends. Frames normally keep arriving while a
+     finger is down, so this only makes sure that the pointer comes back on time. It has its
+     own list of checks, so that it can never hold up the one for a slide's grace period.
+     */
     private func scheduleTickIfResting(device: UnsafeRawPointer) {
         guard let remaining = engines[device]?.restReleaseRemaining(now: now),
             pendingRestTicks.insert(device).inserted
@@ -378,9 +389,11 @@ final class GestureController {
         }
     }
 
-    /// Checks back after the grace period, because no more frames arrive once a finger lifts.
-    /// Each trackpad has its own check. Contact can drop out, return, and leave for good while a
-    /// check is on its way, and that check then comes too early, so it sets up the next one.
+    /**
+     Checks back after the grace period, because no more frames arrive once a finger lifts.
+     Each trackpad has its own check. Contact can drop out, return, and leave for good while a
+     check is on its way, and that check then comes too early, so it sets up the next one.
+     */
     private func scheduleTickIfAwaitingLift(device: UnsafeRawPointer) {
         guard let remaining = engines[device]?.liftGraceRemaining(now: now),
             pendingTicks.insert(device).inserted
@@ -584,13 +597,13 @@ final class GestureController {
             watchdog.beat(ports: [])
         }
         if let device = clickDevice, !CGEventSource.buttonState(.hidSystemState, button: .left) {
-            // The button reads as up a moment before its mouse-up reaches the tap, so one look
-            // could take a click that is about to end normally for a lost one, and drop it.
+            /* The button reads as up a moment before its mouse-up reaches the tap, so one look
+               could take a click that is about to end normally for a lost one, and drop it. */
             if sawButtonUp {
                 sawButtonUp = false
                 recoverLostMouseUp(device: device)
-                // The real mouse-up may still be on its way, and no app saw this click's
-                // mouse-down.
+                /* The real mouse-up may still be on its way, and no app saw this click's
+                   mouse-down. */
                 discardNextUp = true
             } else {
                 sawButtonUp = true
@@ -676,9 +689,9 @@ final class GestureController {
         frontBundleID = app?.bundleIdentifier
         // Most apps have no profile, so this usually has nothing to change.
         let profileChanged = wasUsing != SettingsStore.shared.settings.profile(for: frontBundleID)
-        // Some availability changes send no notice, such as the Spaces shortcuts being turned on
-        // in System Settings. Leaving System Settings brings another app to the front, so this
-        // is when the app looks.
+        /* Some availability changes send no notice, such as the Spaces shortcuts being turned on
+           in System Settings. Leaving System Settings brings another app to the front, so this
+           is when the app looks. */
         let availabilityChanged = unavailableKinds != appliedUnavailable
         if profileChanged || availabilityChanged { applySettings() }
         if availabilityChanged { onAvailabilityChanged?() }

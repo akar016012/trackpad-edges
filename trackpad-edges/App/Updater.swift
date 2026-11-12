@@ -2,12 +2,16 @@ import AppKit
 import Security
 import Sparkle
 
-/// Owns the app's automatic updates. `Config/Info.plist` holds the feed, the public key, and the
-/// check interval of 24 hours. A check is due at launch once a day has passed since the last one,
-/// and again every day while the app runs.
+/**
+ Owns the app's automatic updates. `Config/Info.plist` holds the feed, the public key, and the
+ check interval of 24 hours. A check is due at launch once a day has passed since the last one,
+ and again every day while the app runs.
+ */
 final class Updater: NSObject, SPUStandardUserDriverDelegate {
-    /// Accepts only this project's Developer ID. A copy built with any other identity must not
-    /// offer to replace itself with the official app, because that would discard its changes.
+    /**
+     Accepts only this project's Developer ID. A copy built with any other identity must not
+     offer to replace itself with the official app, because that would discard its changes.
+     */
     private static let officialRequirement =
         "anchor apple generic and certificate leaf[subject.OU] = \"3J6QGH6H9F\" "
         // These fields mark Apple's Developer ID intermediate and a Developer ID Application leaf.
@@ -18,8 +22,10 @@ final class Updater: NSObject, SPUStandardUserDriverDelegate {
     var onSessionEnded: (() -> Void)?
     /// False in a copy that is not signed with this project's Developer ID.
     let isAvailable = Updater.isOfficialBuild
-    /// True from the moment an update is shown until its session ends. The app keeps its Dock icon
-    /// during that time, so that an update window can always be reached.
+    /**
+     True from the moment an update is shown until its session ends. The app keeps its Dock icon
+     during that time, so that an update window can always be reached.
+     */
     private(set) var isInSession = false
 
     private var controller: SPUStandardUpdaterController?
@@ -63,9 +69,9 @@ final class Updater: NSObject, SPUStandardUserDriverDelegate {
 
     // MARK: SPUStandardUserDriverDelegate
 
-    // The app lives in the menu bar, so an update found by a scheduled check could open behind
-    // other windows and go unnoticed. While the update window is up, the app has a Dock icon that
-    // bounces once.
+    /* The app lives in the menu bar, so an update found by a scheduled check could open behind
+       other windows and go unnoticed. While the update window is up, the app has a Dock icon that
+       bounces once. */
 
     nonisolated var supportsGentleScheduledUpdateReminders: Bool { true }
 

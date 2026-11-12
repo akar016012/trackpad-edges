@@ -87,9 +87,9 @@ final class SettingsModelTests: XCTestCase {
         let data = try JSONEncoder().encode(settings)
         let loaded = try JSONDecoder().decode(AppSettings.self, from: data)
         XCTAssertEqual(loaded, settings)
-        // Every stored value differs from its default, so each key must appear in the saved form
-        // and be read back. A setting added later is missing from the saved form until this test
-        // sets it too, which the two counts below catch even for an optional setting.
+        /* Every stored value differs from its default, so each key must appear in the saved form
+           and be read back. A setting added later is missing from the saved form until this test
+           sets it too, which the two counts below catch even for an optional setting. */
         let saved = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let defaults = try XCTUnwrap(
             JSONSerialization.jsonObject(with: JSONEncoder().encode(AppSettings()))
