@@ -8,6 +8,7 @@ final class DiagnosticsReportTests: XCTestCase {
         "/Applications/Secret Notes.app", "https://example.com/private/page",
         "/Applications/Other Browser.app", "/Users/someone/Documents/Diary.txt", "Control-Option-K",
         "My Morning Routine", "com.example.secretnotes", "Secret Notes",
+        "~/Secret/start-work.sh --token Diary",
     ]
 
     private func personalSettings() -> AppSettings {
@@ -17,6 +18,8 @@ final class DiagnosticsReportTests: XCTestCase {
         settings.bottomLeft[1] = .openFile(path: personal[3])
         settings.bottomLeft[3] = .keyCombination(keyCode: 40, modifiers: 1, label: personal[4])
         settings.bottomRight[1] = .shortcut(name: personal[5])
+        settings.bottomRight[2] = .command(script: personal[8])
+        settings.bottomRight[3] = .system(action: .restart)
         var profile = AppProfile(bundleID: personal[6], name: personal[7])
         profile.edges[.left] = EdgeChoice(kind: nil)
         profile.edges[.twoFingerTop] = EdgeChoice(kind: .zoom)
@@ -68,6 +71,25 @@ final class DiagnosticsReportTests: XCTestCase {
         }
     }
 
+    func testReportSaysWhichWayTheSystemActionsUse() {
+        var report = report()
+        for line in [
+            "Lock Screen: system call", "Toggle Dark Mode: system call",
+            "Do Not Disturb key: not set",
+        ] {
+            XCTAssertTrue(report.text.contains(line + "\n"), "The report is missing: \(line)")
+        }
+        report.lockUsesSystemCall = false
+        report.darkModeUsesSystemCall = false
+        report.doNotDisturbKeySet = true
+        for line in [
+            "Lock Screen: Control-Command-Q", "Toggle Dark Mode: System Events",
+            "Do Not Disturb key: set",
+        ] {
+            XCTAssertTrue(report.text.contains(line + "\n"), "The report is missing: \(line)")
+        }
+    }
+
     func testReportGivesTheReasonForEachDimmedAction() {
         XCTAssertTrue(report().text.contains("Dimmed actions: none\n"))
         let text = report(unavailable: [.switchSpaces, .seek]).text
@@ -109,7 +131,8 @@ final class DiagnosticsReportTests: XCTestCase {
             "Top-left corner: 1 click Mute, 2 clicks Open App",
             "Top-right corner: 1 click Open Link",
             "Bottom-left corner: 1 click Open File or Folder, 3 clicks Press Keys",
-            "Bottom-right corner: 1 click Run Shortcut", "Profiles: 2", "- Profile 1:",
+            "Bottom-right corner: 1 click Run Shortcut, 2 clicks Run Command, 3 clicks Restart…",
+            "Profiles: 2", "- Profile 1:",
             "  - Left edge: Off", "  - Top edge, two fingers: Zoom",
             "  - Top-left corner: 1 click Open App", "- Profile 2: no changes",
         ] {
@@ -123,8 +146,10 @@ final class DiagnosticsReportTests: XCTestCase {
             XCTAssertFalse(text.contains(value), "The report must not include: \(value)")
         }
         // No part of any of them may appear either, such as a folder or a file name.
-        for fragment in ["/", "http", "Secret", "Diary", "example", "someone", "Routine", "Option"]
-        {
+        for fragment in [
+            "/", "http", "Secret", "Diary", "example", "someone", "Routine", "Option", "token",
+            "start-work",
+        ] {
             XCTAssertFalse(text.contains(fragment), "The report must not include: \(fragment)")
         }
     }

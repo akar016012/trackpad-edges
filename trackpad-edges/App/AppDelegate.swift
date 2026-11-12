@@ -22,6 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         title: "", action: #selector(requestAccessibility), keyEquivalent: "")
     private let pauseItem = NSMenuItem(
         title: "Pause Gestures", action: #selector(togglePause), keyEquivalent: "")
+    private let stopCommandsItem = NSMenuItem(
+        title: "Stop Running Commands", action: #selector(stopCommands), keyEquivalent: "")
     private let updatesItem = NSMenuItem(
         title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
 
@@ -51,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             window.updateTouches(touches)
         }
         controller.onSlideStep = { [weak self] in self?.welcomeWindow?.slideHappened() }
+        controller.onCommandsChanged = { [weak self] in self?.mainWindow?.commandsChanged() }
         controller.start()
         setUpStatusItem()
         guard !launchedAtLogin else { return }
@@ -84,6 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         accessibilityItem.title = trusted ? "Accessibility Is On" : "Grant Accessibility…"
         accessibilityItem.isEnabled = !trusted
         pauseItem.state = controller.paused ? .on : .off
+        stopCommandsItem.isHidden = controller.runningCommands.isEmpty
         updatesItem.isEnabled = updater.canCheckForUpdates
         let settings = SettingsStore.shared.settings
         let unavailable = controller.unavailableKinds
@@ -123,19 +127,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(profileItem)
         menu.addItem(accessibilityItem)
         menu.addItem(.separator())
-        if #available(macOS 14.0, *) {
-            menu.addItem(.sectionHeader(title: "Edges for All Apps"))
-        } else {
-            // macOS 13 has no section header, so a disabled item stands in for one.
-            let header = NSMenuItem(title: "Edges for All Apps", action: nil, keyEquivalent: "")
-            header.isEnabled = false
-            menu.addItem(header)
-        }
+        menu.addItem(.header("Edges for All Apps"))
         for (index, edge) in Self.edges.enumerated() {
             menu.addItem(makeEdgeItem(title: edge.title, edgeIndex: index, path: edge.path))
         }
         menu.addItem(.separator())
         menu.addItem(pauseItem)
+        stopCommandsItem.target = self
+        stopCommandsItem.toolTip = "Ends every corner command that is still running."
+        stopCommandsItem.isHidden = true
+        menu.addItem(stopCommandsItem)
         let about = NSMenuItem(
             title: "About Trackpad Edges", action: #selector(showAbout), keyEquivalent: "")
         about.target = self
@@ -178,6 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let item = NSMenuItem(
                 title: choice.title, action: #selector(chooseEdgeAction(_:)), keyEquivalent: "")
             item.target = self
+            // The tag packs both indexes, which works while there are fewer than 100 choices.
             item.tag = edgeIndex * 100 + choiceIndex
             submenu.addItem(item)
         }
@@ -212,6 +214,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             copyDiagnostics: { [weak self] in self?.copyDiagnostics() },
             recordTouches: { [weak self] completion in
                 self?.controller.recordTouches(completion: completion)
+            },
+            runningCommands: { [weak self] in self?.controller.runningCommands ?? [] },
+            stopCommand: { [weak self] in self?.controller.stopCommand($0) },
+            requestNotificationPermission: { [weak self] in
+                self?.controller.requestNotificationPermission()
             })
     }
 
@@ -290,6 +297,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func togglePause() {
         controller.paused.toggle()
+    }
+
+    @objc private func stopCommands() {
+        controller.stopAllCommands()
     }
 
     /// Shows the system prompt for the permission that gestures need.

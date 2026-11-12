@@ -3,38 +3,25 @@ import UniformTypeIdentifiers
 
 /// Lets you choose an action for each click count of each corner. The clicks popup picks the
 /// count to edit, so a corner with several actions needs no extra rows.
-final class CornersPane: ProfilePane {
-    private enum Choice: Int, CaseIterable {
-        case none, mute, playPause, nextTrack, previousTrack, app, link, file, keys, shortcut
+final class CornersPane: ProfilePane, NSTextFieldDelegate {
+    private typealias Kind = CornerActionKind
 
-        var title: String {
-            switch self {
-            case .none: return "No Action"
-            case .mute: return "Mute"
-            case .playPause: return "Play or Pause"
-            case .nextTrack: return "Next Track"
-            case .previousTrack: return "Previous Track"
-            case .app: return "Open App"
-            case .link: return "Open Link"
-            case .file: return "Open File or Folder"
-            case .keys: return "Press Keys"
-            case .shortcut: return "Run Shortcut"
-            }
-        }
+    /// A command row. Save and Stop share one slot beside the field.
+    private struct CommandRow {
+        let field: NSTextField
+        let save: NSButton
+        let stop: NSButton
+    }
 
-        init(_ action: CornerAction) {
-            switch action {
-            case .none: self = .none
-            case .mute: self = .mute
-            case .playPause: self = .playPause
-            case .nextTrack: self = .nextTrack
-            case .previousTrack: self = .previousTrack
-            case .openApp: self = .app
-            case .openLink: self = .link
-            case .openFile: self = .file
-            case .keyCombination: self = .keys
-            case .shortcut: self = .shortcut
-            }
+    /// The width of the Save and Stop slot.
+    private static let commandButtonWidth: CGFloat = 64
+    private static let keyboardSettings = URL(
+        string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")
+
+    /// The popup items, by group.
+    private static var actionGroups: [(header: String?, items: [(title: String, tag: Int)])] {
+        CornerActionGroup.allCases.map { group in
+            (group.title, Kind.allCases.filter { $0.group == group }.map { ($0.title, $0.tag) })
         }
     }
 
@@ -48,6 +35,9 @@ final class CornersPane: ProfilePane {
     private var clickPopups: [Corner: NSPopUpButton] = [:]
     /// The click count being edited for each corner.
     private var selectedClicks: [Corner: Int] = [:]
+    private var sectionTitles: [Corner: String] = [:]
+    /// The command row of each corner that shows one.
+    private var commandRows: [Corner: CommandRow] = [:]
     private let strengthLabel = NSTextField(labelWithString: "")
 
     override func loadView() {
@@ -67,12 +57,67 @@ final class CornersPane: ProfilePane {
     override func profileChanged() {
         for (corner, action) in actionPopups {
             selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
-            action.selectItem(at: Choice(currentAction(corner)).rawValue)
+            action.selectItem(withTag: Kind(currentAction(corner)).tag)
             clickPopups[corner]?.selectItem(at: (selectedClicks[corner] ?? 1) - 1)
             refreshClickTitles(corner)
             rebuildDetails(corner: corner)
         }
         onChange?()
+    }
+
+    /// Rereads the Do Not Disturb key so the status is current.
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        for corner in actionPopups.keys
+        where currentAction(corner) == .system(action: .toggleDoNotDisturb) {
+            rebuildDetails(corner: corner)
+        }
+    }
+
+    /// Updates every command row's buttons.
+    func commandsChanged() {
+        for corner in commandRows.keys { updateCommandButtons(corner) }
+    }
+
+    /// Enables Save while the field has unsaved text, and shows Stop instead while the saved
+    /// command runs with nothing to save.
+    private func updateCommandButtons(_ corner: Corner) {
+        guard let row = commandRows[corner], case .command(let saved) = currentAction(corner)
+        else { return }
+        let isDirty = row.field.stringValue != saved
+        let showsStop = !isDirty && actions.runningCommands().contains(saved)
+        row.save.isEnabled = isDirty
+        guard row.stop.isHidden == showsStop else { return }
+        let window = row.field.window
+        let hidingFocus = window?.firstResponder === (showsStop ? row.save : row.stop)
+        row.save.isHidden = showsStop
+        row.stop.isHidden = !showsStop
+        // Return focus to the field if the hidden button had it.
+        if hidingFocus { window?.makeFirstResponder(row.field) }
+        // Tell VoiceOver, but only while the pane is on screen.
+        if window != nil, let slot = row.save.superview {
+            NSAccessibility.post(element: slot, notification: .layoutChanged)
+        }
+    }
+
+    /// Updates Save as you type.
+    func controlTextDidChange(_ notification: Notification) {
+        guard let field = notification.object as? NSTextField,
+            let corner = commandRows.first(where: { $0.value.field === field })?.key
+        else { return }
+        updateCommandButtons(corner)
+    }
+
+    /// Saves the text in a corner's command field.
+    private func saveCommand(_ corner: Corner) {
+        guard let row = commandRows[corner] else { return }
+        let text = row.field.stringValue
+        if currentAction(corner) != .command(script: text) {
+            assign(.command(script: text), corner: corner)
+            // Ask for notification permission now, when the reason is clear.
+            if ShellCommand.isConfigured(text) { actions.requestNotificationPermission() }
+        }
+        updateCommandButtons(corner)
     }
 
     private func pressControls() -> NSView {
@@ -89,6 +134,7 @@ final class CornersPane: ProfilePane {
     }
 
     private static func strengthName(_ threshold: Float) -> String {
+        // The cutoffs split `AppSettings.pressThresholdRange` into three equal bands.
         if threshold < 85 { return "A light press" }
         return threshold < 100 ? "A medium press" : "A firm press"
     }
@@ -97,10 +143,11 @@ final class CornersPane: ProfilePane {
         _ title: String, corner: Corner
     ) -> NSView {
         selectedClicks[corner] = settings[keyPath: corner].configuredClicks.min() ?? 1
-        let action = popup(
-            Choice.allCases.map(\.title), selected: Choice(currentAction(corner)).rawValue
-        ) { [weak self] index in
-            self?.choose(Choice(rawValue: index) ?? .none, corner: corner)
+        sectionTitles[corner] = title
+        let action = groupedPopup(
+            Self.actionGroups, selectedTag: Kind(currentAction(corner)).tag
+        ) { [weak self] tag in
+            self?.choose(Kind(tag: tag) ?? .none, corner: corner)
         }
         let clicks = popup(clickTitles(corner), selected: (selectedClicks[corner] ?? 1) - 1) {
             [weak self] index in self?.selectClicks(index + 1, corner: corner)
@@ -123,24 +170,13 @@ final class CornersPane: ProfilePane {
         return column([heading(title), controls, details])
     }
 
-    private func choose(_ choice: Choice, corner: Corner) {
+    private func choose(_ kind: Kind, corner: Corner) {
         // A text field commits when it loses focus, so that must happen before the new action is
         // stored, or the old text would overwrite it.
         view.window?.makeFirstResponder(nil)
         // AppKit also sends the action for the item that is already selected.
-        guard Choice(currentAction(corner)) != choice else { return }
-        switch choice {
-        case .none: assign(.none, corner: corner)
-        case .mute: assign(.mute, corner: corner)
-        case .playPause: assign(.playPause, corner: corner)
-        case .nextTrack: assign(.nextTrack, corner: corner)
-        case .previousTrack: assign(.previousTrack, corner: corner)
-        case .app: assign(.openApp(path: ""), corner: corner)
-        case .link: assign(.openLink(url: "", browserPath: nil), corner: corner)
-        case .file: assign(.openFile(path: ""), corner: corner)
-        case .keys: assign(.keyCombination(keyCode: nil, modifiers: 0, label: ""), corner: corner)
-        case .shortcut: assign(.shortcut(name: ""), corner: corner)
-        }
+        guard Kind(currentAction(corner)) != kind else { return }
+        assign(kind.blankAction, corner: corner)
         rebuildDetails(corner: corner)
         // The window fits the pane, so it must hear about this after the rows have changed.
         onChange?()
@@ -174,21 +210,27 @@ final class CornersPane: ProfilePane {
     private func selectClicks(_ count: Int, corner: Corner) {
         view.window?.makeFirstResponder(nil)
         selectedClicks[corner] = count
-        actionPopups[corner]?.selectItem(at: Choice(currentAction(corner)).rawValue)
+        actionPopups[corner]?.selectItem(withTag: Kind(currentAction(corner)).tag)
         rebuildDetails(corner: corner)
         onChange?()
     }
 
     private func rebuildDetails(corner: Corner) {
         guard let stack = detailStacks[corner] else { return }
+        commandRows[corner] = nil
         stack.setViews([], in: .leading)
         for view in detailViews(corner: corner) { stack.addView(view, in: .leading) }
+        commandsChanged()
     }
 
     private func detailViews(corner: Corner) -> [NSView] {
         switch currentAction(corner) {
         case .none, .mute, .playPause, .nextTrack, .previousTrack:
             return []
+        case .system(let action):
+            return action == .toggleDoNotDisturb ? doNotDisturbViews() : []
+        case .command(let script):
+            return commandViews(script: script, corner: corner)
         case .openApp(let path):
             return chooser(path: path, title: "Choose App…", types: [.application]) {
                 [weak self] chosen in
@@ -238,6 +280,7 @@ final class CornersPane: ProfilePane {
         url: String, browserPath: String?, corner: Corner
     ) -> [NSView] {
         var browsers: [URL] = []
+        // Any web address works here, because it only asks which apps open links.
         if let sample = URL(string: "https://example.com") {
             browsers = NSWorkspace.shared.urlsForApplications(toOpen: sample)
         }
@@ -276,12 +319,77 @@ final class CornersPane: ProfilePane {
         return [recorder]
     }
 
+    /// Builds a monospaced command field with a Save or Stop slot. A corner press runs the saved
+    /// command, and Return, Save, or leaving the field saves.
+    private func commandViews(script: String, corner: Corner) -> [NSView] {
+        let fieldWidth = Self.columnWidth - Self.commandButtonWidth - 8
+        let field = textField(value: script, placeholder: "Shell command", width: fieldWidth) {
+            [weak self] _ in
+            self?.saveCommand(corner)
+        }
+        field.delegate = self
+        field.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        field.lineBreakMode = .byTruncatingTail
+        let name = sectionTitles[corner] ?? ""
+        field.setAccessibilityLabel("\(name) corner command")
+        let save = button("Save") { [weak self] in self?.saveCommand(corner) }
+        save.setAccessibilityLabel("Save the \(name) corner command")
+        save.isEnabled = false
+        let stop = button("Stop") { [weak self] in
+            guard let self, case .command(let script) = self.currentAction(corner) else { return }
+            self.actions.stopCommand(script)
+        }
+        stop.setAccessibilityLabel("Stop the \(name) corner command")
+        stop.isHidden = true
+        // The slot has a fixed size, so swapping buttons never moves the field.
+        let slot = NSView()
+        slot.translatesAutoresizingMaskIntoConstraints = false
+        for button in [save, stop] {
+            button.translatesAutoresizingMaskIntoConstraints = false
+            slot.addSubview(button)
+            NSLayoutConstraint.activate([
+                button.leadingAnchor.constraint(equalTo: slot.leadingAnchor),
+                button.trailingAnchor.constraint(equalTo: slot.trailingAnchor),
+                button.topAnchor.constraint(equalTo: slot.topAnchor),
+                button.bottomAnchor.constraint(equalTo: slot.bottomAnchor),
+            ])
+        }
+        slot.widthAnchor.constraint(equalToConstant: Self.commandButtonWidth).isActive = true
+        commandRows[corner] = CommandRow(field: field, save: save, stop: stop)
+        #if DEBUG
+            /* `-debugCommandDraft 'text'` puts unsaved text in each command field, and leaving a
+               field saves it. */
+            if let draft = UserDefaults.standard.string(forKey: "debugCommandDraft") {
+                field.stringValue = draft
+            }
+        #endif
+        return [field, slot]
+    }
+
+    /// Shows the Do Not Disturb key status, with a Keyboard settings button when no key is set.
+    private func doNotDisturbViews() -> [NSView] {
+        guard SystemActionRunner.doNotDisturbKey == nil else {
+            let label = NSTextField(labelWithString: "It presses your key for Do Not Disturb.")
+            label.textColor = .secondaryLabelColor
+            return [label]
+        }
+        let label = NSTextField(labelWithString: "No key is assigned yet.")
+        label.textColor = .secondaryLabelColor
+        let open = button("Keyboard Settings…") {
+            if let url = Self.keyboardSettings { NSWorkspace.shared.open(url) }
+        }
+        open.toolTip =
+            "Assign a key to Do Not Disturb under Keyboard Shortcuts, in the Mission Control section."
+        return [label, open]
+    }
+
     private func textField(
-        value: String, placeholder: String, _ assign: @escaping (String) -> Void
+        value: String, placeholder: String, width: CGFloat = 150,
+        _ assign: @escaping (String) -> Void
     ) -> NSTextField {
         let field = NSTextField(string: value)
         field.placeholderString = placeholder
-        field.widthAnchor.constraint(equalToConstant: 150).isActive = true
+        field.widthAnchor.constraint(equalToConstant: width).isActive = true
         bind(field) { [weak field] in assign(field?.stringValue ?? "") }
         return field
     }

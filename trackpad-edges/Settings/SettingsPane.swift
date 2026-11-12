@@ -16,6 +16,21 @@ struct WindowActions {
     var copyDiagnostics: () -> Void
     /// Records touches for a fixed time, and then hands the recording to the closure.
     var recordTouches: (@escaping (TouchRecording) -> Void) -> Void
+    /// The running commands, by text.
+    var runningCommands: () -> Set<String>
+    var stopCommand: (String) -> Void
+    /// Asks once for permission to post failure notifications.
+    var requestNotificationPermission: () -> Void
+}
+
+extension NSMenuItem {
+    /// A menu section header, or a disabled item on macOS 13.
+    static func header(_ title: String) -> NSMenuItem {
+        if #available(macOS 14.0, *) { return .sectionHeader(title: title) }
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        return item
+    }
 }
 
 /// Forwards a control's action to a closure.
@@ -80,6 +95,27 @@ class SettingsPane: NSViewController {
         }
         button.selectItem(at: selected)
         bind(button) { [weak button] in handler(button?.indexOfSelectedItem ?? 0) }
+        return button
+    }
+
+    /// A popup with grouped, tagged items. Use tags, not positions, to find items.
+    func groupedPopup(
+        _ groups: [(header: String?, items: [(title: String, tag: Int)])], selectedTag: Int,
+        _ handler: @escaping (Int) -> Void
+    ) -> NSPopUpButton {
+        let button = NSPopUpButton()
+        button.autoenablesItems = false
+        for (index, group) in groups.enumerated() {
+            if index > 0 { button.menu?.addItem(.separator()) }
+            if let header = group.header { button.menu?.addItem(.header(header)) }
+            for item in group.items {
+                let menuItem = NSMenuItem(title: item.title, action: nil, keyEquivalent: "")
+                menuItem.tag = item.tag
+                button.menu?.addItem(menuItem)
+            }
+        }
+        button.selectItem(withTag: selectedTag)
+        bind(button) { [weak button] in handler(button?.selectedTag() ?? 0) }
         return button
     }
 

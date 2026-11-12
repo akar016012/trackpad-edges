@@ -202,6 +202,7 @@ final class KeyRecorderButton: NSButton {
     }
 
     private static func alwaysReportsFn(_ keyCode: UInt16) -> Bool {
+        // Codes 96 to 126 hold F1 to F16, the arrows, and keys such as Home and Page Up.
         (96...126).contains(Int(keyCode))
     }
 
@@ -217,6 +218,7 @@ final class KeyRecorderButton: NSButton {
     private static func name(of event: CGEvent, keyCode: UInt16) -> String {
         if let name = namedKeys[Int(keyCode)] { return name }
         let characters = NSEvent(cgEvent: event)?.charactersIgnoringModifiers?.uppercased() ?? ""
+        // AppKit gives function and arrow keys private-use characters from U+F700 up.
         let isPrintable = characters.unicodeScalars.allSatisfy { $0.value >= 32 && $0.value < 0xF700 }
         return !characters.isEmpty && isPrintable ? characters : "Key \(keyCode)"
     }

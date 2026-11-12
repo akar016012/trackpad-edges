@@ -59,6 +59,7 @@ rm -rf "$previous"
 
 if [[ ${#running[@]} -gt 0 ]]; then
   kill "${running[@]}"
+  # This waits up to two seconds, so that open launches the new copy, not the old one.
   for _ in 1 2 3 4 5 6 7 8 9 10; do
     kill -0 "${running[@]}" 2>/dev/null || break
     sleep 0.2

@@ -4,7 +4,7 @@ Status: the menu bar item and the first-run steps are built. Their layout has be
 
 ## Menu bar
 
-The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu also holds **Check for Updates…** and **Release Notes**, which opens the notes for the running version on GitHub. **Report a Problem…** copies the [diagnostics report](roadmap/diagnostics-report.md) and opens an empty bug report on GitHub, so that you can paste the report into its Diagnostics field. The report never travels in the link. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, reopens the welcome tour, opens the window, and quits the app.
+The app has a window and a menu bar item, and it keeps running in the menu bar after the window closes. The menu also holds **Check for Updates…** and **Release Notes**, which opens the notes for the running version on GitHub. **Report a Problem…** copies the [diagnostics report](roadmap/diagnostics-report.md) and opens an empty bug report on GitHub, so that you can paste the report into its Diagnostics field. The report never travels in the link. The menu shows how many trackpads were found and which profile is in use, offers the Accessibility prompt, assigns each edge, pauses gestures, reopens the welcome tour, opens the window, and quits the app. **Stop Running Commands** appears below **Pause Gestures** while any corner command runs, and it ends every one of them.
 
 ## First-run guide
 
@@ -14,10 +14,16 @@ If macOS needs you to approve launch at login, the app opens the Login Items pan
 
 ## Permissions
 
-| Capability                       | Permission needed                  |
-| -------------------------------- | ---------------------------------- |
-| Reading touches                  | None, but App Sandbox must be off. |
-| Event tap and synthesized events | Accessibility                      |
+| Capability                                   | Permission needed                                                                      |
+| -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Reading touches                              | None, but App Sandbox must be off.                                                     |
+| Event tap and synthesized events             | Accessibility                                                                          |
+| Empty Trash, and the Dark Mode fallback      | Automation for Finder or System Events, which macOS asks for on first use.             |
+| Log Out, Restart, and Shut Down              | macOS may ask for Automation the first time. This has not been confirmed yet.          |
+| Reporting a failed command in a notification | Notifications, which the app asks for when you first enter a command.                  |
+| Run Command                                  | None for the app. A command asks for its own permissions, and never borrows the app's. |
+
+The app is signed with the `com.apple.security.automation.apple-events` entitlement, which the hardened runtime needs before an app can ask to send Apple events. `Config/TrackpadEdges.entitlements` holds it, and `NSAppleEventsUsageDescription` in `Config/Info.plist` is the reason that macOS shows in its prompt.
 
 ## Rebuilds
 

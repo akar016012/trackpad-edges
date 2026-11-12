@@ -9,6 +9,8 @@ final class GestureController {
     private static let lostFingerInterval: TimeInterval = 0.25
     private static let healthCheckInterval: TimeInterval = 0.25
     private static let noticeDuration: TimeInterval = 3
+    /// The delay before the sleep actions, so the lifting finger does not wake the Mac.
+    private static let liftWait: TimeInterval = 0.5
     /// How many health checks pass between asking the system directly about the permission.
     private static let permissionProbeEvery = 4
 
@@ -19,6 +21,9 @@ final class GestureController {
     private let haptics = HapticEngine()
     private let monitor = DeviceMonitor()
     private let watchdog = TapWatchdog()
+    private let failures = FailureNotifier()
+    /// Ignores some power actions just after a wake or an unlock.
+    private var powerGuard = PowerActionGuard()
 
     private var engines: [UnsafeRawPointer: GestureEngine] = [:]
     private var lastFrames: [UnsafeRawPointer: TimeInterval] = [:]
@@ -51,6 +56,8 @@ final class GestureController {
     var onSlideStep: (() -> Void)?
     /// Runs when an edge action becomes available or stops being available.
     var onAvailabilityChanged: (() -> Void)?
+    /// Runs when a command starts or ends.
+    var onCommandsChanged: (() -> Void)?
     /// The app in front, which decides the profile.
     private var frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
     /// Whether the user has paused all gestures from the menu.
@@ -78,6 +85,17 @@ final class GestureController {
             self?.onAvailabilityChanged?()
         }
         monitor.onDevicesChanged = { [weak self] in self?.rebuildDevices() }
+        corners.showNotice = { [weak self] title, detail in
+            self?.seek.showNotice(title: title, detail: detail, for: Self.noticeDuration)
+        }
+        failures.showNotice = { [weak self] title, detail, duration in
+            self?.seek.showNotice(title: title, detail: detail, for: duration)
+        }
+        failures.install()
+        corners.commands.reportFailure = { [weak self] corner, title, summary, body in
+            self?.failures.report(corner: corner, title: title, summary: summary, body: body)
+        }
+        corners.commands.onChange = { [weak self] in self?.onCommandsChanged?() }
         monitor.start()
         observeLocking()
         NSWorkspace.shared.notificationCenter.addObserver(
@@ -108,6 +126,30 @@ final class GestureController {
             let defaults = UserDefaults.standard
             // Launching with `-debugNotice YES` shows the bright room notice for inspection.
             if defaults.bool(forKey: "debugNotice") { showBrightRoomNotice(for: 30) }
+            // `-debugConfirm YES` shows the confirm box; confirming only shows a notice.
+            if defaults.bool(forKey: "debugConfirm") {
+                let panel = ConfirmationPanel(
+                    question: "Restart this Mac?", detail: "The top-left corner asked for this.",
+                    actionTitle: "Restart")
+                panel.onFinish = { [weak self, panel] confirmed in
+                    _ = panel
+                    self?.seek.showNotice(
+                        title: confirmed ? "Confirmed" : "Canceled", detail: "Nothing was sent.",
+                        for: Self.noticeDuration)
+                }
+                panel.present()
+            }
+            // `-debugCommand '<command>'` runs it as the top-left corner.
+            if let script = defaults.string(forKey: "debugCommand") {
+                corners.commands.run(script, corner: .topLeft)
+            }
+            // `-debugStopAfter 3` stops all commands after that many seconds.
+            if defaults.object(forKey: "debugStopAfter") != nil {
+                let delay = defaults.double(forKey: "debugStopAfter")
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                    self?.stopAllCommands()
+                }
+            }
             if let name = defaults.string(forKey: "debugOverlay"),
                 let style = OverlayStyle(rawValue: name)
             {
@@ -121,6 +163,8 @@ final class GestureController {
     }
 
     func stop() {
+        // Commands left running after quit could not be stopped from the app.
+        corners.commands.stopAllForQuit()
         watchdog.stop()
         abortAll()
         ClickTap.shared.uninstall()
@@ -171,7 +215,8 @@ final class GestureController {
     /// Fires one haptic with the current settings.
     func testHaptic() {
         let devices = MultitouchBridge.shared.devices
-        guard let device = devices.first(where: { haptics.hasActuator(device: $0) }) ?? devices.first
+        guard
+            let device = devices.first(where: { haptics.hasActuator(device: $0) }) ?? devices.first
         else { return }
         haptics.pulse(device: device)
     }
@@ -200,7 +245,28 @@ final class GestureController {
             accessibilityGranted: AXIsProcessTrusted(),
             clickWatchingOn: ClickTap.shared.isInstalled, gesturesPaused: paused,
             mediaAdapterLoaded: seek.isAvailable, unavailable: unavailableKinds,
-            settings: SettingsStore.shared.settings)
+            settings: SettingsStore.shared.settings,
+            lockUsesSystemCall: corners.system.lockUsesSystemCall,
+            darkModeUsesSystemCall: corners.system.darkModeUsesSystemCall,
+            doNotDisturbKeySet: SystemActionRunner.doNotDisturbKey != nil)
+    }
+
+    // MARK: Commands
+
+    /// The running commands, by text.
+    var runningCommands: Set<String> { corners.commands.runningScripts }
+
+    func stopCommand(_ script: String) {
+        corners.commands.stop(script)
+    }
+
+    func stopAllCommands() {
+        corners.commands.stopAll()
+    }
+
+    /// Asks once for permission to post failure notifications.
+    func requestNotificationPermission() {
+        failures.requestPermissionIfNeeded()
     }
 
     /// The macOS version as plain numbers with the build, such as `27.2.0 (26B123)`. The
@@ -290,6 +356,7 @@ final class GestureController {
     /// Checks back once a corner's click window has closed, because no event marks that moment.
     private func scheduleCornerTick(device: UnsafeRawPointer) {
         let delay = engines[device]?.config.multiClickWindow ?? 0
+        // The 20 ms margin makes sure that the window has closed by the time the check runs.
         DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.02) { [weak self] in
             self?.runTick(device: device)
         }
@@ -438,6 +505,7 @@ final class GestureController {
     private func applySteps(_ steps: Int) {
         let settings = SettingsStore.shared.settings.haptics
         let modifiers = NSEvent.modifierFlags
+        // Shift and Option give quarter steps, as they do with the brightness and volume keys.
         let fine = modifiers.contains(.shift) && modifiers.contains(.option)
         guard let kind = activeSlide else { return }
         for _ in 0..<abs(steps) {
@@ -473,7 +541,22 @@ final class GestureController {
             {
                 self.haptics.pulse(device: device)
             }
-            if let corner = settings.corner(for: zone) { self.corners.run(corner[clicks]) }
+            guard let slot = CornerSlot(zone: zone), let corner = settings.corner(for: zone)
+            else { return }
+            let action = corner[clicks]
+            if case .system(let system) = action {
+                guard self.powerGuard.allows(system, at: self.now) else {
+                    self.log.debug("Corner: ignored a power action just after a wake")
+                    return
+                }
+                if system.waitsForLift {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Self.liftWait) { [weak self] in
+                        self?.corners.run(action, corner: slot)
+                    }
+                    return
+                }
+            }
+            self.corners.run(action, corner: slot)
         }
     }
 
@@ -550,6 +633,7 @@ final class GestureController {
     }
 
     private func observeLocking() {
+        // A screen lock has no public notification, so this also listens for the undocumented ones.
         let center = DistributedNotificationCenter.default()
         center.addObserver(
             self, selector: #selector(screenLocked),
@@ -564,6 +648,13 @@ final class GestureController {
         workspace.addObserver(
             self, selector: #selector(screenUnlocked),
             name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.screensDidWakeNotification] {
+            workspace.addObserver(self, selector: #selector(didWake), name: name, object: nil)
+        }
+    }
+
+    @objc private func didWake() {
+        powerGuard.recordWake(at: now)
     }
 
     @objc private func screenLocked() {
@@ -573,6 +664,7 @@ final class GestureController {
 
     @objc private func screenUnlocked() {
         locked = false
+        powerGuard.recordWake(at: now)
         frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         applySettings()
     }

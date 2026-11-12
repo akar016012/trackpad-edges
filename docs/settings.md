@@ -22,7 +22,7 @@ The menu bar item can also assign each edge for All Apps, and the window stays i
 
 ## Corners
 
-All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. See [corners.md](corners.md).
+All four corners can hold an action for each click count from 1 to 4, and the pane arranges them like the trackpad. The clicks popup picks the count to edit, and a dot marks each count that has an action. The action popup groups its 21 actions under headers. **Run Command** shows a field in a fixed-width font with one button beside it, and together they fill the column. The button is **Save**, which turns on while the field holds text that is not saved yet, and a corner press still runs the saved command. **Save**, Return, and leaving the field each save the text. While the saved command runs and nothing is waiting to be saved, **Stop** takes the button's place. The field never changes width. **Toggle Do Not Disturb** shows whether a key is assigned, with a button that opens Keyboard settings while none is, and the pane reads that again each time it appears. See [corners.md](corners.md).
 
 ## Profiles
 
@@ -66,8 +66,8 @@ The pane holds the first-run steps, the Accessibility status, launch at login, a
 
 The **Report a problem** section helps with a bug report, and the app sends nothing itself. Its **Diagnostics** row lines up with the rows above it, with one button beneath the other. A line beneath the buttons says what just happened, and VoiceOver announces it.
 
-- **Copy Diagnostics** puts a plain-text report on the clipboard. It lists the app version, the macOS version, the Mac model, each trackpad with its family ID and whether it is built in, the Accessibility state, whether the app is watching clicks, whether gestures are paused, whether the media adapter loaded, each dimmed action with its reason, and a summary of the settings.
-- The report leaves out file paths, links, app names, bundle identifiers, recorded key labels, and shortcut names. A corner shows only the kind of action for each click count, and a profile shows only its number and what it changes.
+- **Copy Diagnostics** puts a plain-text report on the clipboard. It lists the app version, the macOS version, the Mac model, each trackpad with its family ID and whether it is built in, the Accessibility state, whether the app is watching clicks, whether gestures are paused, whether the media adapter loaded, which way Lock Screen and Toggle Dark Mode use, whether Do Not Disturb has a key, each dimmed action with its reason, and a summary of the settings.
+- The report leaves out file paths, links, app names, bundle identifiers, recorded key labels, shortcut names, and commands. A corner shows only the kind of action for each click count, and a profile shows only its number and what it changes.
 - **Record Touches…** says what it records, and then records 10 seconds of touch data while gestures keep working. It then asks where to save the file and shows it in the Finder. The file holds a format version, each trackpad's family ID and whether it is built in, and the time of each frame with the number, position, pressure, size, and long axis of each contact. It holds nothing else.
 
 See [diagnostics-report.md](roadmap/diagnostics-report.md).

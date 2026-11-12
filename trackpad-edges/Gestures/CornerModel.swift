@@ -14,6 +14,10 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
     /// modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
     case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
     case shortcut(name: String)
+    /// Controls the Mac, such as locking or restarting it.
+    case system(action: SystemAction)
+    /// Runs a shell command through your login shell.
+    case command(script: String)
 
     /// Whether the action has everything it needs. A corner that is not configured stays a normal
     /// part of the trackpad, so that it never swallows clicks while doing nothing.
@@ -25,7 +29,10 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
         case .openLink(let url, _):
             return ["http", "https"].contains(URL(string: url)?.scheme?.lowercased())
         case .keyCombination(let keyCode, let modifiers, _): return keyCode != nil || modifiers != 0
+        // The shortcuts tool would read a leading hyphen as an option, so such a name never runs.
         case .shortcut(let name): return !name.isEmpty && !name.hasPrefix("-")
+        case .system: return true
+        case .command(let script): return ShellCommand.isConfigured(script)
         }
     }
 }

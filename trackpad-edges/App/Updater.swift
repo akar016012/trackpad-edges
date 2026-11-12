@@ -10,6 +10,7 @@ final class Updater: NSObject, SPUStandardUserDriverDelegate {
     /// offer to replace itself with the official app, because that would discard its changes.
     private static let officialRequirement =
         "anchor apple generic and certificate leaf[subject.OU] = \"3J6QGH6H9F\" "
+        // These fields mark Apple's Developer ID intermediate and a Developer ID Application leaf.
         + "and certificate 1[field.1.2.840.113635.100.6.2.6] exists "
         + "and certificate leaf[field.1.2.840.113635.100.6.1.13] exists"
 

@@ -129,6 +129,7 @@ private nonisolated func contactFrameCallback(
                         fromByteOffset: base + TouchLayout.majorAxis, as: Float.self)))
         }
     }
+    // The pointer crosses to the main thread as an integer, because a raw pointer is not Sendable.
     let deviceAddress = UInt(bitPattern: device)
     let snapshot = points
     DispatchQueue.main.async {

@@ -10,6 +10,7 @@ final class GeneralPane: SettingsPane {
     private var updatesCheckbox: NSButton?
     private var checkNowButton: NSButton?
     private var permissionTimer: Timer?
+    /// The status form's row that holds the Grant button.
     private static let grantRow = 1
     /// What the diagnostics line says until you use one of its buttons.
     private static let diagnosticsHint = "Nothing is sent by the app."
@@ -96,6 +97,7 @@ final class GeneralPane: SettingsPane {
         updateLogin()
         updateUpdates()
         permissionTimer?.invalidate()
+        // macOS posts no public notice when the permission changes, so the pane checks each second.
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
                 self?.updatePermission()

@@ -63,6 +63,7 @@ nonisolated enum OverlayPlacement: String, Codable, CaseIterable, Sendable {
 nonisolated enum HapticPattern: String, Codable, CaseIterable, Sendable {
     case soft, medium, firm
 
+    /// The pattern ID for the private actuator API. The values were chosen by feel on hardware.
     var actuatorID: Int32 {
         switch self {
         case .soft: return 1
@@ -142,6 +143,27 @@ nonisolated enum CornerSlot: String, Codable, CaseIterable, Sendable {
         case .topRight: return \.topRight
         case .bottomLeft: return \.bottomLeft
         case .bottomRight: return \.bottomRight
+        }
+    }
+
+    /// The corner of a trackpad zone, or nil for an edge.
+    init?(zone: Zone) {
+        switch zone {
+        case .topLeft: self = .topLeft
+        case .topRight: self = .topRight
+        case .bottomLeft: self = .bottomLeft
+        case .bottomRight: self = .bottomRight
+        case .left, .right, .bottom, .top: return nil
+        }
+    }
+
+    /// A short name such as `top-left`, for notices.
+    var shortName: String {
+        switch self {
+        case .topLeft: return "top-left"
+        case .topRight: return "top-right"
+        case .bottomLeft: return "bottom-left"
+        case .bottomRight: return "bottom-right"
         }
     }
 
@@ -345,6 +367,7 @@ nonisolated struct AppSettings: Codable, Equatable, Sendable {
     func gestureConfig(unavailable: Set<SlideKind>) -> GestureConfig {
         var config = GestureConfig()
         config.edgeWidth = edgeWidth
+        // 0.035 is the default step in GestureConfig, so a sensitivity of 1 keeps that step.
         config.stepSize = 0.035 / sensitivity
         config.bottomQuarterOnly = bottomQuarterOnly
         config.requireClick = requireClick

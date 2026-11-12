@@ -42,6 +42,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 echo "Building the Release configuration..."
+# Xcode builds unsigned, because the steps below sign each part in the right order.
 xcodebuild -project "$root/trackpad-edges.xcodeproj" -scheme trackpad-edges \
   -configuration Release -derivedDataPath "$work/build" \
   -clonedSourcePackagesDirPath "$work/build/SourcePackages" \
@@ -100,13 +101,21 @@ fi
 # updater's helpers are signed one at a time, because each must carry the hardened runtime.
 sparkle="$app/Contents/Frameworks/Sparkle.framework"
 "${sign[@]}" "$sparkle/Versions/B/XPCServices/Installer.xpc"
+# The downloader keeps its own sandbox entitlements.
 "${sign[@]}" --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
 "${sign[@]}" "$sparkle/Versions/B/Autoupdate"
 "${sign[@]}" "$sparkle/Versions/B/Updater.app"
 "${sign[@]}" "$sparkle"
 "${sign[@]}" "$framework"
-"${sign[@]}" "$app"
+# Signing with --force and no entitlements file would strip the app's entitlements, and corners
+# then cannot ask for permission to send Apple events.
+"${sign[@]}" --entitlements "$root/Config/TrackpadEdges.entitlements" "$app"
 codesign --verify --strict --deep "$app"
+if ! codesign -d --entitlements - --xml "$app" 2>/dev/null |
+  grep -q "com.apple.security.automation.apple-events"; then
+  echo "The signed app is missing the Apple events entitlement." >&2
+  exit 1
+fi
 
 rm -rf "${output:?}/$app_name.app"
 ditto "$app" "$output/$app_name.app"

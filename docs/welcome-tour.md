@@ -16,7 +16,7 @@ The tour opens by itself on the first launch of a new install. It has seven step
 | Permission      | The step shows live whether Accessibility is on, and it opens the system prompt.                                                                                                    |
 | First slide     | A live diagram shows your fingers, and the step confirms your first real slide.                                                                                                     |
 | Edges           | You pick Everyday, Browsing, or Volume Only as a starting point, and then change any edge.                                                                                          |
-| Corners         | You choose a simple action for each corner. A corner set up in more detail keeps its setup unless you change it.                                                                    |
+| Corners         | You choose a simple action for each corner, and the text says what else the Corners tab can do. A corner set up in more detail keeps its setup unless you change it.                |
 | Haptics         | You turn the tick on or off, set its strength and pattern, and try it.                                                                                                              |
 | You are all set | You choose whether the app starts at login, and the step says where the settings live. **Star on GitHub** opens the project page, because GitHub cannot star a project from a link. |
 

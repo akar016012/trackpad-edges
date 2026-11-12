@@ -139,6 +139,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         profiles.refresh()
     }
 
+    /// Updates the command buttons as commands start and end.
+    func commandsChanged() {
+        if corners.isViewLoaded { corners.commandsChanged() }
+    }
+
     /// Shows one profile on both panes that edit a profile.
     private func selectProfile(_ bundleID: String?) {
         edges.select(bundleID)

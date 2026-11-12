@@ -19,7 +19,7 @@ nonisolated struct TrackpadInfo: Codable, Equatable, Sendable {
 ///
 /// The formatting makes no system calls, so unit tests can check what the report includes and
 /// what it leaves out. It never prints a file path, a link, an app name, a bundle identifier, a
-/// recorded key label, or a shortcut name, because those can be personal.
+/// recorded key label, a shortcut name, or a command, because those can be personal.
 nonisolated struct DiagnosticsReport: Equatable, Sendable {
     var appVersion: String
     var appBuild: String
@@ -34,6 +34,11 @@ nonisolated struct DiagnosticsReport: Equatable, Sendable {
     /// The edge actions that are dimmed right now.
     var unavailable: Set<SlideKind>
     var settings: AppSettings
+    /// Whether Lock Screen and Toggle Dark Mode have their private calls, or use the fallback.
+    var lockUsesSystemCall = true
+    var darkModeUsesSystemCall = true
+    /// Whether Do Not Disturb has a key in Keyboard settings.
+    var doNotDisturbKeySet = false
 
     var text: String {
         var lines = [
@@ -45,6 +50,9 @@ nonisolated struct DiagnosticsReport: Equatable, Sendable {
             "Click watching: \(clickWatchingOn ? "on" : "off")",
             "Gestures: \(gesturesPaused ? "paused" : "active")",
             "Media adapter: \(mediaAdapterLoaded ? "loaded" : "not loaded")",
+            "Lock Screen: \(lockUsesSystemCall ? "system call" : "Control-Command-Q")",
+            "Toggle Dark Mode: \(darkModeUsesSystemCall ? "system call" : "System Events")",
+            "Do Not Disturb key: \(doNotDisturbKeySet ? "set" : "not set")",
             "",
             "Trackpads found: \(trackpads.count)",
         ]
@@ -145,19 +153,6 @@ nonisolated extension CornerSetting {
 }
 
 nonisolated extension CornerAction {
-    /// Names the kind of action only. What it opens or presses stays out of the report.
-    fileprivate var reportKind: String {
-        switch self {
-        case .none: return "No Action"
-        case .mute: return "Mute"
-        case .playPause: return "Play or Pause"
-        case .nextTrack: return "Next Track"
-        case .previousTrack: return "Previous Track"
-        case .openApp: return "Open App"
-        case .openLink: return "Open Link"
-        case .openFile: return "Open File or Folder"
-        case .keyCombination: return "Press Keys"
-        case .shortcut: return "Run Shortcut"
-        }
-    }
+    /// The action's kind only, never what it opens, presses, or runs.
+    fileprivate var reportKind: String { CornerActionKind(self).title }
 }
