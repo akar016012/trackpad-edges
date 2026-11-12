@@ -9,7 +9,7 @@ final class SystemActionTests: XCTestCase {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
         let data = try encoder.encode(corner)
-        // Older versions read this form, so a change to it would lose settings.
+        // Older versions read this form, so changing it would lose settings.
         XCTAssertEqual(
             String(decoding: data, as: UTF8.self),
             #"{"actions":[{"system":{"action":"lockScreen"}},{"command":{"script":"say hello"}},"#
@@ -48,8 +48,7 @@ final class SystemActionTests: XCTestCase {
         XCTAssertEqual(confirming, [.logOut, .restart, .shutDown])
         for action in SystemAction.allCases {
             XCTAssertEqual(action.confirmation != nil, action.confirmsFirst, "\(action)")
-            // An action that opens the box says so with an ellipsis, and one that does not
-            // has none.
+            // Only actions that open the box end with an ellipsis.
             XCTAssertEqual(action.title.hasSuffix("…"), action.confirmsFirst, "\(action)")
         }
         XCTAssertEqual(SystemAction.restart.confirmation?.question, "Restart this Mac?")
@@ -75,7 +74,7 @@ final class SystemActionTests: XCTestCase {
         XCTAssertFalse(guardrail.allows(.lockScreen, at: 102.9))
         XCTAssertTrue(guardrail.allows(.sleep, at: 103))
         XCTAssertTrue(guardrail.allows(.startScreenSaver, at: 104))
-        // The actions that ask first, and the ones that do not sleep or lock, are never held.
+        // Actions that confirm first, or do not sleep or lock, are never held.
         XCTAssertTrue(guardrail.allows(.restart, at: 100.5))
         XCTAssertTrue(guardrail.allows(.toggleDarkMode, at: 100.5))
     }
@@ -91,11 +90,11 @@ final class SystemActionTests: XCTestCase {
         let groups = CornerActionKind.allCases.map(\.group)
         XCTAssertEqual(groups, groups.sorted { $0.order < $1.order })
         XCTAssertEqual(Set(groups), Set(CornerActionGroup.allCases))
-        // Choosing a kind assigns an action that the popup shows as that same kind again.
+        // A chosen kind maps back to itself.
         for kind in CornerActionKind.allCases {
             XCTAssertEqual(CornerActionKind(kind.blankAction), kind)
         }
-        // A tag from a menu item that is not an action, or from a newer version, is no kind.
+        // Unknown tags map to no kind.
         XCTAssertNil(CornerActionKind(tag: -1))
         XCTAssertNil(CornerActionKind(tag: CornerActionKind.allCases.count))
     }

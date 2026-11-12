@@ -9,8 +9,7 @@ final class GestureController {
     private static let lostFingerInterval: TimeInterval = 0.25
     private static let healthCheckInterval: TimeInterval = 0.25
     private static let noticeDuration: TimeInterval = 3
-    /// How long Start Screen Saver, Sleep Display, and Sleep wait after the press, so that the
-    /// lifting finger does not wake the Mac again.
+    /// The delay before the sleep actions, so the lifting finger does not wake the Mac.
     private static let liftWait: TimeInterval = 0.5
     /// How many health checks pass between asking the system directly about the permission.
     private static let permissionProbeEvery = 4
@@ -57,7 +56,7 @@ final class GestureController {
     var onSlideStep: (() -> Void)?
     /// Runs when an edge action becomes available or stops being available.
     var onAvailabilityChanged: (() -> Void)?
-    /// Runs when a command starts or ends, so that the Stop buttons can follow.
+    /// Runs when a command starts or ends.
     var onCommandsChanged: (() -> Void)?
     /// The app in front, which decides the profile.
     private var frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
@@ -127,8 +126,7 @@ final class GestureController {
             let defaults = UserDefaults.standard
             // Launching with `-debugNotice YES` shows the bright room notice for inspection.
             if defaults.bool(forKey: "debugNotice") { showBrightRoomNotice(for: 30) }
-            // Launching with `-debugConfirm YES` shows the confirm box, and confirming it only
-            // shows a notice, so that the box can be tried without a trackpad.
+            // `-debugConfirm YES` shows the confirm box; confirming only shows a notice.
             if defaults.bool(forKey: "debugConfirm") {
                 let panel = ConfirmationPanel(
                     question: "Restart this Mac?", detail: "The top-left corner asked for this.",
@@ -141,12 +139,11 @@ final class GestureController {
                 }
                 panel.present()
             }
-            // Launching with `-debugCommand 'some command'` runs it as the top-left corner would.
+            // `-debugCommand '<command>'` runs it as the top-left corner.
             if let script = defaults.string(forKey: "debugCommand") {
                 corners.commands.run(script, corner: .topLeft)
             }
-            // Adding `-debugStopAfter 3` stops every command after that many seconds, as the
-            // Stop button would.
+            // `-debugStopAfter 3` stops all commands after that many seconds.
             if defaults.object(forKey: "debugStopAfter") != nil {
                 let delay = defaults.double(forKey: "debugStopAfter")
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
@@ -166,8 +163,7 @@ final class GestureController {
     }
 
     func stop() {
-        // A command that kept running after the app quit could not be stopped from the app, and
-        // the next press would start a second copy.
+        // Commands left running after quit could not be stopped from the app.
         corners.commands.stopAllForQuit()
         watchdog.stop()
         abortAll()
@@ -257,7 +253,7 @@ final class GestureController {
 
     // MARK: Commands
 
-    /// The commands that are running now, by their text.
+    /// The running commands, by text.
     var runningCommands: Set<String> { corners.commands.runningScripts }
 
     func stopCommand(_ script: String) {
@@ -268,7 +264,7 @@ final class GestureController {
         corners.commands.stopAll()
     }
 
-    /// Asks once for permission to report failed commands in a notification.
+    /// Asks once for permission to post failure notifications.
     func requestNotificationPermission() {
         failures.requestPermissionIfNeeded()
     }

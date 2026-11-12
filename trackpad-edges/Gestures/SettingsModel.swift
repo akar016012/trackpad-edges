@@ -156,7 +156,7 @@ nonisolated enum CornerSlot: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// The corner's place alone, such as `top-left`, for short notices.
+    /// A short name such as `top-left`, for notices.
     var shortName: String {
         switch self {
         case .topLeft: return "top-left"

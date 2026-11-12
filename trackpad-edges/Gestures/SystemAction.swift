@@ -1,15 +1,11 @@
 import Foundation
 
-/// An action that controls the Mac itself. The raw values are saved, so they must never change.
-///
-/// This type holds only names and rules. How each action is carried out lives in the runners,
-/// and the codes for logging out, restarting, and shutting down stay private to the one file
-/// that sends them, so that nothing else can reach them without the confirm box.
+/// An action that controls the Mac. The raw values are saved, so never change them.
 nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
     case lockScreen, startScreenSaver, sleepDisplay, sleep, logOut, restart, shutDown
     case toggleDarkMode, toggleDoNotDisturb, emptyTrash
 
-    /// The name in the action popup. An action that opens the confirm box ends with an ellipsis.
+    /// The popup title. Actions that confirm first end with an ellipsis.
     var title: String {
         switch self {
         case .lockScreen: return "Lock Screen"
@@ -34,7 +30,7 @@ nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Whether the action runs only after you confirm it, because it ends your session.
+    /// Whether the action ends the session and needs confirmation.
     var confirmsFirst: Bool {
         switch self {
         case .logOut, .restart, .shutDown: return true
@@ -42,8 +38,7 @@ nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Whether the action waits a moment after the press, so that the lifting finger does not
-    /// wake the Mac or end the screen saver at once.
+    /// Whether the action waits briefly so the lifting finger does not wake the Mac.
     var waitsForLift: Bool {
         switch self {
         case .startScreenSaver, .sleepDisplay, .sleep: return true
@@ -51,8 +46,8 @@ nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Whether the action is ignored for a moment after the Mac wakes or unlocks. A finger that was
-    /// already resting on the corner could otherwise send the Mac straight back to sleep.
+    /// Whether the action is ignored just after a wake or unlock, so a resting finger cannot send
+    /// the Mac back to sleep.
     var pausesAfterWake: Bool {
         switch self {
         case .lockScreen, .startScreenSaver, .sleepDisplay, .sleep: return true
@@ -60,7 +55,7 @@ nonisolated enum SystemAction: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// The text of the confirm box, for the actions that have one.
+    /// The confirm box text, if the action has one.
     var confirmation: (question: String, button: String)? {
         switch self {
         case .logOut: return ("Log out of this Mac?", "Log Out")

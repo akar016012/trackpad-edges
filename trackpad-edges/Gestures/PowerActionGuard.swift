@@ -1,11 +1,9 @@
 import Foundation
 
-/// Decides whether a power action may run, from the time that the Mac last woke or unlocked.
-///
-/// A finger that was already resting on a corner when the Mac woke could otherwise lock it or put
-/// it straight back to sleep. A deliberate press in the quiet period is ignored too.
+/// Blocks sleep and lock actions just after a wake or unlock, so a resting finger cannot undo the
+/// wake.
 nonisolated struct PowerActionGuard: Equatable, Sendable {
-    /// How long after a wake or an unlock these actions are ignored, in seconds.
+    /// Seconds after a wake or unlock during which these actions are ignored.
     static let quietPeriod: TimeInterval = 3
 
     private var lastWake: TimeInterval?

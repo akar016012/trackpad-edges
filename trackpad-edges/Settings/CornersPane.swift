@@ -6,19 +6,19 @@ import UniformTypeIdentifiers
 final class CornersPane: ProfilePane, NSTextFieldDelegate {
     private typealias Kind = CornerActionKind
 
-    /// The views of one corner's command row. Save and Stop share one slot beside the field.
+    /// A command row. Save and Stop share one slot beside the field.
     private struct CommandRow {
         let field: NSTextField
         let save: NSButton
         let stop: NSButton
     }
 
-    /// The width of the slot that holds Save or Stop beside a command field.
+    /// The width of the Save and Stop slot.
     private static let commandButtonWidth: CGFloat = 64
     private static let keyboardSettings = URL(
         string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")
 
-    /// The popup's items, grouped as `CornerActionGroup` lists the groups.
+    /// The popup items, by group.
     private static var actionGroups: [(header: String?, items: [(title: String, tag: Int)])] {
         CornerActionGroup.allCases.map { group in
             (group.title, Kind.allCases.filter { $0.group == group }.map { ($0.title, $0.tag) })
@@ -36,7 +36,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
     /// The click count being edited for each corner.
     private var selectedClicks: [Corner: Int] = [:]
     private var sectionTitles: [Corner: String] = [:]
-    /// The command field of each corner that shows one, with its Save and Stop buttons.
+    /// The command row of each corner that shows one.
     private var commandRows: [Corner: CommandRow] = [:]
     private let strengthLabel = NSTextField(labelWithString: "")
 
@@ -65,7 +65,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         onChange?()
     }
 
-    /// Reads the Do Not Disturb key again, so that the pane never shows an old answer.
+    /// Rereads the Do Not Disturb key so the status is current.
     override func viewWillAppear() {
         super.viewWillAppear()
         for corner in actionPopups.keys
@@ -74,15 +74,13 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         }
     }
 
-    /// Shows Stop beside each saved command that is running and has no unsaved edit, and Save
-    /// beside the rest.
+    /// Updates every command row's buttons.
     func commandsChanged() {
         for corner in commandRows.keys { updateCommandButtons(corner) }
     }
 
-    /// Turns Save on while the field differs from the saved command. Stop takes Save's place
-    /// while the saved command runs and the field has nothing to save. The two share one slot,
-    /// so the field keeps its width and your cursor stays where it is.
+    /// Enables Save while the field has unsaved text, and shows Stop instead while the saved
+    /// command runs with nothing to save.
     private func updateCommandButtons(_ corner: Corner) {
         guard let row = commandRows[corner], case .command(let saved) = currentAction(corner)
         else { return }
@@ -94,16 +92,15 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         let hidingFocus = window?.firstResponder === (showsStop ? row.save : row.stop)
         row.save.isHidden = showsStop
         row.stop.isHidden = !showsStop
-        // A button that had the keyboard focus is gone now, so the focus returns to the field.
+        // Return focus to the field if the hidden button had it.
         if hidingFocus { window?.makeFirstResponder(row.field) }
-        // VoiceOver hears that the slot now holds the other button, but only while the pane is
-        // on screen, because a tab that is not selected has no window.
+        // Tell VoiceOver, but only while the pane is on screen.
         if window != nil, let slot = row.save.superview {
             NSAccessibility.post(element: slot, notification: .layoutChanged)
         }
     }
 
-    /// Turns Save on or off as you type in a command field.
+    /// Updates Save as you type.
     func controlTextDidChange(_ notification: Notification) {
         guard let field = notification.object as? NSTextField,
             let corner = commandRows.first(where: { $0.value.field === field })?.key
@@ -117,7 +114,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         let text = row.field.stringValue
         if currentAction(corner) != .command(script: text) {
             assign(.command(script: text), corner: corner)
-            // This is the moment when the reason for notifications is clear.
+            // Ask for notification permission now, when the reason is clear.
             if ShellCommand.isConfigured(text) { actions.requestNotificationPermission() }
         }
         updateCommandButtons(corner)
@@ -320,10 +317,8 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         return [recorder]
     }
 
-    /// A field for one command, in a fixed-width font, with one button slot beside it that
-    /// fills the rest of the column. The slot holds Save, which turns on while the field holds
-    /// text that is not saved yet, or Stop while the saved command runs. A corner press runs the
-    /// saved command, and Return, Save, and leaving the field all save it.
+    /// Builds a monospaced command field with a Save or Stop slot. A corner press runs the saved
+    /// command, and Return, Save, or leaving the field saves.
     private func commandViews(script: String, corner: Corner) -> [NSView] {
         let fieldWidth = Self.columnWidth - Self.commandButtonWidth - 8
         let field = textField(value: script, placeholder: "Shell command", width: fieldWidth) {
@@ -344,8 +339,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         }
         stop.setAccessibilityLabel("Stop the \(name) corner command")
         stop.isHidden = true
-        // Both buttons fill the same slot, and the slot keeps its size whichever one shows, so
-        // nothing in the row moves when they swap.
+        // The slot has a fixed size, so swapping buttons never moves the field.
         let slot = NSView()
         slot.translatesAutoresizingMaskIntoConstraints = false
         for button in [save, stop] {
@@ -361,9 +355,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         slot.widthAnchor.constraint(equalToConstant: Self.commandButtonWidth).isActive = true
         commandRows[corner] = CommandRow(field: field, save: save, stop: stop)
         #if DEBUG
-            // Launching with `-debugCommandDraft 'text'` puts unsaved text in each command field,
-            // so that the Save button can be inspected without typing. Leaving the field saves
-            // that text, as it would save typed text. `rebuildDetails` updates the buttons next.
+            // `-debugCommandDraft 'text'` puts unsaved text in each command field; leaving a field saves it.
             if let draft = UserDefaults.standard.string(forKey: "debugCommandDraft") {
                 field.stringValue = draft
             }
@@ -371,7 +363,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         return [field, slot]
     }
 
-    /// Says whether Do Not Disturb has a key, and offers Keyboard settings while it has none.
+    /// Shows the Do Not Disturb key status, with a Keyboard settings button when no key is set.
     private func doNotDisturbViews() -> [NSView] {
         guard SystemActionRunner.doNotDisturbKey == nil else {
             let label = NSTextField(labelWithString: "It presses your key for Do Not Disturb.")

@@ -7,7 +7,7 @@ final class CornerActionRunner {
     let session: SessionActionRunner
     let commands = CommandRunner()
 
-    /// Shows a short notice, with a title and a sentence that says what to do.
+    /// Shows a notice with a title and a detail line.
     var showNotice: ((String, String) -> Void)? {
         didSet {
             system.showNotice = showNotice
@@ -21,7 +21,7 @@ final class CornerActionRunner {
         session = SessionActionRunner(events: events)
     }
 
-    /// Runs one action. The corner names who asked, in the confirm box and in failure reports.
+    /// Runs an action. The corner is named in the confirm box and failure reports.
     func run(_ action: CornerAction, corner: CornerSlot) {
         guard action.isConfigured else { return }
         switch action {

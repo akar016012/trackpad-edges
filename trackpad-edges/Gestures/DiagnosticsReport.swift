@@ -34,11 +34,10 @@ nonisolated struct DiagnosticsReport: Equatable, Sendable {
     /// The edge actions that are dimmed right now.
     var unavailable: Set<SlideKind>
     var settings: AppSettings
-    /// Whether Lock Screen and Toggle Dark Mode can use their first way, which is a direct system
-    /// call. Each falls back to its second way when that call is missing.
+    /// Whether Lock Screen and Toggle Dark Mode have their private calls, or use the fallback.
     var lockUsesSystemCall = true
     var darkModeUsesSystemCall = true
-    /// Whether a key is assigned to Do Not Disturb in Keyboard settings.
+    /// Whether Do Not Disturb has a key in Keyboard settings.
     var doNotDisturbKeySet = false
 
     var text: String {
@@ -154,6 +153,6 @@ nonisolated extension CornerSetting {
 }
 
 nonisolated extension CornerAction {
-    /// Names the kind of action only. What it opens, presses, or runs stays out of the report.
+    /// The action's kind only, never what it opens, presses, or runs.
     fileprivate var reportKind: String { CornerActionKind(self).title }
 }

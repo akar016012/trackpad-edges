@@ -1,26 +1,23 @@
 import AppKit
 import UserNotifications
 
-/// Reports a command that failed. It uses a notification when you allow them, and the app's own
-/// overlay notice otherwise.
-///
-/// Each corner has one notification, so that a new failure replaces the old one.
+/// Reports failed commands as notifications, or as an overlay notice when notifications are off.
+/// Each corner has one notification, so a new failure replaces the old one.
 final class FailureNotifier: NSObject, UNUserNotificationCenterDelegate {
-    /// How long the overlay notice stays when notifications are not allowed.
+    /// How long the fallback notice stays.
     private static let noticeDuration: TimeInterval = 5
 
-    /// Shows the overlay notice, with a title and a sentence.
+    /// Shows the overlay notice.
     var showNotice: ((String, String, TimeInterval) -> Void)?
 
     private var center: UNUserNotificationCenter { .current() }
 
-    /// Makes notifications show even while the app's window is in front.
+    /// Shows notifications even while the app is in front.
     func install() {
         center.delegate = self
     }
 
-    /// Asks once for permission to show notifications. The app asks when you first enter a
-    /// command, because that is the moment when the reason is clear.
+    /// Asks for notification permission once, when you first enter a command.
     func requestPermissionIfNeeded() {
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .notDetermined else { return }
@@ -28,8 +25,7 @@ final class FailureNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
-    /// Reports one failure. A notification shows the body, and the overlay notice, which holds one
-    /// short line, shows the summary.
+    /// A notification shows the body; the one-line overlay shows the summary.
     func report(corner: CornerSlot, title: String, summary: String, body: String) {
         center.getNotificationSettings { [weak self] settings in
             let allowed =

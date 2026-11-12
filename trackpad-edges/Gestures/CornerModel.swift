@@ -14,7 +14,7 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
     /// modifiers means that nothing has been recorded yet. The label shows the whole shortcut.
     case keyCombination(keyCode: UInt16?, modifiers: UInt64, label: String)
     case shortcut(name: String)
-    /// Controls the Mac itself, such as locking the screen or restarting.
+    /// Controls the Mac, such as locking or restarting it.
     case system(action: SystemAction)
     /// Runs a shell command through your login shell.
     case command(script: String)

@@ -1,22 +1,18 @@
 import AppKit
 import Darwin
 
-/// Runs the shell commands of Run Command corners in the background.
-///
-/// A command runs through your login shell, with no window, no input, and your home folder as its
-/// working folder. It starts in a way that makes it answer for its own permissions, so it never
-/// borrows the app's Accessibility or Automation permission. If that cannot be done, the command
-/// does not run. Each command runs in its own process group, so that Stop ends the command and
-/// everything that it started.
+/// Runs the commands of Run Command corners through the login shell, in the background. A command never gets the
+/// app's permissions; if that cannot be ensured, it does not run. Each command gets its own
+/// process group, so Stop ends everything it started.
 final class CommandRunner {
-    /// The private call that makes a child process answer for its own permissions.
+    /// Makes a child process answer for its own permissions.
     private typealias DisclaimCall =
         @convention(c) (UnsafeMutablePointer<posix_spawnattr_t?>, Int32) -> Int32
 
-    /// How long a stopped command gets to end before it is killed.
+    /// How long a stopped command gets before it is killed.
     private static let stopGrace: TimeInterval = 2
 
-    /// One command that is running, by its text.
+    /// A running command, keyed by its text.
     private final class Job {
         var pid: pid_t?
         var stopped = false
@@ -25,24 +21,23 @@ final class CommandRunner {
     /// Why a command did not start.
     private enum SpawnResult {
         case started(pid: pid_t, errors: Int32)
-        /// macOS refused to keep the command apart from the app's permissions.
+        /// macOS refused to separate the command from the app's permissions.
         case notSeparated
         case failed
     }
 
-    /// How often the app checks whether anything that a finished shell started is still running.
+    /// How often to check for processes left running after the shell ends.
     private static let groupCheckInterval: TimeInterval = 1
 
     private let disclaim: DisclaimCall?
     private let queue = DispatchQueue(label: "commands", qos: .utility)
     private var jobs: [String: Job] = [:]
 
-    /// Runs when a command starts or ends, so that the Stop buttons can follow.
+    /// Runs when a command starts or ends.
     var onChange: (() -> Void)?
-    /// Shows a short notice, with a title and a sentence that says what to do.
+    /// Shows a notice with a title and a detail line.
     var showNotice: ((String, String) -> Void)?
-    /// Reports a command that failed, with a title, a short summary, and a longer body that holds
-    /// the last lines of error output.
+    /// Reports a failure with a title, a short summary, and a body with the error output.
     var reportFailure: ((CornerSlot, String, String, String) -> Void)?
 
     init() {
@@ -58,7 +53,7 @@ final class CommandRunner {
     func run(_ script: String, corner: CornerSlot) {
         guard ShellCommand.isConfigured(script) else { return }
         guard let disclaim else {
-            // A command must never borrow the app's permissions, so it does not run at all.
+            // A command must never run with the app's permissions.
             showNotice?("Command Not Run", "macOS cannot keep it apart from this app.")
             return
         }
@@ -102,7 +97,7 @@ final class CommandRunner {
             return
         }
         job.pid = pid
-        // A Stop that came while the command was starting applies now.
+        // Apply a Stop that came during startup.
         if job.stopped { Self.signal(group: pid) }
         watch(pid: pid, errors: errors) { [weak self] end, tail in
             guard let self, self.jobs[script] === job else { return }
@@ -115,8 +110,8 @@ final class CommandRunner {
         }
     }
 
-    /// Keeps a command listed, with its Stop button, while anything that it started is still
-    /// running in its process group, such as a job that it left in the background.
+    /// Keeps a command listed while anything in its process group still runs, such as a
+    /// background job.
     private func finishWhenGroupEnds(pid: pid_t, script: String, job: Job) {
         guard jobs[script] === job else { return }
         guard kill(-pid, 0) == -1, errno == ESRCH else {
@@ -130,7 +125,7 @@ final class CommandRunner {
         onChange?()
     }
 
-    /// Ends one command and everything that it started.
+    /// Ends a command and everything it started.
     func stop(_ script: String) {
         guard let job = jobs[script], !job.stopped else { return }
         job.stopped = true
@@ -141,17 +136,16 @@ final class CommandRunner {
         for script in jobs.keys { stop(script) }
     }
 
-    /// Asks every command to end when the app quits. The app cannot wait for them, so commands that
-    /// ignore the request keep running.
+    /// Asks every command to end when the app quits. The app cannot wait, so a command that
+    /// ignores this keeps running.
     func stopAllForQuit() {
         for job in jobs.values {
             if let pid = job.pid { kill(-pid, SIGTERM) }
         }
     }
 
-    /// Asks the command's process group to end, and kills it if it is still there a moment later.
-    /// A process group keeps its number while any member lives, so the second signal cannot reach
-    /// another program.
+    /// Sends SIGTERM to the process group, then SIGKILL if it remains. A group keeps its ID while any
+    /// member lives, so the kill cannot hit another program.
     private static func signal(group pid: pid_t) {
         kill(-pid, SIGTERM)
         DispatchQueue.main.asyncAfter(deadline: .now() + stopGrace) {
@@ -159,9 +153,8 @@ final class CommandRunner {
         }
     }
 
-    /// Reads the error output as it arrives, and finishes when the process ends. Reading to the end
-    /// of the output instead would wait forever on a command that leaves a background job running,
-    /// because that job keeps the output open.
+    /// Collects error output and finishes when the process exits, not at end of output, which a
+    /// background job can hold open forever.
     private func watch(
         pid: pid_t, errors: Int32,
         _ finished: @escaping @MainActor (ShellCommand.End, OutputTail) -> Void
@@ -175,9 +168,7 @@ final class CommandRunner {
         let output = Output()
         _ = fcntl(errors, F_SETFL, fcntl(errors, F_GETFL) | O_NONBLOCK)
         let reader = DispatchSource.makeReadSource(fileDescriptor: errors, queue: queue)
-        // The end of the output must stop the reader, because a pipe at its end always reads as
-        // ready, and the reader would otherwise spin until the command ends. A command closes its
-        // output early when its last part sends errors elsewhere, such as `tool 2>/dev/null`.
+        // Cancel at end of output: a pipe at EOF always reads as ready, so the source would spin.
         let drain = {
             guard !output.isClosed else { return }
             var buffer = [UInt8](repeating: 0, count: 4096)
@@ -188,9 +179,9 @@ final class CommandRunner {
                     continue
                 }
                 if count < 0, errno == EINTR { continue }
-                // Nothing more has arrived yet, so the reader waits for the next event.
+                // No data has arrived yet.
                 if count < 0, errno == EAGAIN { break }
-                // The end of the output, or an error that would keep the pipe ready forever.
+                // EOF or an error keeps the pipe ready forever, so stop reading.
                 output.isClosed = true
                 reader.cancel()
                 break
@@ -199,8 +190,7 @@ final class CommandRunner {
         reader.setEventHandler(handler: drain)
         reader.setCancelHandler { close(errors) }
         reader.resume()
-        // A thread that waits on the process is simpler and safer than an exit event, which can be
-        // missed by a process that ends before the event is set up.
+        // A blocking wait cannot miss an exit, unlike an exit event set up too late.
         Thread.detachNewThread {
             var status: Int32 = 0
             while waitpid(pid, &status, 0) == -1, errno == EINTR {}
@@ -215,8 +205,7 @@ final class CommandRunner {
         }
     }
 
-    /// Starts the shell, and returns its process number with the read end of its error output, or
-    /// why it did not start.
+    /// Starts the shell and returns its PID and error-output pipe, or why it did not start.
     nonisolated private static func spawn(
         shell: String, arguments: [String], environment: [String: String], home: String,
         disclaim: DisclaimCall
@@ -236,8 +225,7 @@ final class CommandRunner {
         var attributes: posix_spawnattr_t?
         posix_spawnattr_init(&attributes)
         defer { posix_spawnattr_destroy(&attributes) }
-        // Only the three standard streams reach the command, and it starts with ordinary signal
-        // handling in a process group of its own.
+        // Pass only the standard streams, reset signals, and start a new process group.
         let flags =
             POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF
             | POSIX_SPAWN_SETSIGMASK
@@ -247,8 +235,7 @@ final class CommandRunner {
         var allSignals = ~sigset_t()
         posix_spawnattr_setsigmask(&attributes, &noSignals)
         posix_spawnattr_setsigdefault(&attributes, &allSignals)
-        // Without this, macOS would treat the command as part of the app, and the command would
-        // get the app's permissions.
+        // Without this, the command would inherit the app's permissions.
         guard disclaim(&attributes, 1) == 0 else {
             close(pipeEnds[0])
             return .notSeparated

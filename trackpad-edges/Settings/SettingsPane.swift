@@ -16,16 +16,15 @@ struct WindowActions {
     var copyDiagnostics: () -> Void
     /// Records touches for a fixed time, and then hands the recording to the closure.
     var recordTouches: (@escaping (TouchRecording) -> Void) -> Void
-    /// The corner commands that are running now, by their text.
+    /// The running commands, by text.
     var runningCommands: () -> Set<String>
     var stopCommand: (String) -> Void
-    /// Asks once for permission to report failed commands in a notification.
+    /// Asks once for permission to post failure notifications.
     var requestNotificationPermission: () -> Void
 }
 
 extension NSMenuItem {
-    /// A header above a group of items. macOS 13 has no section header, so a disabled item stands
-    /// in for one there.
+    /// A menu section header, or a disabled item on macOS 13.
     static func header(_ title: String) -> NSMenuItem {
         if #available(macOS 14.0, *) { return .sectionHeader(title: title) }
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
@@ -99,8 +98,7 @@ class SettingsPane: NSViewController {
         return button
     }
 
-    /// A popup whose items are grouped under headers, with a separator between groups. Each item
-    /// is found by its tag, because the headers and separators shift the positions.
+    /// A popup with grouped, tagged items. Use tags, not positions, to find items.
     func groupedPopup(
         _ groups: [(header: String?, items: [(title: String, tag: Int)])], selectedTag: Int,
         _ handler: @escaping (Int) -> Void

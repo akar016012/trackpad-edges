@@ -1,10 +1,10 @@
 import Foundation
 
-/// The groups of the corner action popup, in the order that it shows them.
+/// The corner action popup's groups, in display order.
 nonisolated enum CornerActionGroup: String, CaseIterable, Sendable {
     case none, media, open, automation, system, power
 
-    /// The header above the group. The first group holds only No Action, so it has none.
+    /// The group header. No Action has none.
     var title: String? {
         switch self {
         case .none: return nil
@@ -17,15 +17,15 @@ nonisolated enum CornerActionGroup: String, CaseIterable, Sendable {
     }
 }
 
-/// The kind of a corner action, without its details. This is the one place that names each
-/// action, so that the Corners pane, the welcome tour, and the diagnostics report agree.
+/// A corner action's kind, without details. This is the one place that names each action, so the
+/// Corners pane, the tour, and the diagnostics report agree.
 nonisolated enum CornerActionKind: Hashable, Sendable {
     case none, mute, playPause, nextTrack, previousTrack
     case app, link, file
     case keys, shortcut, command
     case system(SystemAction)
 
-    /// Every kind in popup order, grouped as `CornerActionGroup` lists the groups.
+    /// Every kind in popup order.
     static let allCases: [CornerActionKind] =
         [
             .none, .mute, .playPause, .nextTrack, .previousTrack, .app, .link, .file, .keys,
@@ -80,8 +80,7 @@ nonisolated enum CornerActionKind: Hashable, Sendable {
         }
     }
 
-    /// A stable number for this kind, which the popup uses as each item's tag. A menu with
-    /// headers and separators has more items than kinds, so its positions cannot stand in.
+    /// The popup item tag. Headers and separators shift positions, so items are found by tag.
     var tag: Int { Self.allCases.firstIndex(of: self) ?? 0 }
 
     init?(tag: Int) {
@@ -89,7 +88,7 @@ nonisolated enum CornerActionKind: Hashable, Sendable {
         self = Self.allCases[tag]
     }
 
-    /// The action that choosing this kind assigns, before you fill in its details.
+    /// The empty action that choosing this kind assigns.
     var blankAction: CornerAction {
         switch self {
         case .none: return .none

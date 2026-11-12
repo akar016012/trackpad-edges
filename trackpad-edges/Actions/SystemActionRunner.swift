@@ -1,11 +1,8 @@
 import AppKit
 import Carbon.HIToolbox
 
-/// Carries out the system actions that need no confirmation. Log Out, Restart, and Shut Down go
-/// through `SessionActionRunner` instead, which is the only code that can send them.
-///
-/// Lock Screen and Toggle Dark Mode each have two ways to work. The first is a private system call,
-/// which is looked up once at launch, and the second is used when that call is missing.
+/// Runs the system actions that need no confirmation. Lock Screen and Toggle Dark Mode use a
+/// private call when it exists and fall back otherwise.
 final class SystemActionRunner {
     private typealias LockCall = @convention(c) () -> Int32
     private typealias ReadThemeCall = @convention(c) () -> Bool
@@ -15,9 +12,9 @@ final class SystemActionRunner {
     nonisolated private static let systemEvents = "com.apple.systemevents"
     private static let screenSaver = URL(
         fileURLWithPath: "/System/Library/CoreServices/ScreenSaverEngine.app")
-    /// How long Finder may show its own warning before an Empty Trash request gives up waiting.
+    /// How long an Empty Trash request waits while Finder shows its warning.
     nonisolated private static let emptyTrashTimeout: TimeInterval = 600
-    /// How long Finder can hold up this thread while it comes forward.
+    /// The longest that raising Finder may block the main thread.
     private static let raiseTimeout: Float = 0.25
 
     private let events: AppleEventSender
@@ -25,7 +22,7 @@ final class SystemActionRunner {
     private let lockCall: LockCall?
     private let readTheme: ReadThemeCall?
     private let setTheme: SetThemeCall?
-    /// Shows a short notice, with a title and a sentence that says what to do.
+    /// Shows a notice with a title and a detail line.
     var showNotice: ((String, String) -> Void)?
 
     init(events: AppleEventSender) {
@@ -38,11 +35,11 @@ final class SystemActionRunner {
         setTheme = Self.symbol("SLSSetAppearanceThemeLegacy", in: skyLight)
     }
 
-    /// Whether each action uses its first way, for the diagnostics report.
+    /// Whether each action has its private call, for the diagnostics report.
     var lockUsesSystemCall: Bool { lockCall != nil }
     var darkModeUsesSystemCall: Bool { readTheme != nil && setTheme != nil }
 
-    /// The key assigned to Do Not Disturb, which is read afresh each time.
+    /// The key assigned to Do Not Disturb, read on each use.
     static var doNotDisturbKey: SymbolicHotKey? {
         let table = UserDefaults(suiteName: "com.apple.symbolichotkeys")?
             .dictionary(forKey: "AppleSymbolicHotKeys")
@@ -68,14 +65,14 @@ final class SystemActionRunner {
         case .toggleDoNotDisturb: toggleDoNotDisturb()
         case .emptyTrash: emptyTrash()
         case .logOut, .restart, .shutDown:
-            // These never run from here, because they must ask first.
+            // These go through SessionActionRunner, which asks first.
             break
         }
     }
 
     private func lockScreen() {
         guard let lockCall else {
-            // This is the system's own shortcut for locking the screen.
+            // This is the system's lock shortcut.
             let flags = CGEventFlags([.maskControl, .maskCommand]).rawValue
             KeyPoster.press(keyCode: UInt16(kVK_ANSI_Q), modifiers: flags, releaseFlags: flags)
             return
@@ -122,12 +119,12 @@ final class SystemActionRunner {
         KeyPoster.press(keyCode: key.keyCode, modifiers: key.modifiers, releaseFlags: key.modifiers)
     }
 
-    /// Brings Finder forward first, so that its own warning opens in front.
+    /// Raises Finder first so its warning opens in front.
     private func emptyTrash() {
         if let finder = NSRunningApplication.runningApplications(
             withBundleIdentifier: Self.finder
         ).first {
-            // macOS ignores a plain activation request from an app that is not in front.
+            // macOS ignores plain activation from a background app.
             let element = AXUIElementCreateApplication(finder.processIdentifier)
             AXUIElementSetMessagingTimeout(element, Self.raiseTimeout)
             AXUIElementSetAttributeValue(
@@ -147,14 +144,14 @@ final class SystemActionRunner {
         case .notAllowed:
             showNotice?("\(app) Is Not Allowed", "Allow it under Privacy & Security, Automation.")
         case .timedOut:
-            // The app is still busy with the request, often with its own question.
+            // The app is still handling it, often by asking a question.
             break
         case .failed(let code):
             showNotice?("\(app) Did Not Answer", "The request failed with error \(code).")
         }
     }
 
-    /// Turns a four-letter code, such as `thme`, into the number that Apple events use.
+    /// Converts a four-letter code such as `thme` to its number.
     nonisolated private static func code(_ text: String) -> FourCharCode {
         text.utf8.reduce(0) { $0 << 8 | FourCharCode($1) }
     }

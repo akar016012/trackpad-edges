@@ -1,32 +1,27 @@
 import AppKit
 import CoreServices
 
-/// Sends Apple events to other apps on one background queue.
-///
-/// Sending an event waits for its reply, and the first event to an app can wait for you to answer
-/// a consent prompt, so none of it may run on the main thread, which serves every click on the
-/// Mac. A request is dropped while another one to the same app is still waiting, so that repeated
-/// presses cannot stack prompts. `NSAppleScript` is not used, because it works only on the main
-/// thread.
+/// Sends Apple events off the main thread, because a send can wait on a consent prompt. Don't use
+/// `NSAppleScript`, which is main-thread only. A request to an app with one pending is dropped.
 nonisolated final class AppleEventSender: @unchecked Sendable {
     /// Why an event did not arrive.
     enum Failure: Error, Equatable {
-        /// You did not allow the app to control the target, or you have not answered yet.
+        /// Automation was denied or not answered yet.
         case notAllowed
-        /// The target did not reply in time, for example while it shows its own question.
+        /// The target did not reply in time, often because it is showing its own question.
         case timedOut
         case failed(Int)
     }
 
-    /// How long a launched app gets before an event to it gives up.
+    /// How long to wait for a launched app.
     private static let launchTimeout: TimeInterval = 5
 
     private let queue = DispatchQueue(label: "apple-events", qos: .userInitiated)
     private let lock = NSLock()
     private var pending: Set<String> = []
 
-    /// Runs `body` on the event queue, unless a request to the same app is still waiting. A
-    /// failure is handed to `onFailure` on the main thread.
+    /// Runs `body` on the queue unless a request to the same app is pending. Failures arrive on
+    /// the main thread.
     func perform(
         target bundleID: String, _ body: @escaping @Sendable () throws -> Void,
         onFailure: @escaping @MainActor (Failure) -> Void
@@ -53,7 +48,7 @@ nonisolated final class AppleEventSender: @unchecked Sendable {
         }
     }
 
-    /// Sends one event and returns the reply. This blocks, so call it only inside `perform`.
+    /// Sends one event and returns the reply. It blocks, so call it only inside `perform`.
     static func send(
         eventClass: AEEventClass, eventID: AEEventID, to bundleID: String,
         directObject: NSAppleEventDescriptor? = nil,
@@ -79,8 +74,8 @@ nonisolated final class AppleEventSender: @unchecked Sendable {
         }
     }
 
-    /// Starts an app in the background if it is not running, and waits a moment for it, because
-    /// an event to an app that is not running fails. This blocks, so call it only inside `perform`.
+    /// Starts the app in the background if needed, because events to a stopped app fail. It
+    /// blocks, so call it only inside `perform`.
     static func launchIfNeeded(_ bundleID: String) {
         guard NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty,
             let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)

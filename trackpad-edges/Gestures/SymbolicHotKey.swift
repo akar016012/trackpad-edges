@@ -1,23 +1,19 @@
 import Foundation
 
-/// A key from the system's own shortcut table, which Keyboard settings writes.
-///
-/// macOS offers apps no way to change a Focus, but Keyboard settings can assign a key to Do Not
-/// Disturb. The app reads that key each time and presses it.
+/// A key from the system shortcut table. Apps cannot change a Focus directly, so Toggle Do Not
+/// Disturb presses the key assigned in Keyboard settings.
 nonisolated struct SymbolicHotKey: Equatable, Sendable {
-    /// The table entry for turning Do Not Disturb on or off.
+    /// The Do Not Disturb entry.
     static let doNotDisturb = "175"
-    /// The key code that the table uses for no key.
+    /// The table's "no key" code.
     private static let noKey = 65535
 
     let keyCode: UInt16
-    /// The modifier flags, in the same bits that key events use.
+    /// Modifier flags, in key-event bits.
     let modifiers: UInt64
 
-    /// Reads one entry of the table, which is the `AppleSymbolicHotKeys` dictionary of the
-    /// `com.apple.symbolichotkeys` domain. An entry holds `enabled` and a `value` whose
-    /// `parameters` are the character, the key code, and the modifier flags. Returns nil for an
-    /// entry that is missing, turned off, unset, or not in that form.
+    /// Reads an entry of `AppleSymbolicHotKeys`, whose `parameters` are the character, the key
+    /// code, and the modifiers. Returns nil if it is missing, off, unset, or malformed.
     init?(entry: String, in table: [String: Any]?) {
         guard let item = table?[entry] as? [String: Any],
             (item["enabled"] as? NSNumber)?.boolValue == true,

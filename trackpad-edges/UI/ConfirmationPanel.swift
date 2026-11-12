@@ -1,18 +1,13 @@
 import AppKit
 
-/// A button that no key can press, so that only a deliberate click confirms.
+/// A button no key can press, so only a click confirms.
 private final class ClickOnlyButton: NSButton {
     override var acceptsFirstResponder: Bool { false }
 }
 
-/// The box that asks before Log Out, Restart, or Shut Down.
-///
-/// It is a floating panel that takes the keyboard without bringing the app to the front, so it
-/// never asks macOS for activation, which could be refused. It has no default button, so Return
-/// does nothing, and Escape cancels. The focus starts on Cancel and no key reaches the action
-/// button, so keys that you were typing when it appeared can only cancel it. Both buttons wait one
-/// second before they take clicks, and the box closes without acting after 30 seconds, when the
-/// screen locks, or when the Mac sleeps.
+/// The confirm box for Log Out, Restart, and Shut Down. It takes the keyboard without activating
+/// the app, has no default button, and only a click confirms. Buttons arm after one second, and
+/// the box cancels itself after 30 seconds, on screen lock, or on sleep.
 final class ConfirmationPanel: NSPanel {
     private static let width: CGFloat = 340
     private static let margin: CGFloat = 20
@@ -24,7 +19,7 @@ final class ConfirmationPanel: NSPanel {
     private let announcement: String
     private var timers: [Timer] = []
     private var finished = false
-    /// Runs once, with true only when you clicked the action button.
+    /// Runs once; true means the action button was clicked.
     var onFinish: ((Bool) -> Void)?
 
     init(question: String, detail: String, actionTitle: String) {
@@ -34,7 +29,7 @@ final class ConfirmationPanel: NSPanel {
             contentRect: NSRect(x: 0, y: 0, width: Self.width, height: 100),
             styleMask: [.titled, .nonactivatingPanel, .fullSizeContentView], backing: .buffered,
             defer: true)
-        // The title stays hidden, but VoiceOver reads it as the name of the box.
+        // VoiceOver reads the hidden title.
         title = question
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
@@ -56,7 +51,7 @@ final class ConfirmationPanel: NSPanel {
 
     private func buildContent(question: String, detail: String) {
         let icon = NSImageView(image: NSApp.applicationIconImage ?? NSImage())
-        // The icon is decoration, and the question already says which app is asking.
+        // The icon is decorative.
         icon.setAccessibilityElement(false)
         icon.widthAnchor.constraint(equalToConstant: 56).isActive = true
         icon.heightAnchor.constraint(equalToConstant: 56).isActive = true
@@ -75,7 +70,7 @@ final class ConfirmationPanel: NSPanel {
         actionButton.target = self
         actionButton.action = #selector(actionClicked)
         actionButton.hasDestructiveAction = true
-        // Some versions of macOS draw the destructive style only in their own alerts.
+        // macOS may draw the destructive style only in its own alerts.
         actionButton.contentTintColor = .systemRed
         for button in [cancelButton, actionButton] {
             button.bezelStyle = .rounded
@@ -105,8 +100,7 @@ final class ConfirmationPanel: NSPanel {
         setContentSize(container.fittingSize)
     }
 
-    /// Shows the box on the screen under the pointer, in front of other windows, and starts its
-    /// timers.
+    /// Shows the box on the pointer's screen and starts the timers.
     func present() {
         let pointer = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { $0.frame.contains(pointer) } ?? NSScreen.main
@@ -130,7 +124,7 @@ final class ConfirmationPanel: NSPanel {
         let expire = Timer(timeInterval: Self.timeout, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated { self?.finish(confirmed: false) }
         }
-        // The common modes keep the timers running while a menu is open.
+        // Common modes keep the timers running during menu tracking.
         for timer in [arm, expire] { RunLoop.main.add(timer, forMode: .common) }
         timers = [arm, expire]
     }
@@ -141,7 +135,7 @@ final class ConfirmationPanel: NSPanel {
         makeFirstResponder(cancelButton)
     }
 
-    /// Escape cancels at any time, even before the buttons take clicks.
+    /// Escape cancels at any time, even before the buttons arm.
     override func cancelOperation(_ sender: Any?) {
         finish(confirmed: false)
     }

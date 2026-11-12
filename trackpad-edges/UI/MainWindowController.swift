@@ -139,7 +139,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         profiles.refresh()
     }
 
-    /// Shows or hides the Stop buttons as commands start and end.
+    /// Updates the command buttons as commands start and end.
     func commandsChanged() {
         if corners.isViewLoaded { corners.commandsChanged() }
     }
