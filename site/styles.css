@@ -17,6 +17,9 @@
   --graphite: #17181a;
   --gutter: clamp(16px, 4vw, 48px);
   --strip: clamp(44px, 6vw, 72px);
+  --rule: rgb(29 31 34 / 0.18);
+  --columns: minmax(0, 5fr) minmax(0, 7fr);
+  --column-gap: clamp(40px, 6vw, 88px);
 }
 
 [hidden] {
@@ -341,67 +344,120 @@ h1 {
   grid-area: 3 / 3;
 }
 
-/* The rest of the page reads like a spec sheet. */
+/* The sections below the hero share one width and one set of buttons. */
 
-main > section {
-  padding: clamp(64px, 11vw, 136px) var(--gutter);
+.wrap {
+  width: min(100% - 2 * var(--gutter), 1200px);
+  margin-inline: auto;
 }
 
-.what {
+.film :focus-visible,
+footer :focus-visible {
+  outline-color: #fff;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-weight: 650;
+  text-align: center;
+  text-decoration: none;
+}
+
+.button-ink {
+  background: var(--ink);
+  color: #fff;
+}
+
+.button-ink:hover {
+  background: #000;
+}
+
+.button-outline {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.button-outline:hover {
+  background: rgb(29 31 34 / 0.1);
+}
+
+.button-soon {
+  background: rgb(29 31 34 / 0.14);
+  color: var(--ink);
+}
+
+/* Sections share one pair of columns, so headings and content line up down the page. */
+
+.edges,
+.look,
+.film,
+.answers,
+.get {
+  padding-block: clamp(64px, 10vw, 128px);
+}
+
+.section-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-  gap: clamp(32px, 6vw, 80px);
-  max-width: 1280px;
-  margin: 0 auto;
-  align-items: start;
+  grid-template-columns: var(--columns);
+  column-gap: var(--column-gap);
+  row-gap: 16px;
+  align-items: end;
+  margin-bottom: clamp(32px, 5vw, 64px);
 }
 
-.measure p {
-  max-width: 30em;
-  margin-top: 20px;
+.section-head p {
+  max-width: 34em;
   color: var(--ink-soft);
 }
 
 .actions-list {
-  grid-column: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(24px, 4vw, 56px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .actions-list li {
-  padding: 11px 0;
-  border-top: 1px solid rgb(29 31 34 / 0.18);
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 18px 0 26px;
+  border-top: 1px solid var(--rule);
   color: var(--ink-soft);
+}
+
+/* Each control starts with a short orange mark, like the strip that it would fill. */
+
+.actions-list li::before {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 28px;
+  height: 3px;
+  background: var(--orange);
+  content: "";
 }
 
 .actions-list b {
   color: var(--ink);
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
-.shot {
-  margin: 0;
-}
-
-.shot img {
-  border-radius: 14px;
-  box-shadow: 0 18px 44px rgb(23 24 26 / 0.3);
-}
-
-.what .shot {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  position: sticky;
-  top: 32px;
-}
-
-main > .feel {
+.feel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
-  min-height: min(80vh, 720px);
   align-items: center;
-  padding: 0;
+  min-height: min(76vh, 680px);
   overflow: hidden;
   background: #0e0e0f;
   color: #fff;
@@ -412,12 +468,14 @@ main > .feel {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 16%);
   mask-image: linear-gradient(to right, transparent, #000 16%);
 }
 
 .feel-text {
   grid-area: 1 / 1;
-  padding: clamp(32px, 6vw, 80px) 0 clamp(32px, 6vw, 80px) var(--gutter);
+  padding: clamp(32px, 6vw, 80px) 0 clamp(32px, 6vw, 80px)
+    max(var(--gutter), (100vw - 1200px) / 2);
 }
 
 .feel-text p {
@@ -426,180 +484,332 @@ main > .feel {
   color: #d9dadc;
 }
 
-.more {
+/* The look around. Small screens show every screenshot under its text. Wide screens keep the
+   text in the first column and show one screenshot beside it, which the page's script switches. */
+
+.look-list {
   display: grid;
-  gap: clamp(40px, 6vw, 64px);
-  max-width: 1040px;
-  margin: 0 auto;
+  gap: 48px;
 }
 
-.row {
+.look-item {
   display: grid;
-  grid-template-columns: clamp(120px, 20vw, 200px) minmax(0, 1fr);
-  gap: clamp(20px, 5vw, 56px);
+  gap: 20px;
+}
+
+.look-text h3 {
+  font-size: 1.3125rem;
+}
+
+.look-text p {
+  max-width: 34em;
+  margin-top: 8px;
+  color: var(--ink-soft);
+}
+
+.look-shot {
+  margin: 0;
+}
+
+.look-shot img {
+  width: 100%;
+  max-width: 660px;
+  filter: drop-shadow(0 16px 26px rgb(23 24 26 / 0.3));
+}
+
+.look-text button {
+  all: unset;
+  cursor: pointer;
+}
+
+.look-text button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.look.is-tabbed .look-list {
+  grid-template-columns: var(--columns);
+  column-gap: var(--column-gap);
+  row-gap: 4px;
+  align-items: start;
+}
+
+.look.is-tabbed .look-item {
+  display: contents;
+}
+
+.look.is-tabbed .look-text {
+  grid-column: 1;
+  padding: 16px 20px 18px 22px;
+  border-left: 3px solid var(--rule);
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+}
+
+.look.is-tabbed .look-item:nth-child(1) .look-text {
+  grid-row: 1;
+}
+
+.look.is-tabbed .look-item:nth-child(2) .look-text {
+  grid-row: 2;
+}
+
+.look.is-tabbed .look-item:nth-child(3) .look-text {
+  grid-row: 3;
+}
+
+.look.is-tabbed .look-item:nth-child(4) .look-text {
+  grid-row: 4;
+}
+
+.look.is-tabbed .look-item:nth-child(5) .look-text {
+  grid-row: 5;
+}
+
+.look.is-tabbed .look-item:nth-child(6) .look-text {
+  grid-row: 6;
+}
+
+.look.is-tabbed .look-item.is-current .look-text {
+  border-left-color: var(--orange);
+  background: var(--pad);
+}
+
+.look.is-tabbed .look-shot {
+  position: sticky;
+  top: 32px;
+  grid-column: 2;
+  grid-row: 1 / span 6;
+  visibility: hidden;
+}
+
+.look.is-tabbed .look-item.is-current .look-shot {
+  visibility: visible;
+}
+
+.film {
+  background: #0e0e0f;
+  color: #fff;
+}
+
+.film .section-head p {
+  color: #d9dadc;
+}
+
+.film video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  background: #000;
+}
+
+.answers-grid {
+  display: grid;
+  grid-template-columns: var(--columns);
+  column-gap: var(--column-gap);
+  row-gap: 28px;
+  align-items: start;
+}
+
+.answers h2 {
+  position: sticky;
+  top: 32px;
+}
+
+.answers details {
+  border-top: 1px solid var(--rule);
+}
+
+.answers details:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.answers summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 0;
+  font-size: 1.125rem;
+  font-weight: 650;
+  list-style: none;
+  cursor: pointer;
+}
+
+.answers summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The mark is a plus while the answer is closed and a minus while it is open. */
+
+.answers summary::after {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 6px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) center / 100% 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) center / 2px 100% no-repeat;
+  content: "";
+}
+
+.answers details[open] summary::after {
+  background: linear-gradient(var(--ink), var(--ink)) center / 100% 2px
+    no-repeat;
+}
+
+.answers details p {
+  max-width: 38em;
+  margin-bottom: 24px;
+  color: var(--ink-soft);
+}
+
+.get {
+  background: var(--orange);
+}
+
+.get-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: var(--column-gap);
+  row-gap: 48px;
   align-items: center;
 }
 
-.row p {
-  max-width: 34em;
-  margin-top: 10px;
-  color: var(--ink-soft);
-}
-
-/* Each small trackpad marks the zone that its text describes. */
-
-.map {
-  position: relative;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--pad);
-  box-shadow:
-    inset 0 0 0 1px var(--pad-edge),
-    0 1px 2px rgb(0 0 0 / 0.25);
-}
-
-.map[data-zone="corners"] {
-  --block: linear-gradient(var(--orange), var(--orange));
-  background:
-    var(--block) 0 0 / 20% 22% no-repeat,
-    var(--block) 100% 0 / 20% 22% no-repeat,
-    var(--block) 0 100% / 20% 22% no-repeat,
-    var(--block) 100% 100% / 20% 22% no-repeat,
-    var(--pad);
-}
-
-.map[data-zone="two"] {
-  --finger: radial-gradient(circle closest-side, var(--ink) 92%, transparent);
-  background:
-    var(--finger) 96.5% 30% / 8% 12% no-repeat,
-    var(--finger) 96.5% 70% / 8% 12% no-repeat,
-    linear-gradient(var(--orange), var(--orange)) 100% 0 / 13% 100% no-repeat,
-    var(--pad);
-}
-
-.map[data-zone="apps"] {
-  background:
-    linear-gradient(var(--ink), var(--ink)) 28% 36% / 20% 30% no-repeat,
-    linear-gradient(var(--ink-soft), var(--ink-soft)) 62% 36% / 20% 30%
-      no-repeat,
-    linear-gradient(var(--orange), var(--orange)) 0 100% / 100% 16% no-repeat,
-    var(--pad);
-}
-
-.map[data-zone="tour"] {
-  --edge: linear-gradient(var(--orange), var(--orange));
-  background:
-    var(--edge) 0 0 / 100% 12% no-repeat,
-    var(--edge) 0 100% / 100% 12% no-repeat,
-    var(--edge) 0 0 / 8% 100% no-repeat,
-    var(--edge) 100% 0 / 8% 100% no-repeat,
-    var(--pad);
-}
-
-.shot-small {
-  max-width: 720px;
-  margin-left: calc(clamp(120px, 20vw, 200px) + clamp(20px, 5vw, 56px));
-}
-
-.answers {
-  max-width: 880px;
-  margin: 0 auto;
-}
-
-.answers dl {
-  margin: 32px 0 0;
-}
-
-.answers dt {
-  padding-top: 22px;
-  border-top: 1px solid rgb(29 31 34 / 0.18);
-  font-weight: 650;
-}
-
-.answers dd {
-  margin: 6px 0 22px;
-  max-width: 38em;
-  color: var(--ink-soft);
-}
-
-main > .get {
-  display: grid;
-  justify-items: center;
-  gap: 18px;
-  background: var(--orange);
-  text-align: center;
-}
-
-.get img {
-  border-radius: 22px;
+.get-main img {
+  border-radius: 20px;
   box-shadow: 0 8px 22px rgb(23 24 26 / 0.3);
 }
 
-.coming,
-.version {
-  font-weight: 650;
-}
-
-.downloads {
-  margin-top: -8px;
-  color: var(--ink);
+.get-main h2 {
+  margin-top: 24px;
 }
 
 .get-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
+  margin-top: 28px;
 }
 
-.download.is-soon {
-  background: rgb(29 31 34 / 0.16);
-  color: var(--ink);
+.release {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 16px;
+  font-weight: 650;
 }
 
 .needs {
   max-width: 34em;
-  font-size: 1rem;
+  margin-top: 12px;
+}
+
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  padding: 20px 0;
+  border-top: 1px solid rgb(29 31 34 / 0.32);
+  counter-increment: step;
+}
+
+.steps li:last-child {
+  border-bottom: 1px solid rgb(29 31 34 / 0.32);
+}
+
+.steps li::before {
+  grid-row: 1 / span 2;
+  font-size: 1.75rem;
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 1;
+  content: counter(step);
+}
+
+.steps b {
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+.steps span {
+  grid-column: 2;
 }
 
 footer {
-  padding: 32px var(--gutter);
+  padding-block: 40px;
   background: var(--graphite);
   color: #c8cacd;
   font-size: 0.9375rem;
 }
 
-footer a {
+.footer-grid {
+  display: grid;
+  grid-template-columns: var(--columns);
+  column-gap: var(--column-gap);
+  row-gap: 24px;
+}
+
+.footer-brand {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  align-content: start;
+}
+
+.footer-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.footer-name img {
+  border-radius: 7px;
+}
+
+.footer-notes {
+  display: grid;
+  gap: 6px;
+  max-width: 38em;
+}
+
+footer p a {
   color: #fff;
 }
 
-footer a:focus-visible {
-  outline-color: #fff;
-}
-
-@media (max-width: 860px) {
-  .what {
+@media (max-width: 900px) {
+  .section-head,
+  .answers-grid,
+  .get-grid,
+  .footer-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .actions-list,
-  .what .shot {
-    grid-column: 1;
-    grid-row: auto;
+  .answers h2 {
     position: static;
   }
 
-  .shot-small {
-    margin-left: 0;
+  .actions-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  main > .feel {
+  .feel {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .feel-image {
     grid-area: 1 / 1;
+    -webkit-mask-image: none;
     mask-image: none;
   }
 
@@ -618,12 +828,12 @@ footer a:focus-visible {
     font-size: 0.625rem;
   }
 
-  .row {
+  .actions-list {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .map {
-    max-width: 200px;
+  .get-actions .button {
+    flex: 1 1 100%;
   }
 }
 

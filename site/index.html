@@ -38,7 +38,11 @@
         "image": "https://trackpad.adiworks.dev/assets/icon.png",
         "screenshot": [
           "https://trackpad.adiworks.dev/assets/edges.png",
-          "https://trackpad.adiworks.dev/assets/profiles.png"
+          "https://trackpad.adiworks.dev/assets/corners.png",
+          "https://trackpad.adiworks.dev/assets/media.png",
+          "https://trackpad.adiworks.dev/assets/haptics.png",
+          "https://trackpad.adiworks.dev/assets/profiles.png",
+          "https://trackpad.adiworks.dev/assets/tour.png"
         ],
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "macOS 13 or later",
@@ -71,7 +75,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <a class="skip" href="#what">Skip the demo</a>
+    <a class="skip" href="#actions">Skip the demo</a>
 
     <header class="stage" id="stage">
       <div class="pad" id="pad">
@@ -162,43 +166,61 @@
     </header>
 
     <main>
-      <section class="what" id="what">
-        <div class="measure">
-          <h2>Every edge does what you choose</h2>
-          <p>
-            Give each edge any of these controls. They move in fixed steps, so a
-            slide goes as far as you expect, and a tap on an edge changes
-            nothing.
-          </p>
+      <section class="edges" id="actions">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Every edge does what you choose</h2>
+            <p>
+              Give each edge any of these controls. They move in fixed steps, so
+              a slide goes as far as you expect, and a tap on an edge changes
+              nothing.
+            </p>
+          </div>
+          <ul class="actions-list" role="list">
+            <li>
+              <b>Volume</b>
+              <span>It moves in the same steps as your keyboard.</span>
+            </li>
+            <li>
+              <b>Brightness</b>
+              <span>It changes your Mac's built-in screen.</span>
+            </li>
+            <li>
+              <b>Media seek</b>
+              <span>It shows a preview before you let go.</span>
+            </li>
+            <li>
+              <b>Scroll</b>
+              <span>It moves the window under the pointer.</span>
+            </li>
+            <li>
+              <b>Zoom</b>
+              <span
+                >It works in apps that use the standard zoom shortcuts on a US
+                keyboard layout.</span
+              >
+            </li>
+            <li>
+              <b>Switch apps</b>
+              <span>It moves through your open apps one at a time.</span>
+            </li>
+            <li>
+              <b>Switch Spaces</b>
+              <span>It moves one Space left or right.</span>
+            </li>
+            <li>
+              <b>Keyboard backlight</b>
+              <span>It changes the light under your keys.</span>
+            </li>
+            <li>
+              <b>Monitor brightness</b>
+              <span
+                >It is experimental, and it needs an external display that
+                allows it.</span
+              >
+            </li>
+          </ul>
         </div>
-        <ul class="actions-list">
-          <li><b>Volume</b> moves in the same steps as your keyboard.</li>
-          <li><b>Brightness</b> changes your Mac's built-in screen.</li>
-          <li><b>Media seek</b> shows a preview before you let go.</li>
-          <li><b>Scroll</b> moves the window under the pointer.</li>
-          <li>
-            <b>Zoom</b> works in apps that use the standard zoom shortcuts on a
-            US keyboard layout.
-          </li>
-          <li>
-            <b>Switch apps</b> moves through your open apps one at a time.
-          </li>
-          <li><b>Switch Spaces</b> moves one Space left or right.</li>
-          <li><b>Keyboard backlight</b> changes the light under your keys.</li>
-          <li>
-            <b>Monitor brightness</b> is experimental, and it needs an external
-            display that allows it.
-          </li>
-        </ul>
-        <figure class="shot">
-          <img
-            src="assets/edges.png"
-            width="1320"
-            height="1132"
-            loading="lazy"
-            alt="The Edges tab, with a diagram of the trackpad beside a menu for each edge."
-          />
-        </figure>
       </section>
 
       <section class="feel">
@@ -219,158 +241,316 @@
         </div>
       </section>
 
-      <section class="more">
-        <h2 class="visually-hidden">More controls</h2>
-        <article class="row">
-          <div class="map" data-zone="corners" aria-hidden="true"></div>
-          <div>
-            <h3>Four corners</h3>
+      <section class="look" id="look">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>A look around the settings</h2>
             <p>
-              Press a corner lightly to mute, play, or skip a track, to open an
-              app, link, or file, to press a key combination, or to run a
-              shortcut. One corner can hold a different action for each number
-              of presses.
+              The app's window has a tab for each kind of setting, and a short
+              tour sets everything up the first time you open it.
             </p>
           </div>
-        </article>
-        <article class="row">
-          <div class="map" data-zone="two" aria-hidden="true"></div>
-          <div>
-            <h3>Two fingers</h3>
-            <p>
-              Give an edge a second job. One finger can change the volume, and
-              two fingers can zoom.
-            </p>
+          <div class="look-list">
+            <article class="look-item is-current">
+              <div class="look-text">
+                <h3>Edges, with one finger or two</h3>
+                <p>
+                  Choose what each edge does, and watch your fingers on a live
+                  diagram of the trackpad. Every edge can hold a second job, so
+                  one finger can change the volume, and two fingers can zoom.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-edges">
+                <img
+                  src="assets/edges.png"
+                  width="1320"
+                  height="1132"
+                  loading="lazy"
+                  alt="The Edges tab, with a diagram of the trackpad beside a menu for each edge."
+                />
+              </figure>
+            </article>
+            <article class="look-item">
+              <div class="look-text">
+                <h3>Four corners</h3>
+                <p>
+                  Press a corner lightly to mute, play, or skip a track, to open
+                  an app, link, or file, to press a key combination, or to run a
+                  shortcut. One corner can hold a different action for each
+                  number of presses.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-corners">
+                <img
+                  src="assets/corners.png"
+                  width="1320"
+                  height="756"
+                  loading="lazy"
+                  alt="The Corners tab, with an action for each of the four corners."
+                />
+              </figure>
+            </article>
+            <article class="look-item">
+              <div class="look-text">
+                <h3>Media seek</h3>
+                <p>
+                  Choose how far one step moves, as a share of the track or as a
+                  number of seconds. A preview shows where you will land, and
+                  you choose how it looks and where it appears.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-media">
+                <img
+                  src="assets/media.png"
+                  width="1320"
+                  height="448"
+                  loading="lazy"
+                  alt="The Media tab, with seek step and overlay settings."
+                />
+              </figure>
+            </article>
+            <article class="look-item">
+              <div class="look-text">
+                <h3>Haptics</h3>
+                <p>
+                  Set how strong each tick feels and which pattern it uses, and
+                  choose which events give one. A test button lets you feel the
+                  result right away.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-haptics">
+                <img
+                  src="assets/haptics.png"
+                  width="1320"
+                  height="576"
+                  loading="lazy"
+                  alt="The Haptics tab, with strength, pattern, and event settings."
+                />
+              </figure>
+            </article>
+            <article class="look-item">
+              <div class="look-text">
+                <h3>A setup for each app</h3>
+                <p>
+                  The bottom edge can seek in your video player and scroll in
+                  your browser. Each app changes only what you tell it to, and
+                  the rest follows your usual setup.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-profiles">
+                <img
+                  src="assets/profiles.png"
+                  width="1320"
+                  height="768"
+                  loading="lazy"
+                  alt="The Profiles tab, listing apps with their own settings."
+                />
+              </figure>
+            </article>
+            <article class="look-item">
+              <div class="look-text">
+                <h3>A guided start</h3>
+                <p>
+                  A short tour walks you through the permission and your first
+                  slide, and then helps you choose your edges, corners, and
+                  haptics. You can take it again at any time.
+                </p>
+              </div>
+              <figure class="look-shot" id="shot-tour">
+                <img
+                  src="assets/tour.png"
+                  width="1320"
+                  height="900"
+                  loading="lazy"
+                  alt="The welcome tour, on its step for choosing edges."
+                />
+              </figure>
+            </article>
           </div>
-        </article>
-        <article class="row">
-          <div class="map" data-zone="apps" aria-hidden="true"></div>
-          <div>
-            <h3>A setup for each app</h3>
-            <p>
-              The bottom edge can seek in your video player and scroll in your
-              browser. Each app changes only what you tell it to, and the rest
-              follows your usual setup.
-            </p>
-          </div>
-        </article>
-        <figure class="shot shot-small">
-          <img
-            src="assets/profiles.png"
-            width="1320"
-            height="768"
-            loading="lazy"
-            alt="The Profiles tab, listing apps with their own settings."
-          />
-        </figure>
-        <article class="row">
-          <div class="map" data-zone="tour" aria-hidden="true"></div>
-          <div>
-            <h3>A guided start</h3>
-            <p>
-              A short tour walks you through the permission and your first
-              slide, and then helps you choose your edges, corners, and haptics.
-              You can take it again at any time.
-            </p>
-          </div>
-        </article>
+        </div>
       </section>
 
-      <section class="answers">
-        <h2>Good to know</h2>
-        <dl>
-          <dt>Will it get in the way of normal clicks?</dt>
-          <dd>
-            The middle of the trackpad works as it always has. A finger that
-            lands on an edge is treated as the start of a slide, so the pointer
-            waits, and a click there arrives when you let go. A finger that
-            rests there without sliding gives the pointer back after 0.6
-            seconds. A corner with an action uses that press for its action, and
-            the top-left corner mutes until you change it.
-          </dd>
-          <dt>Why does it ask for Accessibility?</dt>
-          <dd>
-            The app needs this permission to press keys for you, including any
-            shortcut you assign, to bring apps forward, and to watch trackpad
-            clicks so that a slide or corner press does not also click. It reads
-            key presses only while you record a shortcut, and during a gesture
-            it checks which modifier keys are held. Without the permission,
-            gestures stay off.
-          </dd>
-          <dt>Does it collect anything?</dt>
-          <dd>
-            No. Your touches stay on your Mac, and the app has no accounts, no
-            tracking, and no analytics. When it first opens, and then once a
-            day, it checks this site for a new version. That request carries the
-            app's version, and like any web request it shows your IP address to
-            the site's host. An update downloads from the project's releases
-            page, which sees that request in the same way. You can turn the
-            check off in the General pane.
-          </dd>
-          <dt>Does media seek work everywhere?</dt>
-          <dd>
-            It works with whatever your Mac shows as now playing. An app that
-            does not share its position cannot be moved, and testing so far has
-            used Chrome.
-          </dd>
-          <dt>Why does keyboard backlight sometimes stop?</dt>
-          <dd>
-            macOS turns the keyboard light off when the room is bright. The app
-            tells you when this happens, and the light comes back in a darker
-            room.
-          </dd>
-          <dt>How do I report a problem?</dt>
-          <dd>
-            Choose Report a Problem… from the app's menu bar menu. It copies a
-            report of your versions, trackpads, and settings, and it opens a bug
-            report for you to paste it into. The report leaves out paths, links,
-            and names, and the app sends nothing itself.
-          </dd>
-        </dl>
+      <section class="film" id="film">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>See it in 25 seconds</h2>
+            <p>
+              This short film shows the edges and corners at work, and then the
+              app's settings. It has sound.
+            </p>
+          </div>
+          <video
+            controls
+            playsinline
+            preload="none"
+            poster="assets/film-poster.jpg"
+            width="1920"
+            height="1080"
+            aria-label="The Trackpad Edges launch film"
+          >
+            <source src="assets/launch.mp4" type="video/mp4" />
+            <a href="assets/launch.mp4">Download the film.</a>
+          </video>
+        </div>
+      </section>
+
+      <section class="answers" id="questions">
+        <div class="wrap answers-grid">
+          <h2>Good to know</h2>
+          <div class="answers-list">
+            <details open>
+              <summary>Will it get in the way of normal clicks?</summary>
+              <p>
+                The middle of the trackpad works as it always has. A finger that
+                lands on an edge is treated as the start of a slide, so the
+                pointer waits, and a click there arrives when you let go. A
+                finger that rests there without sliding gives the pointer back
+                after 0.6 seconds. A corner with an action uses that press for
+                its action, and the top-left corner mutes until you change it.
+              </p>
+            </details>
+            <details>
+              <summary>Why does it ask for Accessibility?</summary>
+              <p>
+                The app needs this permission to press keys for you, including
+                any shortcut you assign, to bring apps forward, and to watch
+                trackpad clicks so that a slide or corner press does not also
+                click. It reads key presses only while you record a shortcut,
+                and during a gesture it checks which modifier keys are held.
+                Without the permission, gestures stay off.
+              </p>
+            </details>
+            <details>
+              <summary>Does it collect anything?</summary>
+              <p>
+                No. Your touches stay on your Mac, and the app has no accounts,
+                no tracking, and no analytics. When it first opens, and then
+                once a day, it checks this site for a new version. That request
+                carries the app's version, and like any web request it shows
+                your IP address to the site's host. An update downloads from the
+                project's releases page, which sees that request in the same
+                way. You can turn the check off in the General pane.
+              </p>
+            </details>
+            <details>
+              <summary>Does media seek work everywhere?</summary>
+              <p>
+                It works with whatever your Mac shows as now playing. An app
+                that does not share its position cannot be moved, and testing so
+                far has used Chrome.
+              </p>
+            </details>
+            <details>
+              <summary>Why does keyboard backlight sometimes stop?</summary>
+              <p>
+                macOS turns the keyboard light off when the room is bright. The
+                app tells you when this happens, and the light comes back in a
+                darker room.
+              </p>
+            </details>
+            <details>
+              <summary>How do I report a problem?</summary>
+              <p>
+                Choose Report a Problem… from the app's menu bar menu. It copies
+                a report of your versions, trackpads, and settings, and it opens
+                a bug report for you to paste it into. The report leaves out
+                paths, links, and names, and the app sends nothing itself.
+              </p>
+            </details>
+          </div>
+        </div>
       </section>
 
       <section class="get" id="download">
-        <img src="assets/icon.png" alt="" width="96" height="96" />
-        <h2>Get Trackpad Edges</h2>
-        <div class="get-actions">
-          <span class="download is-soon" id="coming-soon"
-            >macOS download coming soon</span
-          >
-          <a class="download" id="download-link" hidden>Download for Mac</a>
-          <a
-            class="download"
-            href="https://github.com/akar016012/trackpad-edges#build-and-run"
-            >Build from source</a
-          >
+        <div class="wrap get-grid">
+          <div class="get-main">
+            <img src="assets/icon.png" alt="" width="88" height="88" />
+            <h2>Get Trackpad Edges</h2>
+            <div class="get-actions">
+              <span class="button button-soon" id="coming-soon"
+                >macOS download coming soon</span
+              >
+              <a class="button button-ink" id="download-link" hidden
+                >Download for Mac</a
+              >
+              <a
+                class="button button-outline"
+                href="https://github.com/akar016012/trackpad-edges#build-and-run"
+                >Build from source</a
+              >
+            </div>
+            <p class="release">
+              <span id="version" hidden></span>
+              <span data-download-count="{count} so far." hidden></span>
+            </p>
+            <p class="needs">
+              The app needs a Mac with Apple silicon and a Force Touch trackpad,
+              running macOS 13 or later. All testing so far has used macOS 27.2
+              and built-in trackpads.
+            </p>
+          </div>
+          <ol class="steps" role="list">
+            <li>
+              <b>Install it.</b>
+              <span
+                >Open the download and drag Trackpad Edges to your Applications
+                folder.</span
+              >
+            </li>
+            <li>
+              <b>Open it.</b>
+              <span
+                >The app is signed and notarized, so macOS only asks you to
+                confirm the first time.</span
+              >
+            </li>
+            <li>
+              <b>Take the tour.</b>
+              <span
+                >It helps you allow Accessibility, try your first slide, and
+                choose your edges, corners, and haptics.</span
+              >
+            </li>
+          </ol>
         </div>
-        <p class="version" id="version" hidden></p>
-        <p class="downloads" data-download-count="{count} so far" hidden></p>
-        <p class="needs">
-          The app needs a Mac with Apple silicon and a Force Touch trackpad,
-          running macOS 13 or later. All testing so far has used macOS 27.2 and
-          built-in trackpads.
-        </p>
       </section>
     </main>
 
     <footer>
-      <p>
-        © 2026 <a href="https://adiportfolio.com/" rel="author">Aditya Kar</a>.
-      </p>
-      <p>
-        Trackpad Edges is free software under the
-        <a href="https://www.gnu.org/licenses/gpl-3.0.html"
-          >GNU General Public License version 3</a
-        >.
-        <a href="https://github.com/akar016012/trackpad-edges"
-          >Read the source code.</a
-        >
-      </p>
-      <p>
-        Trackpad Edges is an independent app, and it is not affiliated with
-        Apple Inc.
-      </p>
-      <p>Mac, macOS, and Force Touch are trademarks of Apple Inc.</p>
+      <div class="wrap footer-grid">
+        <div class="footer-brand">
+          <a class="footer-name" href="#stage">
+            <img
+              src="assets/icon.png"
+              alt=""
+              width="28"
+              height="28"
+              loading="lazy"
+            />
+            <span>Trackpad Edges</span>
+          </a>
+          <p>
+            © 2026
+            <a href="https://adiportfolio.com/" rel="author">Aditya Kar</a>.
+          </p>
+        </div>
+        <div class="footer-notes">
+          <p>
+            Trackpad Edges is free software under the
+            <a href="https://www.gnu.org/licenses/gpl-3.0.html"
+              >GNU General Public License version 3</a
+            >.
+            <a href="https://github.com/akar016012/trackpad-edges"
+              >Read the source code.</a
+            >
+          </p>
+          <p>
+            Trackpad Edges is an independent app, and it is not affiliated with
+            Apple Inc.
+          </p>
+          <p>Mac, macOS, and Force Touch are trademarks of Apple Inc.</p>
+        </div>
+      </div>
     </footer>
 
     <script src="main.js"></script>
