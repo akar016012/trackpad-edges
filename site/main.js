@@ -207,6 +207,55 @@ function openWithTicks() {
 
 openWithTicks();
 
+// The look around. On a wide screen each heading becomes a button that shows its screenshot
+// beside the list. On a small screen the headings stay plain, and every screenshot is shown.
+
+const look = document.querySelector(".look");
+const lookItems = [...look.querySelectorAll(".look-item")];
+const wideScreen = matchMedia("(min-width: 901px)");
+
+function showShot(chosen) {
+  lookItems.forEach((item) => {
+    const isCurrent = item === chosen;
+    item.classList.toggle("is-current", isCurrent);
+    item
+      .querySelector("button")
+      ?.setAttribute("aria-expanded", String(isCurrent));
+  });
+}
+
+function arrangeLook() {
+  const isTabbed = wideScreen.matches;
+  look.classList.toggle("is-tabbed", isTabbed);
+  lookItems.forEach((item) => {
+    const heading = item.querySelector("h3");
+    const button = heading.querySelector("button");
+    if (isTabbed && !button) {
+      const made = document.createElement("button");
+      made.type = "button";
+      made.textContent = heading.textContent;
+      made.setAttribute("aria-controls", item.querySelector(".look-shot").id);
+      heading.replaceChildren(made);
+    } else if (!isTabbed && button) {
+      heading.textContent = button.textContent;
+    }
+  });
+  showShot(look.querySelector(".look-item.is-current") ?? lookItems[0]);
+}
+
+lookItems.forEach((item) => {
+  // The whole block of text is the target, so a click on the paragraph works too.
+  item.querySelector(".look-text").addEventListener("click", () => {
+    if (wideScreen.matches) {
+      showShot(item);
+    }
+  });
+});
+wideScreen.addEventListener("change", arrangeLook);
+arrangeLook();
+
+// The download.
+
 if (release.url) {
   const link = document.getElementById("download-link");
   link.href = release.url;
@@ -214,7 +263,7 @@ if (release.url) {
   document.getElementById("coming-soon").hidden = true;
   if (release.version) {
     const version = document.getElementById("version");
-    version.textContent = `Version ${release.version}`;
+    version.textContent = `Version ${release.version} is the newest.`;
     version.hidden = false;
   }
 }

@@ -1,10 +1,14 @@
 # Landing page
 
-Status: the page is built and tested at desktop and phone sizes. It publishes to https://trackpad.adiworks.dev.
+Status: the sections below the hero were rebuilt on 2026-11-11 and tested at desktop, tablet, and phone sizes in one browser. The hero is unchanged. The page publishes to https://trackpad.adiworks.dev.
 
 ## What it is
 
-`site/` holds a static page with no build tools. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. The font is stored in `site/fonts/` under its open font license, and the page makes one request to another site, which reads the public releases list for the download count. That host sees the visitor's IP address, but the request carries no referrer and no cookies.
+`site/` holds a static page with no build tools. The hero is a working trackpad: the left edge dims the demo, the right edge steps a volume readout, the bottom edge seeks a track, and the corners press. When the page opens, the volume strip ticks up to its level with a small pulse on each step, unless the visitor prefers reduced motion. A web page cannot drive a Mac's trackpad haptics, so this is visual. All of it works by keyboard too. Keep the full-screen trackpad hero.
+
+Below the hero, the page lists the nine edge actions, shows the haptics render, and gives a look around the settings with one screenshot for each of the Edges, Corners, Media, Haptics, and Profiles tabs and for the welcome tour. On a screen wider than 900 pixels, `site/main.js` turns the six headings into buttons that switch one screenshot beside the list. On a smaller screen, or without scripts, every screenshot sits under its own text. The launch film plays in a section of its own and loads only when the visitor starts it. The questions open and close, and the download section ends with three steps for installing the app.
+
+The font is stored in `site/fonts/` under its open font license, and the page makes one request to another site, which reads the public releases list for the download count. That host sees the visitor's IP address, but the request carries no referrer and no cookies.
 
 ## Adding a build
 
@@ -26,7 +30,11 @@ Registering the site with each search engine's own webmaster tools needs the mai
 
 ## Updating it
 
-Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The README's preview at `docs/images/launch.gif` comes from the film at `site/assets/launch.mp4`, so remake it when the film changes. The screenshots in `site/assets/` and `docs/images/` were captured from a debug build with example settings, so a new install looks different. Update them when a tab changes.
+Public text must describe what the app does for the user, and it must not name tools, libraries, or vendors. The README's preview at `docs/images/launch.gif` comes from the film at `site/assets/launch.mp4`, so remake it when the film changes. The film's poster at `site/assets/film-poster.jpg` is a frame from 1.2 seconds into the film, so remake it then too.
+
+The screenshots in `site/assets/` and `docs/images/` were captured from a debug build with example settings, so a new install looks different. The six in `site/assets/` are copies of the ones in `docs/images/`, so update both folders when a tab changes.
+
+The deploy fills the download link by matching the `url` and `version` lines at the top of `site/main.js`, so keep those two lines in their current form. No other line in that file may start with two spaces and `url:` or `version:`.
 
 ## Related docs
 
