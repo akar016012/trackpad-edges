@@ -63,6 +63,7 @@ nonisolated enum OverlayPlacement: String, Codable, CaseIterable, Sendable {
 nonisolated enum HapticPattern: String, Codable, CaseIterable, Sendable {
     case soft, medium, firm
 
+    /// The pattern ID for the private actuator API. The values were chosen by feel on hardware.
     var actuatorID: Int32 {
         switch self {
         case .soft: return 1
@@ -366,6 +367,7 @@ nonisolated struct AppSettings: Codable, Equatable, Sendable {
     func gestureConfig(unavailable: Set<SlideKind>) -> GestureConfig {
         var config = GestureConfig()
         config.edgeWidth = edgeWidth
+        // 0.035 is the default step in GestureConfig, so a sensitivity of 1 keeps that step.
         config.stepSize = 0.035 / sensitivity
         config.bottomQuarterOnly = bottomQuarterOnly
         config.requireClick = requireClick

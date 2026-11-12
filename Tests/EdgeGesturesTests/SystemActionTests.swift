@@ -166,6 +166,7 @@ final class ShellCommandTests: XCTestCase {
         XCTAssertEqual(ShellCommand.End(waitStatus: 0), .exited(0))
         XCTAssertEqual(ShellCommand.End(waitStatus: 127 << 8), .exited(127))
         XCTAssertEqual(ShellCommand.End(waitStatus: 9), .signaled(9))
+        // The 0x80 bit flags a core dump, and it must not change the signal number.
         XCTAssertEqual(ShellCommand.End(waitStatus: 15 | 0x80), .signaled(15))
     }
 

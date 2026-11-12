@@ -336,6 +336,7 @@ nonisolated struct GestureEngine {
         if wasEmpty, !newTouches.isEmpty { firstContactAt = now }
         landedStrips = landedStrips.filter { rawTouchIDs.contains($0.key) }
         for touch in newTouches where !landedStrips.keys.contains(touch.id) {
+            // The .some stores a landing in no strip, where assigning nil would remove the key.
             landedStrips[touch.id] = .some(config.twoFingerZone(x: touch.x, y: touch.y))
         }
         updateRested(rawTouches, now: now)

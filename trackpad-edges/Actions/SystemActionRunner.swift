@@ -96,6 +96,7 @@ final class SystemActionRunner {
         }
         events.perform(target: Self.systemEvents) {
             AppleEventSender.launchIfNeeded(Self.systemEvents)
+            // These codes name the dark mode property of System Events' appearance preferences.
             let darkMode = AppleEventSender.property(
                 Self.code("thme"), of: AppleEventSender.property(Self.code("aprp")))
             let current = try AppleEventSender.send(
@@ -131,6 +132,7 @@ final class SystemActionRunner {
                 element, kAXFrontmostAttribute as CFString, kCFBooleanTrue)
         }
         events.perform(target: Self.finder) {
+            // These codes are Finder's own Empty Trash event.
             _ = try AppleEventSender.send(
                 eventClass: Self.code("fndr"), eventID: Self.code("empt"), to: Self.finder,
                 timeout: Self.emptyTrashTimeout)

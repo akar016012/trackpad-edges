@@ -42,6 +42,7 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 echo "Building the Release configuration..."
+# Xcode builds unsigned, because the steps below sign each part in the right order.
 xcodebuild -project "$root/trackpad-edges.xcodeproj" -scheme trackpad-edges \
   -configuration Release -derivedDataPath "$work/build" \
   -clonedSourcePackagesDirPath "$work/build/SourcePackages" \
@@ -100,6 +101,7 @@ fi
 # updater's helpers are signed one at a time, because each must carry the hardened runtime.
 sparkle="$app/Contents/Frameworks/Sparkle.framework"
 "${sign[@]}" "$sparkle/Versions/B/XPCServices/Installer.xpc"
+# The downloader keeps its own sandbox entitlements.
 "${sign[@]}" --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
 "${sign[@]}" "$sparkle/Versions/B/Autoupdate"
 "${sign[@]}" "$sparkle/Versions/B/Updater.app"

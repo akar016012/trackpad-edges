@@ -356,6 +356,7 @@ final class GestureController {
     /// Checks back once a corner's click window has closed, because no event marks that moment.
     private func scheduleCornerTick(device: UnsafeRawPointer) {
         let delay = engines[device]?.config.multiClickWindow ?? 0
+        // The 20 ms margin makes sure that the window has closed by the time the check runs.
         DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.02) { [weak self] in
             self?.runTick(device: device)
         }
@@ -504,6 +505,7 @@ final class GestureController {
     private func applySteps(_ steps: Int) {
         let settings = SettingsStore.shared.settings.haptics
         let modifiers = NSEvent.modifierFlags
+        // Shift and Option give quarter steps, as they do with the brightness and volume keys.
         let fine = modifiers.contains(.shift) && modifiers.contains(.option)
         guard let kind = activeSlide else { return }
         for _ in 0..<abs(steps) {
@@ -631,6 +633,7 @@ final class GestureController {
     }
 
     private func observeLocking() {
+        // A screen lock has no public notification, so this also listens for the undocumented ones.
         let center = DistributedNotificationCenter.default()
         center.addObserver(
             self, selector: #selector(screenLocked),

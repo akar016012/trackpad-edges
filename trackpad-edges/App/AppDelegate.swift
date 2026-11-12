@@ -179,6 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let item = NSMenuItem(
                 title: choice.title, action: #selector(chooseEdgeAction(_:)), keyEquivalent: "")
             item.target = self
+            // The tag packs both indexes, which works while there are fewer than 100 choices.
             item.tag = edgeIndex * 100 + choiceIndex
             submenu.addItem(item)
         }

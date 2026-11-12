@@ -101,6 +101,7 @@ nonisolated struct NowPlayingAdapter: Sendable {
 
     /// Seeks to a position in seconds. This blocks, so it must not run on the main thread.
     func seek(to seconds: Double) {
+        // The adapter takes the position in microseconds.
         _ = run(["seek", String(Int(max(seconds, 0) * 1_000_000))])
     }
 

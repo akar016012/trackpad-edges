@@ -20,6 +20,8 @@ enum MediaKeys {
     static func press(_ key: Int, fine: Bool = false) {
         let extra = fine ? NSEvent.ModifierFlags([.shift, .option]).rawValue : 0
         for phase in [Int(NX_KEYDOWN), Int(NX_KEYUP)] {
+            /* A special-key event packs the key into the high 16 bits of data1, and the phase into
+               bits 8 to 15. */
             let event = NSEvent.otherEvent(
                 with: .systemDefined, location: .zero,
                 modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(phase << 8) | extra),

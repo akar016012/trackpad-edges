@@ -55,6 +55,7 @@ final class TrackpadDiagramView: NSView {
             NSRect(
                 x: pad.minX, y: pad.maxY - pad.height * width, width: pad.width,
                 height: pad.height * width), title: settings.topEdge?.title, rotated: false)
+        // These fractions match the corner zones in `GestureConfig`.
         let cornerSize = NSSize(width: pad.width * 0.20, height: pad.height * 0.17)
         let leftX = pad.minX
         let rightX = pad.maxX - cornerSize.width

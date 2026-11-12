@@ -37,6 +37,7 @@ def notes_html(markdown):
 
 
 def make_feed(version, build, minimum, url, length, signature, notes):
+    # The notes HTML is escaped again, because the feed carries it as text inside XML.
     return f"""<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>

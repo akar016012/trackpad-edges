@@ -18,6 +18,7 @@ nonisolated enum DDCMessage {
 
     static func write(value: Int) -> [UInt8] {
         let clamped = UInt16(clamping: value)
+        // 0x84 is the length byte (0x80 plus four bytes), and 0x03 is the Set VCP Feature opcode.
         let body: [UInt8] = [
             0x84, 0x03, brightnessCode, UInt8(clamped >> 8), UInt8(clamped & 0xFF),
         ]
@@ -36,6 +37,7 @@ nonisolated enum DDCMessage {
     /// A reply's shape is checked rather than its checksum, because the reply's first byte can
     /// differ between connections, and a shape check already rejects an empty or garbled reply.
     static func reading(from reply: [UInt8]) -> Reading? {
+        // Byte 2 is the Get VCP Feature reply opcode, and byte 3 is the result code for success.
         guard reply.count >= 10, reply[2] == 0x02, reply[3] == 0x00, reply[4] == brightnessCode
         else { return nil }
         let maximum = Int(reply[6]) << 8 | Int(reply[7])

@@ -197,6 +197,7 @@ final class SeekOverlayPanel: NSPanel {
     }
 
     private static func roundedMask() -> NSImage {
+        // The single point between the corner caps is the part that stretches.
         let side = cornerRadius * 2 + 1
         let image = NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
             NSColor.black.setFill()

@@ -60,8 +60,9 @@ nonisolated enum ShellCommand {
         }
     }
 
-    /// Describes a failure, or returns nil for success or a command you stopped. The summary fits the overlay;
-    /// the body adds error output. `corner` is a short name such as `top-left`.
+    /** Describes a failure, or returns nil for success or a command you stopped. The summary
+        fits the overlay, and the body adds error output. `corner` is a short name such as
+        `top-left`. */
     static func failure(
         _ end: End, stopped: Bool, tail: OutputTail, corner: String
     ) -> (title: String, summary: String, body: String)? {

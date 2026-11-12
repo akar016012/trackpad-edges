@@ -156,6 +156,7 @@ final class ConfirmationPanel: NSPanel {
         ] {
             workspace.addObserver(self, selector: #selector(dismiss), name: name, object: nil)
         }
+        // A screen lock has no public notification, so this listens for the undocumented one.
         DistributedNotificationCenter.default().addObserver(
             self, selector: #selector(dismiss),
             name: Notification.Name("com.apple.screenIsLocked"), object: nil)

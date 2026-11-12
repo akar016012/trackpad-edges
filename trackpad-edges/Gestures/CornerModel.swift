@@ -29,6 +29,7 @@ nonisolated enum CornerAction: Codable, Equatable, Sendable {
         case .openLink(let url, _):
             return ["http", "https"].contains(URL(string: url)?.scheme?.lowercased())
         case .keyCombination(let keyCode, let modifiers, _): return keyCode != nil || modifiers != 0
+        // The shortcuts tool would read a leading hyphen as an option, so such a name never runs.
         case .shortcut(let name): return !name.isEmpty && !name.hasPrefix("-")
         case .system: return true
         case .command(let script): return ShellCommand.isConfigured(script)

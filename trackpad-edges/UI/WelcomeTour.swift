@@ -12,6 +12,7 @@ enum WelcomeProgress {
         case finished: return false
         case pending: return true
         default:
+            // The tour itself saves settings, so this stores the answer before it can change.
             let isNew = !SettingsStore.hasSavedSettings
             defaults.set(isNew ? pending : finished, forKey: key)
             return isNew

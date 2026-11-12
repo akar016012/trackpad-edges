@@ -99,6 +99,7 @@ final class EdgeActions {
 
     /// Scrolls in the direction the system uses, so a slide feels like two-finger scrolling.
     private func scroll(up: Bool) {
+        // The key is absent until the setting first changes, and natural scrolling is the default.
         let natural = UserDefaults.standard.object(forKey: "com.apple.swipescrolldirection")
         let distance = up == (natural as? Bool ?? true) ? -Self.scrollPixels : Self.scrollPixels
         let event = CGEvent(

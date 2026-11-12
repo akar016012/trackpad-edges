@@ -134,7 +134,9 @@ private nonisolated final class ExternalService: @unchecked Sendable {
     private typealias TransferI2C =
         @convention(c) (CFTypeRef, UInt32, UInt32, UnsafeMutablePointer<UInt8>, UInt32) -> Int32
 
+    /// The I2C address that DDC/CI assigns to a display.
     private static let chipAddress: UInt32 = 0x37
+    /// The source address that DDC/CI expects at the start of each message from the host.
     private static let dataAddress: UInt32 = 0x51
     /// Monitors need this long between commands, and they ignore requests that come faster.
     private static let settleTime: useconds_t = 50_000
@@ -163,6 +165,7 @@ private nonisolated final class ExternalService: @unchecked Sendable {
             let read: TransferI2C = symbol("IOAVServiceReadI2C")
         else { return [] }
         var iterator: io_iterator_t = 0
+        // This service exists only on Apple silicon, so an Intel Mac finds no displays.
         guard
             IOServiceGetMatchingServices(
                 kIOMainPortDefault, IOServiceMatching("DCPAVServiceProxy"), &iterator)

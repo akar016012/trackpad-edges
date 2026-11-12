@@ -134,6 +134,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
     }
 
     private static func strengthName(_ threshold: Float) -> String {
+        // The cutoffs split `AppSettings.pressThresholdRange` into three equal bands.
         if threshold < 85 { return "A light press" }
         return threshold < 100 ? "A medium press" : "A firm press"
     }
@@ -279,6 +280,7 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         url: String, browserPath: String?, corner: Corner
     ) -> [NSView] {
         var browsers: [URL] = []
+        // Any web address works here, because it only asks which apps open links.
         if let sample = URL(string: "https://example.com") {
             browsers = NSWorkspace.shared.urlsForApplications(toOpen: sample)
         }
@@ -355,7 +357,8 @@ final class CornersPane: ProfilePane, NSTextFieldDelegate {
         slot.widthAnchor.constraint(equalToConstant: Self.commandButtonWidth).isActive = true
         commandRows[corner] = CommandRow(field: field, save: save, stop: stop)
         #if DEBUG
-            // `-debugCommandDraft 'text'` puts unsaved text in each command field; leaving a field saves it.
+            /* `-debugCommandDraft 'text'` puts unsaved text in each command field, and leaving a
+               field saves it. */
             if let draft = UserDefaults.standard.string(forKey: "debugCommandDraft") {
                 field.stringValue = draft
             }

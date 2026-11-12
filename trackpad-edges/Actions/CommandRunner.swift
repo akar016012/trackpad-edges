@@ -1,9 +1,9 @@
 import AppKit
 import Darwin
 
-/// Runs the commands of Run Command corners through the login shell, in the background. A command never gets the
-/// app's permissions; if that cannot be ensured, it does not run. Each command gets its own
-/// process group, so Stop ends everything it started.
+/** Runs the commands of Run Command corners through the login shell, in the background. A
+    command never gets the app's permissions; if that cannot be ensured, it does not run. Each
+    command gets its own process group, so Stop ends everything it started. */
 final class CommandRunner {
     /// Makes a child process answer for its own permissions.
     private typealias DisclaimCall =
@@ -18,7 +18,7 @@ final class CommandRunner {
         var stopped = false
     }
 
-    /// Why a command did not start.
+    /// The outcome of starting a command.
     private enum SpawnResult {
         case started(pid: pid_t, errors: Int32)
         /// macOS refused to separate the command from the app's permissions.
@@ -41,6 +41,7 @@ final class CommandRunner {
     var reportFailure: ((CornerSlot, String, String, String) -> Void)?
 
     init() {
+        // The handle -2 is RTLD_DEFAULT, which Swift does not import, so this searches every image.
         let address = dlsym(
             UnsafeMutableRawPointer(bitPattern: -2), "responsibility_spawnattrs_setdisclaim")
         disclaim = address.map { unsafeBitCast($0, to: DisclaimCall.self) }
@@ -144,8 +145,8 @@ final class CommandRunner {
         }
     }
 
-    /// Sends SIGTERM to the process group, then SIGKILL if it remains. A group keeps its ID while any
-    /// member lives, so the kill cannot hit another program.
+    /** Sends SIGTERM to the process group, then SIGKILL if it remains. A group keeps its ID
+        while any member lives, so the kill cannot hit another program. */
     private static func signal(group pid: pid_t) {
         kill(-pid, SIGTERM)
         DispatchQueue.main.asyncAfter(deadline: .now() + stopGrace) {
