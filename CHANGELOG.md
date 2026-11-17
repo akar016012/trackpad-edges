@@ -2,9 +2,11 @@
 
 ## Unreleased
 
+## 1.4 - 2026-11-17
+
 - A corner can now lock the screen, start the screen saver, turn the displays off, put the Mac to sleep, or log out, restart, or shut down. Logging out, restarting, and shutting down always ask you to confirm in a box first.
 - A corner can toggle Dark Mode, toggle Do Not Disturb, or empty the Trash. Do Not Disturb needs a key that you assign in Keyboard settings.
-- A corner can run a shell command in the background. A running command can be stopped from the Corners pane or the menu bar, and a failed command is reported with its last lines of error output.
+- A corner can run a shell command in the background. A running command can be stopped from the Corners pane or the menu bar. A failed command is reported in a notification with its last lines of error output, or in a short notice if notifications are off.
 - The corner action popup is grouped under headers.
 - The diagnostics report says which way Lock Screen and Toggle Dark Mode use, and whether Do Not Disturb has a key. It never includes a command.
 
