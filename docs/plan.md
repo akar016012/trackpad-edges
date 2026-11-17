@@ -40,14 +40,14 @@ This list was last updated on 2026-11-17. **Done** means that it was tried on a 
 
 ### Needs a check
 
-- Automatic updates are built, and their signing is tested. Versions 1.2, 1.3, and 1.4 are updates that installed copies can receive on their own, but no successful update of an installed copy has been recorded here yet.
+- Automatic updates are built, and their signing is tested. On 2026-11-17, on macOS 27.2, an installed copy of version 1.3 updated itself to 1.4 through **Check for Updates…** and kept its Accessibility permission. The scheduled daily check has not been seen to install an update yet.
 - [ ] [Multiple actions per corner](roadmap/multi-action-corners.md)
 - [ ] [Click-to-start option](gestures.md)
 - [ ] [Release a resting finger](roadmap/resting-finger-release.md), which is built and unit tested, but the 0.6 second wait has not been tried with real slides
 - [ ] [Diagnostics report](roadmap/diagnostics-report.md), which is built and unit tested, but no report has been pasted into an issue and no recording has been made on a trackpad yet
 - [ ] External Apple trackpads still need a check, because all testing used the built-in trackpad.
 - [ ] Media seek in Safari still needs a check, because only Chrome was tried.
-- [ ] [System actions and custom commands on a corner](roadmap/system-and-command-corners.md), which is built and unit tested. A debug build showed the confirm box, ran a command through the login shell, reported its failure, and stopped a command with its background job. A signed build kept the Accessibility permission when it replaced an installed copy of version 1.3, and a command from a corner press asked for its own permissions under the shell's name. The system actions have not fired from the trackpad yet, and the spike questions that need a real press or their consent prompts are still open.
+- [ ] [System actions and custom commands on a corner](roadmap/system-and-command-corners.md), which is built and unit tested. A debug build showed the confirm box, ran a command through the login shell, reported its failure, and stopped a command with its background job. A signed build kept the Accessibility permission when it replaced an installed copy of version 1.3, and the published 1.4 release kept it when an installed 1.3 updated itself through **Check for Updates…**. A command from a corner press asked for its own permissions under the shell's name. The system actions have not fired from the trackpad yet, and the spike questions that need a real press or their consent prompts are still open.
 - [ ] Four fixes from 2026-11-09 have not been tried on a trackpad yet: steps that hold steady on a line, a slide that ends on time after contact drops out, the second look before a mouse-up counts as lost, and the recheck of Switch Spaces when another app comes to the front. Unit tests cover the step logic and the grace period's arithmetic, but the timers and the system's answers need a real run.
 
 ### Planned
